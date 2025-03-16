@@ -72,6 +72,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       window.history.replaceState({}, '', `/chat/${chatId}`);
     }
 
+    console.log("Have call the submit form action");
     handleSubmit(user);
 
     setAttachments([]);

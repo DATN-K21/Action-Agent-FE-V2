@@ -6,7 +6,7 @@ export default async function Page() {
   const id = generateUUID();
 
   const user: User = {
-    id: '425fd43b-48cb-4dbd-8c93-9287b6496ab5',
+    id: '07ccb145-768f-424b-938e-bcc9b766014f',
     email: '',
     username: 'user',
     image: '',

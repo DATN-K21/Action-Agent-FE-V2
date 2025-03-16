@@ -16,7 +16,7 @@ export interface IMessage {
     content: string;
 }
 
-export interface IMessage {
+export interface IMessageWithoutId {
     role: MessageRole;
     content: string;
 }
