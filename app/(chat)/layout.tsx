@@ -6,6 +6,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { auth } from '../(auth)/auth';
 import Script from 'next/script';
 import { User } from 'next-auth';
+import { Role } from '@/constants/data';
 
 export const experimental_ppr = true;
 
@@ -18,11 +19,11 @@ export default async function Layout({
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
 
   const user: User = {
-    id: '425fd43b-48cb-4dbd-8c93-9287b6496ab5',
+    id: '07ccb145-768f-424b-938e-bcc9b766014f',
     email: '',
     username: 'user',
     image: '',
-    role: 'user',
+    role: Role.USER,
     accessToken: '',
     expiresAt: 0,
     refreshToken: '',

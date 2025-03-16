@@ -16,7 +16,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const { id } = params;
 
   const user: User = {
-    id: '425fd43b-48cb-4dbd-8c93-9287b6496ab5',
+    id: '07ccb145-768f-424b-938e-bcc9b766014f',
     email: '',
     username: 'user',
     image: '',
