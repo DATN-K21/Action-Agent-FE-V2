@@ -38,7 +38,7 @@ interface MultimodalInputProps {
 
 function PureMultimodalInput(props: MultimodalInputProps) {
   const { chatId, user, status, attachments, setAttachments, className, } = props;
-  const { messages, input, setInput, append, stop, createThread, handleSubmit } = useChatStore();
+  const { messages, input, setInput, append, stop, createThread, handleStreamChat } = useChatStore();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -72,8 +72,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       window.history.replaceState({}, '', `/chat/${chatId}`);
     }
 
-    console.log("Have call the submit form action");
-    handleSubmit(user);
+    handleStreamChat(user);
 
     setAttachments([]);
     resetHeight();
@@ -83,7 +82,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     }
   }, [
     attachments,
-    handleSubmit,
+    handleStreamChat,
     setAttachments,
     width,
     chatId,
@@ -216,7 +215,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === 'submitted' ? (
+        {status === ChatStatus.STREAMING ? (
           <StopButton stop={stop} />
         ) : (
           <SendButton

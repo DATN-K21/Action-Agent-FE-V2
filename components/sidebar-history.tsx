@@ -208,7 +208,7 @@ export function SidebarHistory({ user }: { user: User }) {
     );
   }
 
-  if (history?.length === 0) {
+  if (threads?.length === 0) {
     return (
       <SidebarGroup>
         <SidebarGroupContent>
@@ -258,7 +258,7 @@ export function SidebarHistory({ user }: { user: User }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {history &&
+            {threads &&
               (() => {
                 const groupedThreads = groupThreadsByDate(threads);
 
