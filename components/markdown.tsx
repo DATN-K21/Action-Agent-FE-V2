@@ -6,14 +6,34 @@ import { CodeBlock } from './code-block';
 
 const components: Partial<Components> = {
   // @ts-expect-error
-  code: CodeBlock,
-  pre: ({ children }) => <>{children}</>,
+  // code: CodeBlock,
+  code: ({ node, inline, className, children, ...props }) => {
+    if (inline) {
+      return <code className={className} {...props}>{children}</code>;
+    }
+    return <CodeBlock node={node} inline={inline} className={className} {...props}>{children}</CodeBlock>;
+  },
+  pre: ({ children }) => <div className="pre-wrapper">{children}</div>,
   ol: ({ node, children, ...props }) => {
     return (
       <ol className="list-decimal list-outside ml-4" {...props}>
         {children}
       </ol>
     );
+  },
+  p: ({ node, children }) => {
+    // Check if the children contain a <pre> or <div> element
+    const hasBlockChild = React.Children.toArray(children).some(
+      (child) =>
+        React.isValidElement(child) &&
+        (child.type === 'pre' || child.type === 'div')
+    );
+
+    if (hasBlockChild) {
+      return <>{children}</>;
+    }
+
+    return <p>{children}</p>;
   },
   li: ({ node, children, ...props }) => {
     return (

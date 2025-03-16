@@ -3,7 +3,7 @@
 interface CodeBlockProps {
   node: any;
   inline: boolean;
-  className: string;
+  className: string | undefined;
   children: any;
 }
 

@@ -17,6 +17,34 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { NavCustom } from '@/components/nav-custom';
+
+import { HiOutlineViewGrid, HiOutlineChatAlt } from 'react-icons/hi';
+import { RiFindReplaceLine } from 'react-icons/ri';
+
+type navCustomItemProps = {
+  title: string;
+  url: string;
+  icon: any;
+};
+
+const navCustomItems: navCustomItemProps[] = [
+  {
+    title: 'New Chat',
+    url: '/',
+    icon: HiOutlineChatAlt,
+  },
+  {
+    title: 'Explore',
+    url: '/explore',
+    icon: RiFindReplaceLine,
+  },
+  {
+    title: 'All Tools',
+    url: '/tools',
+    icon: HiOutlineViewGrid,
+  },
+];
 
 export function AppSidebar({ user }: { user: User }) {
   const router = useRouter();
@@ -59,6 +87,7 @@ export function AppSidebar({ user }: { user: User }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <NavCustom items={navCustomItems} />
         <SidebarHistory user={user} />
       </SidebarContent>
       <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>

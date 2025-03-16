@@ -1,4 +1,5 @@
 import { Chat } from '@/components/chat';
+import { Role } from '@/constants/data';
 import { generateUUID } from '@/lib/utils';
 import { User } from 'next-auth';
 
@@ -10,7 +11,7 @@ export default async function Page() {
     email: '',
     username: 'user',
     image: '',
-    role: 'user',
+    role: Role.USER,
     accessToken: '',
     expiresAt: 0,
     refreshToken: '',
