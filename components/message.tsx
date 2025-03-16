@@ -6,12 +6,10 @@ import { memo } from 'react';
 import { SparklesIcon } from './icons';
 import { Markdown } from './markdown';
 import { PreviewAttachment } from './preview-attachment';
-import equal from 'fast-deep-equal';
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { IMessage } from '@/types/ai';
 import { MessageRole } from '@/constants/ai-constant';
+import { MessageActions } from '@/components/ui/message-actions';
 
 const PurePreviewMessage = ({
   chatId,
@@ -27,7 +25,7 @@ const PurePreviewMessage = ({
     <AnimatePresence>
       <motion.div
         data-testid={`message-${message.role}`}
-        className="w-full mx-auto max-w-3xl px-4 group/message"
+        className="w-full mx-auto max-w-4xl px-4 group/message"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role={message.role}
@@ -75,6 +73,12 @@ const PurePreviewMessage = ({
                 </div>
               </div>
             )}
+
+            <MessageActions
+              key={`action-${message.id}`}
+              message={message}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </motion.div>

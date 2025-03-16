@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 
 
 import { authConfig } from './auth.config';
+import { Role } from '@/constants/data';
 
 export const {
   handlers: { GET, POST },
@@ -22,7 +23,7 @@ export const {
           id: '1',
           name: 'Test User',
           username: 'testuser',
-          role: 'user',
+          role: Role.USER,
           expiresAt: 123,
           accessToken: 'testAccessToken',
           refreshToken: 'testRefreshToken',

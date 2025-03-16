@@ -5,12 +5,8 @@ import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { User } from 'next-auth';
 import { memo, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 import {
-  CheckCircleFillIcon,
-  GlobeIcon,
-  LockIcon,
   MoreHorizontalIcon,
   ShareIcon,
   TrashIcon,
@@ -30,9 +26,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuPortal,
-  DropdownMenuSeparator,
   DropdownMenuSub,
-  DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -110,9 +104,8 @@ const PureThreadItem = ({
   );
 };
 
-export const ThreadItem = memo(PureThreadItem, (prevProps, nextProps) => {
-  if (prevProps.isActive !== nextProps.isActive) return false;
-  return true;
+export const ThreadItem = memo(PureThreadItem, (prev, next) => {
+  return prev.isActive === next.isActive && prev.thread.id === next.thread.id;
 });
 
 export function SidebarHistory({ user }: { user: User }) {

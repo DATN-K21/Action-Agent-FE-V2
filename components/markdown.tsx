@@ -5,15 +5,13 @@ import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
 
 const components: Partial<Components> = {
-  // @ts-expect-error
-  // code: CodeBlock,
-  code: ({ node, inline, className, children, ...props }) => {
-    if (inline) {
-      return <code className={className} {...props}>{children}</code>;
-    }
-    return <CodeBlock node={node} inline={inline} className={className} {...props}>{children}</CodeBlock>;
+  code: ({ node, className, children, ...props }) => {
+    return (
+      <CodeBlock node={node} className={className as string} {...props}>
+        {children}
+      </CodeBlock>
+    );
   },
-  pre: ({ children }) => <div className="pre-wrapper">{children}</div>,
   ol: ({ node, children, ...props }) => {
     return (
       <ol className="list-decimal list-outside ml-4" {...props}>

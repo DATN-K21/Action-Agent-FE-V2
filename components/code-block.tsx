@@ -2,27 +2,22 @@
 
 interface CodeBlockProps {
   node: any;
-  inline: boolean;
-  className: string | undefined;
+  className: string;
   children: any;
 }
 
 export function CodeBlock({
   node,
-  inline,
   className,
   children,
   ...props
 }: CodeBlockProps) {
-  if (!inline) {
+  const match = /language-(\w+)/.exec(className || "");
+
+  if (match) {
     return (
-      <div className="not-prose flex flex-col">
-        <pre
-          {...props}
-          className={`text-sm w-full overflow-x-auto dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900`}
-        >
-          <code className="whitespace-pre-wrap break-words">{children}</code>
-        </pre>
+      <div className="text-sm w-full overflow-y-auto dark:bg-zinc-900 p-4 border border-zinc-3 bg-zinc-50 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900">
+        <code className="whitespace-pre-wrap break-words">{children}</code>
       </div>
     );
   } else {

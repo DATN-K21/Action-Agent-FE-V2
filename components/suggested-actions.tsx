@@ -6,13 +6,15 @@ import { memo } from 'react';
 import { IMessage } from '@/types/ai';
 import { MessageRole } from '@/constants/ai-constant';
 import { generateUUID } from '@/lib/utils';
+import useChatStore from '@/store/chat-store';
 
 interface SuggestedActionsProps {
-  chatId: string;
-  append: (message: IMessage) => void;
+  onSubmission: () => Promise<void>;
 }
 
-function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
+function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
+  const { setInput } = useChatStore();
+
   const suggestedActions = [
     {
       title: 'What are the advantages',
@@ -52,14 +54,10 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
         >
           <Button
             variant="ghost"
-            onClick={async () => {
-              window.history.replaceState({}, '', `/chat/${chatId}`);
-
-              append({
-                id: generateUUID(),
-                role: MessageRole.HUMAN,
-                content: suggestedAction.action,
-              });
+            onClick={async (event) => {
+              event.preventDefault();
+              setInput(suggestedAction.action);
+              await onSubmission();
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
