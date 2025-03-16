@@ -2,15 +2,11 @@
 
 import type {
   Attachment,
-  ChatRequestOptions,
-  CreateMessage,
-  Message,
 } from 'ai';
 import cx from 'classnames';
 import type React from 'react';
 import {
   useRef,
-  useEffect,
   useState,
   useCallback,
   type Dispatch,
@@ -19,7 +15,7 @@ import {
   memo,
 } from 'react';
 import { toast } from 'sonner';
-import { useLocalStorage, useWindowSize } from 'usehooks-ts';
+import { useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
@@ -27,43 +23,25 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
-import { UseChatHelpers, UseChatOptions } from '@ai-sdk/react';
+import { ChatStatus } from '@/constants/ai-constant';
+import { User } from 'next-auth';
+import useChatStore from '@/store/chat-store';
 
-function PureMultimodalInput({
-  chatId,
-  input,
-  setInput,
-  status,
-  stop,
-  attachments,
-  setAttachments,
-  messages,
-  setMessages,
-  append,
-  handleSubmit,
-  className,
-}: {
+interface MultimodalInputProps {
   chatId: string;
-  input: UseChatHelpers['input'];
-  setInput: UseChatHelpers['setInput'];
-  status: UseChatHelpers['status'];
-  stop: () => void;
+  user: User;
+  status: ChatStatus;
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-  messages: Array<Message>;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
-  append: UseChatHelpers['append'];
-  handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
-}) {
+}
+
+function PureMultimodalInput(props: MultimodalInputProps) {
+  const { chatId, user, status, attachments, setAttachments, className, } = props;
+  const { messages, input, setInput, append, stop, createThread, handleSubmit } = useChatStore();
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      adjustHeight();
-    }
-  }, []);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
@@ -79,27 +57,6 @@ function PureMultimodalInput({
     }
   };
 
-  const [localStorageInput, setLocalStorageInput] = useLocalStorage(
-    'input',
-    '',
-  );
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      const domValue = textareaRef.current.value;
-      // Prefer DOM value over localStorage to handle hydration
-      const finalValue = domValue || localStorageInput || '';
-      setInput(finalValue);
-      adjustHeight();
-    }
-    // Only run once after hydration
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    setLocalStorageInput(input);
-  }, [input, setLocalStorageInput]);
-
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value);
     adjustHeight();
@@ -108,15 +65,16 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
-  const submitForm = useCallback(() => {
-    window.history.replaceState({}, '', `/chat/${chatId}`);
+  const submitForm = useCallback(async () => {
+    // Check if is a home page, create a new thread
+    if (window.location.pathname === '/') {
+      await createThread(user, chatId);
+      window.history.replaceState({}, '', `/chat/${chatId}`);
+    }
 
-    handleSubmit(undefined, {
-      experimental_attachments: attachments,
-    });
+    handleSubmit(user);
 
     setAttachments([]);
-    setLocalStorageInput('');
     resetHeight();
 
     if (width && width > 768) {
@@ -126,7 +84,6 @@ function PureMultimodalInput({
     attachments,
     handleSubmit,
     setAttachments,
-    setLocalStorageInput,
     width,
     chatId,
   ]);
@@ -244,7 +201,7 @@ function PureMultimodalInput({
           ) {
             event.preventDefault();
 
-            if (status !== 'ready') {
+            if (status !== ChatStatus.READY) {
               toast.error('Please wait for the model to finish its response!');
             } else {
               submitForm();
@@ -259,7 +216,7 @@ function PureMultimodalInput({
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {status === 'submitted' ? (
-          <StopButton stop={stop} setMessages={setMessages} />
+          <StopButton stop={stop} />
         ) : (
           <SendButton
             input={input}
@@ -275,7 +232,6 @@ function PureMultimodalInput({
 export const MultimodalInput = memo(
   PureMultimodalInput,
   (prevProps, nextProps) => {
-    if (prevProps.input !== nextProps.input) return false;
     if (prevProps.status !== nextProps.status) return false;
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
 
@@ -288,7 +244,7 @@ function PureAttachmentsButton({
   status,
 }: {
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
-  status: UseChatHelpers['status'];
+  status: ChatStatus;
 }) {
   return (
     <Button
@@ -298,7 +254,7 @@ function PureAttachmentsButton({
         event.preventDefault();
         fileInputRef.current?.click();
       }}
-      disabled={status !== 'ready'}
+      disabled={status !== ChatStatus.READY}
       variant="ghost"
     >
       <PaperclipIcon size={14} />
@@ -310,10 +266,8 @@ const AttachmentsButton = memo(PureAttachmentsButton);
 
 function PureStopButton({
   stop,
-  setMessages,
 }: {
   stop: () => void;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
 }) {
   return (
     <Button
@@ -322,7 +276,6 @@ function PureStopButton({
       onClick={(event) => {
         event.preventDefault();
         stop();
-        // setMessages(messages);
       }}
     >
       <StopIcon size={14} />

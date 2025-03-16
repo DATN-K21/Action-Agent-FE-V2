@@ -6,7 +6,6 @@ import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { User } from 'next-auth';
 import { memo, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import useSWR from 'swr';
 
 import {
   CheckCircleFillIcon,
@@ -46,34 +45,34 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { Chat } from '@/lib/db/schema';
-import { fetcher } from '@/lib/utils';
+import { getThreads } from '@/services/thread-service';
+import { IThread } from '@/types/ai';
 
-type GroupedChats = {
-  today: Chat[];
-  yesterday: Chat[];
-  lastWeek: Chat[];
-  lastMonth: Chat[];
-  older: Chat[];
+interface GroupedThreads {
+  today: IThread[];
+  yesterday: IThread[];
+  lastWeek: IThread[];
+  lastMonth: IThread[];
+  older: IThread[];
 };
 
-const PureChatItem = ({
-  chat,
+const PureThreadItem = ({
+  thread,
   isActive,
   onDelete,
   setOpenMobile,
 }: {
-  chat: Chat;
-  isActive: boolean;
-  onDelete: (chatId: string) => void;
+  thread: IThread;
+  isActive: boolean
+  onDelete: () => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <span>{chat.title}</span>
+        <Link href={`/chat/${thread.id}`} onClick={() => setOpenMobile(false)}>
+          <span>{thread.title}</span>
         </Link>
       </SidebarMenuButton>
 
@@ -100,7 +99,7 @@ const PureChatItem = ({
 
           <DropdownMenuItem
             className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
-            onSelect={() => onDelete(chat.id)}
+            onSelect={() => onDelete()}
           >
             <TrashIcon />
             <span>Delete</span>
@@ -111,47 +110,55 @@ const PureChatItem = ({
   );
 };
 
-export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
+export const ThreadItem = memo(PureThreadItem, (prevProps, nextProps) => {
   if (prevProps.isActive !== nextProps.isActive) return false;
   return true;
 });
 
-export function SidebarHistory({ user }: { user: User | undefined }) {
+export function SidebarHistory({ user }: { user: User }) {
   const { setOpenMobile } = useSidebar();
+  const [threads, setThreads] = useState<IThread[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { id } = useParams();
   const pathname = usePathname();
-  const {
-    data: history,
-    isLoading,
-    mutate,
-  } = useSWR<Array<Chat>>(user ? '/api/history' : null, fetcher, {
-    fallbackData: [],
-  });
 
   useEffect(() => {
-    mutate();
-  }, [pathname, mutate]);
+    handleGetThreads();
+  }, [pathname]);
 
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const handleGetThreads = async () => {
+    setIsLoading(true);
+
+    try {
+      const response = await getThreads({ user, payload: {} });
+      setThreads(response.threads);
+    } catch (error) {
+      console.error('Error fetching threads: ', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const [deleteId, setDeleteId] = useState<string>('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
   const handleDelete = async () => {
-    const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
-      method: 'DELETE',
-    });
+    // const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
+    //   method: 'DELETE',
+    // });
 
-    toast.promise(deletePromise, {
-      loading: 'Deleting chat...',
-      success: () => {
-        mutate((history) => {
-          if (history) {
-            return history.filter((h) => h.id !== id);
-          }
-        });
-        return 'Chat deleted successfully';
-      },
-      error: 'Failed to delete chat',
-    });
+    // toast.promise(deletePromise, {
+    //   loading: 'Deleting chat...',
+    //   success: () => {
+    //     mutate((history) => {
+    //       if (history) {
+    //         return history.filter((h) => h.id !== id);
+    //       }
+    //     });
+    //     return 'Chat deleted successfully';
+    //   },
+    //   error: 'Failed to delete chat',
+    // });
 
     setShowDeleteDialog(false);
 
@@ -213,25 +220,25 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     );
   }
 
-  const groupChatsByDate = (chats: Chat[]): GroupedChats => {
+  const groupThreadsByDate = (threads: IThread[]): GroupedThreads => {
     const now = new Date();
     const oneWeekAgo = subWeeks(now, 1);
     const oneMonthAgo = subMonths(now, 1);
 
-    return chats.reduce(
-      (groups, chat) => {
-        const chatDate = new Date(chat.createdAt);
+    return threads.reduce(
+      (groups, thread) => {
+        const threadDate = new Date(thread.createdAt);
 
-        if (isToday(chatDate)) {
-          groups.today.push(chat);
-        } else if (isYesterday(chatDate)) {
-          groups.yesterday.push(chat);
-        } else if (chatDate > oneWeekAgo) {
-          groups.lastWeek.push(chat);
-        } else if (chatDate > oneMonthAgo) {
-          groups.lastMonth.push(chat);
+        if (isToday(threadDate)) {
+          groups.today.push(thread);
+        } else if (isYesterday(threadDate)) {
+          groups.yesterday.push(thread);
+        } else if (threadDate > oneWeekAgo) {
+          groups.lastWeek.push(thread);
+        } else if (threadDate > oneMonthAgo) {
+          groups.lastMonth.push(thread);
         } else {
-          groups.older.push(chat);
+          groups.older.push(thread);
         }
 
         return groups;
@@ -242,7 +249,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
         lastWeek: [],
         lastMonth: [],
         older: [],
-      } as GroupedChats,
+      } as GroupedThreads,
     );
   };
 
@@ -253,22 +260,22 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
           <SidebarMenu>
             {history &&
               (() => {
-                const groupedChats = groupChatsByDate(history);
+                const groupedThreads = groupThreadsByDate(threads);
 
                 return (
                   <>
-                    {groupedChats.today.length > 0 && (
+                    {groupedThreads.today.length > 0 && (
                       <>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
                           Today
                         </div>
-                        {groupedChats.today.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedThreads.today.map((thread) => (
+                          <ThreadItem
+                            key={thread.id}
+                            thread={thread}
+                            isActive={thread.id === id}
+                            onDelete={() => {
+                              setDeleteId(thread.id);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -277,18 +284,18 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       </>
                     )}
 
-                    {groupedChats.yesterday.length > 0 && (
+                    {groupedThreads.yesterday.length > 0 && (
                       <>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Yesterday
                         </div>
-                        {groupedChats.yesterday.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedThreads.yesterday.map((thread) => (
+                          <ThreadItem
+                            key={thread.id}
+                            thread={thread}
+                            isActive={thread.id === id}
+                            onDelete={() => {
+                              setDeleteId(thread.id);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -297,18 +304,18 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       </>
                     )}
 
-                    {groupedChats.lastWeek.length > 0 && (
+                    {groupedThreads.lastWeek.length > 0 && (
                       <>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Last 7 days
                         </div>
-                        {groupedChats.lastWeek.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedThreads.lastWeek.map((thread) => (
+                          <ThreadItem
+                            key={thread.id}
+                            thread={thread}
+                            isActive={thread.id === id}
+                            onDelete={() => {
+                              setDeleteId(thread.id);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -317,18 +324,18 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       </>
                     )}
 
-                    {groupedChats.lastMonth.length > 0 && (
+                    {groupedThreads.lastMonth.length > 0 && (
                       <>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Last 30 days
                         </div>
-                        {groupedChats.lastMonth.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedThreads.lastMonth.map((thread) => (
+                          <ThreadItem
+                            key={thread.id}
+                            thread={thread}
+                            isActive={thread.id === id}
+                            onDelete={() => {
+                              setDeleteId(thread.id);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
@@ -337,18 +344,18 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                       </>
                     )}
 
-                    {groupedChats.older.length > 0 && (
+                    {groupedThreads.older.length > 0 && (
                       <>
                         <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
                           Older
                         </div>
-                        {groupedChats.older.map((chat) => (
-                          <ChatItem
-                            key={chat.id}
-                            chat={chat}
-                            isActive={chat.id === id}
-                            onDelete={(chatId) => {
-                              setDeleteId(chatId);
+                        {groupedThreads.older.map((thread) => (
+                          <ThreadItem
+                            key={thread.id}
+                            thread={thread}
+                            isActive={thread.id === id}
+                            onDelete={() => {
+                              setDeleteId(thread.id);
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}

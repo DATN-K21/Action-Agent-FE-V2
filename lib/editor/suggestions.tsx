@@ -8,7 +8,18 @@ import {
 import { createRoot } from 'react-dom/client';
 
 import { Suggestion as PreviewSuggestion } from '@/components/suggestion';
-import type { Suggestion } from '@/lib/db/schema';
+
+export type Suggestion = {
+  id: string;
+  documentId: string;
+  documentCreatedAt: string;
+  originalText: string;
+  suggestedText: string;
+  description?: string;
+  isResolved: boolean;
+  userId: string;
+  createdAt: string;
+}
 
 export interface UISuggestion extends Suggestion {
   selectionStart: number;
