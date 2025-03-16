@@ -1,15 +1,6 @@
-import type {
-  CoreAssistantMessage,
-  CoreToolMessage,
-  Message,
-  TextStreamPart,
-  ToolInvocation,
-  ToolSet,
-} from 'ai';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
-import type { Message as DBMessage, Document } from '@/lib/db/schema';
+import queryString from 'query-string';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -51,3 +42,44 @@ export function generateUUID(): string {
     return v.toString(16);
   });
 }
+
+export const sendRequest = async <T>(props: IRequest) => {
+  let {
+    url,
+    method,
+    body,
+    queryParams = {},
+    useCredentials = false,
+    headers = {},
+    nextOption = {}
+  } = props;
+
+  const options: any = {
+    method: method,
+    // by default setting the content-type to be json type
+    headers: new Headers({ 'content-type': 'application/json', ...headers }),
+    body: body ? JSON.stringify(body) : null,
+    ...nextOption
+  };
+  if (useCredentials) options.credentials = "include";
+
+  if (Object.keys(queryParams).length !== 0) {
+    console.log("check");
+    url = `${url}?${queryString.stringify(queryParams)}`;
+  }
+
+  return fetch(url, options).then(res => {
+    if (res.ok) {
+      return res.json() as T;
+    } else {
+      return res.json().then(function (json) {
+        // to be able to access error status when you catch the error 
+        return {
+          statusCode: res.status,
+          message: json?.message ?? "",
+          error: json?.error ?? ""
+        } as T;
+      });
+    }
+  });
+};

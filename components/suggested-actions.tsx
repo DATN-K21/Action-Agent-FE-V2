@@ -2,15 +2,14 @@
 
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
-import { ChatRequestOptions, CreateMessage, Message } from 'ai';
 import { memo } from 'react';
+import { IMessage } from '@/types/ai';
+import { MessageRole } from '@/constants/ai-constant';
+import { generateUUID } from '@/lib/utils';
 
 interface SuggestedActionsProps {
   chatId: string;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  append: (message: IMessage) => void;
 }
 
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
@@ -57,7 +56,8 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
               window.history.replaceState({}, '', `/chat/${chatId}`);
 
               append({
-                role: 'user',
+                id: generateUUID(),
+                role: MessageRole.HUMAN,
                 content: suggestedAction.action,
               });
             }}

@@ -1,23 +1,21 @@
-import { Message } from "ai";
 import { PreviewMessage, ThinkingMessage } from "./message";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
 import { Overview } from "./overview";
 import { memo } from "react";
 import equal from "fast-deep-equal";
-import { UseChatHelpers } from "@ai-sdk/react";
+import { ChatStatus, MessageRole } from "@/constants/ai-constant";
+import { IMessage } from "@/types/ai";
 
 interface MessagesProps {
   chatId: string;
-  status: UseChatHelpers["status"];
-  messages: Array<Message>;
-  setMessages: UseChatHelpers["setMessages"];
+  status: ChatStatus;
+  messages: Array<IMessage>;
 }
 
 function PureMessages({
   chatId,
   status,
   messages,
-  setMessages,
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -34,14 +32,13 @@ function PureMessages({
           key={message.id}
           chatId={chatId}
           message={message}
-          isLoading={status === "streaming" && messages.length - 1 === index}
-          setMessages={setMessages}
+          isLoading={status === ChatStatus.STREAMING && messages.length - 1 === index}
         />
       ))}
 
-      {status === "submitted" &&
+      {status === ChatStatus.SUBMITTED &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === "user" && <ThinkingMessage />}
+        messages[messages.length - 1].role === MessageRole.HUMAN && <ThinkingMessage />}
 
       <div
         ref={messagesEndRef}

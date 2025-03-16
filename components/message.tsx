@@ -1,29 +1,26 @@
 'use client';
 
-import type { ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useState } from 'react';
-import { PencilEditIcon, SparklesIcon } from './icons';
+import { memo } from 'react';
+import { SparklesIcon } from './icons';
 import { Markdown } from './markdown';
 import { PreviewAttachment } from './preview-attachment';
 import equal from 'fast-deep-equal';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { IMessage } from '@/types/ai';
+import { MessageRole } from '@/constants/ai-constant';
 
 const PurePreviewMessage = ({
   chatId,
   message,
   isLoading,
-  setMessages,
 }: {
   chatId: string;
-  message: Message;
+  message: IMessage;
   isLoading: boolean;
-  setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
-  ) => void;
 }) => {
 
   return (
@@ -37,10 +34,10 @@ const PurePreviewMessage = ({
       >
         <div
           className={cn(
-            'flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:w-fit'
+            'flex gap-4 w-full group-data-[role=human]/message:ml-auto group-data-[role=human]/message:max-w-2xl group-data-[role=human]/message:w-fit'
           )}
         >
-          {message.role === 'assistant' && (
+          {message.role === MessageRole.AI && (
             <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
               <div className="translate-y-px">
                 <SparklesIcon size={14} />
@@ -49,7 +46,7 @@ const PurePreviewMessage = ({
           )}
 
           <div className="flex flex-col gap-4 w-full">
-            {message.experimental_attachments && (
+            {/* {message.experimental_attachments && (
               <div
                 data-testid={`message-attachments`}
                 className="flex flex-row justify-end gap-2"
@@ -61,7 +58,7 @@ const PurePreviewMessage = ({
                   />
                 ))}
               </div>
-            )}
+            )} */}
 
             {(message.content) && (
               <div
@@ -71,7 +68,7 @@ const PurePreviewMessage = ({
                 <div
                   className={cn('flex flex-col gap-4', {
                     'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                      message.role === 'user',
+                      message.role === MessageRole.HUMAN,
                   })}
                 >
                   <Markdown>{message.content as string}</Markdown>
@@ -89,23 +86,14 @@ export const PreviewMessage = memo(
   PurePreviewMessage,
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.message.reasoning !== nextProps.message.reasoning)
-      return false;
     if (prevProps.message.content !== nextProps.message.content) return false;
-    if (
-      !equal(
-        prevProps.message.toolInvocations,
-        nextProps.message.toolInvocations,
-      )
-    )
-      return false;
 
     return true;
   },
 );
 
 export const ThinkingMessage = () => {
-  const role = 'assistant';
+  const role = MessageRole.AI;
 
   return (
     <motion.div
@@ -117,9 +105,9 @@ export const ThinkingMessage = () => {
     >
       <div
         className={cx(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
+          'flex gap-4 group-data-[role=human]/message:px-3 w-full group-data-[role=human]/message:w-fit group-data-[role=human]/message:ml-auto group-data-[role=human]/message:max-w-2xl group-data-[role=human]/message:py-2 rounded-xl',
           {
-            'group-data-[role=user]/message:bg-muted': true,
+            'group-data-[role=human]/message:bg-muted': true,
           },
         )}
       >
