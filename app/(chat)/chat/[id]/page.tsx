@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { auth } from '@/app/(auth)/auth';
+import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
 
 import { generateUUID } from '@/lib/utils';
