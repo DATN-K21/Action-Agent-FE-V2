@@ -3,26 +3,13 @@ import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { Role } from '@/constants/auth-constant';
 
-const allowedOrigins = [process.env.NEXT_PUBLIC_ORIGIN];
-
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
-  const { pathname, origin } = url;
-  const isAllowedOrigin = allowedOrigins.includes(origin);
+  const { pathname } = url;
   const session = await auth();
 
-  // Prevent API access from different origins (CORS check)
-  if (pathname.startsWith('/api') && !isAllowedOrigin) {
-    return NextResponse.redirect(new URL('/unauthorized', url));
-  }
-
-  // Allow access to all APIs under `/api/access`
-  if (pathname.startsWith('/api/access')) {
-    return NextResponse.next();
-  }
-
-  // Allow all authentication-related APIs except for `/api/auth/session`
-  if (pathname.startsWith('/api/auth') && pathname !== '/api/auth/session') {
+  // Allow all authentication-related APIs
+  if (pathname.startsWith('/api/auth')) {
     return NextResponse.next();
   }
 

@@ -99,7 +99,7 @@ export function SignUpForm() {
 
   return (
     <>
-      <Card className="mx-auto max-w-sm bg-transparent border-none">
+      <Card className="mx-auto max-w-sm bg-white border border-gray-200 shadow-lg rounded-lg">
         <CardHeader>
           <CardTitle className="text-4xl">Create account</CardTitle>
           <CardDescription className="text-gray-600">

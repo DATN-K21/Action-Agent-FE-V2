@@ -173,6 +173,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.role = token.role as Role;
       session.accessToken = token.accessToken as string;
       session.refreshToken = token.refreshToken as string;
+      session.expiresAt = token.expiresAt;
       session.error = token.error;
       return session;
     },

@@ -154,7 +154,7 @@ export function LoginForm() {
     <>
       {/* Login Form */}
       <div className="flex flex-col gap-2">
-        <Card className="mx-auto max-w-sm bg-transparent border-none">
+        <Card className="mx-auto max-w-sm bg-white border border-gray-200 shadow-lg rounded-lg">
           <CardHeader>
             <CardTitle className="text-4xl">Login</CardTitle>
             <CardDescription className="text-gray-600">
@@ -173,9 +173,8 @@ export function LoginForm() {
                       <FormLabel htmlFor="email">Email</FormLabel>
                       <FormControl>
                         <Input
-                          className={`border-[#a996f6] ${
-                            form.formState.errors.email ? 'border-red-500' : ''
-                          } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
+                          className={`border-[#a996f6] ${form.formState.errors.email ? 'border-red-500' : ''
+                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
                           id="email"
                           type="email"
                           placeholder="m@example.com"
@@ -205,9 +204,8 @@ export function LoginForm() {
                       </div>
                       <FormControl>
                         <Input
-                          className={`border-[#a996f6] ${
-                            form.formState.errors.password ? 'border-red-500' : ''
-                          } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
+                          className={`border-[#a996f6] ${form.formState.errors.password ? 'border-red-500' : ''
+                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
                           id="password"
                           type="password"
                           placeholder="********"
