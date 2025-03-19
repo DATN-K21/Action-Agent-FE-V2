@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { extensions, Extension, ExtensionResponse, User, Role } from '@/constants/data';
 import { Separator } from '@/components/ui/separator';
 import ExtensionDialog from './extension-dialog';
-import { useSession } from 'next-auth/react';
 import { getAllExtensions, getConnectedExtensions } from '@/services/extension-service';
 import { IConnectedApp } from '@/types/extension';
 
@@ -28,6 +27,7 @@ export default function ExtensionList() {
 
   const [allExtensions, setAllExtensions] = useState<ExtensionResponse>();
   const [connectedExtensions, setConnectedExtensions] = useState<IConnectedApp[]>([]);
+  const [filteredExtensions, setFilteredExtensions] = useState<Extension[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [extensionType, setExtensionType] = useState<
@@ -60,13 +60,38 @@ export default function ExtensionList() {
     const fetchExtensionData = async () => {
       setIsLoading(true);
       try {
-        const [allExtensions, connectedExtensions] = await Promise.all([
+        const [allExtensionsData, connectedExtensionsData] = await Promise.all([
           getAllExtensions({ user: sessionData?.user as any, extension: { name: '' }, payload: {} }),
           getConnectedExtensions({ user: sessionData?.user as any, extension: { name: '' }, payload: {} }),
         ]);
 
-        setAllExtensions(allExtensions);
-        setConnectedExtensions(connectedExtensions.connectedApps);
+        setAllExtensions(allExtensionsData);
+        setConnectedExtensions(connectedExtensionsData.connectedApps);
+
+        const getExtensions = extensions.filter(
+          (ext) => ext.key && allExtensionsData?.extensions.includes(ext.key)
+        );
+        const updatedExtensions = getExtensions.map((extension) => ({
+          ...extension,
+          connected: connectedExtensionsData.connectedApps?.some((ext) => ext.appName === extension.key) || false,
+        }));
+
+        const newFilteredExtensions = updatedExtensions
+          .sort((a, b) =>
+            sort === 'ascending' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+          )
+          .filter((extension) =>
+            extensionType === 'connected'
+              ? extension.connected
+              : extensionType === 'notConnected'
+                ? !extension.connected
+                : true
+          )
+          .filter((extension) =>
+            extension.name.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+
+        setFilteredExtensions(newFilteredExtensions);
       } catch (error) {
         console.error('Error fetching extension data: ', error);
       } finally {
@@ -75,22 +100,9 @@ export default function ExtensionList() {
     }
 
     fetchExtensionData();
-  }, []);
+  }, [extensionType, searchTerm, sort]);
 
-  const filteredExtensions = extensions
-    .sort((a, b) =>
-      sort === 'ascending' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-    )
-    .filter((extension) =>
-      extensionType === 'connected'
-        ? extension.connected
-        : extensionType === 'notConnected'
-          ? !extension.connected
-          : true
-    )
-    .filter((extension) =>
-      extension.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
 
   return (
     <>
