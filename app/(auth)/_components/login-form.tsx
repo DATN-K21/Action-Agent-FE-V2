@@ -220,7 +220,7 @@ export function LoginForm() {
 
                 {/* Submit Button */}
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
                   Login
                 </Button>
               </form>
