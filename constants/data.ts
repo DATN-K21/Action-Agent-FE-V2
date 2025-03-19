@@ -204,11 +204,15 @@ export const navItems: NavItem[] = [
   
 ];
 
+export interface ExtensionResponse {
+  extensions: string[];
+}
 export interface Extension {
   name: string;
   logo: any;
   connected: boolean;
   desc: string;
+  key?: string;
 }
 
 export const appText = new Map<string, string>([

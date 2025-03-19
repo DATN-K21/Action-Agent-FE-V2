@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -15,17 +15,67 @@ import {
   IconSortDescendingLetters,
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
-import { extensions } from '@/constants/data';
+import { extensions, Extension, ExtensionResponse, User, Role } from '@/constants/data';
 import { Separator } from '@/components/ui/separator';
 import ExtensionDialog from './extension-dialog';
+import { useSession } from 'next-auth/react';
+import { getAllExtensions, getConnectedExtensions } from '@/services/extension-service';
+import { IConnectedApp } from '@/types/extension';
+
 
 export default function ExtensionList() {
   const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
+
+  const [allExtensions, setAllExtensions] = useState<ExtensionResponse>();
+  const [connectedExtensions, setConnectedExtensions] = useState<IConnectedApp[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const [extensionType, setExtensionType] = useState<
     'all' | 'connected' | 'notConnected'
   >('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isOpenDialog, setIsOpenDialog] = useState(false);
+  const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
+
+  // const { data: sessionData } = useSession();
+
+
+  useEffect(() => {
+    // Mock session data
+    const sessionData = {
+      user: {
+        id: '07ccb145-768f-424b-938e-bcc9b766014f',
+        email: '',
+        username: 'user',
+        image: '',
+        role: Role.USER,
+        accessToken: '',
+        expiresAt: 0,
+        refreshToken: '',
+      }
+    };
+
+    if (!sessionData?.user === undefined || !sessionData?.user?.id) {
+      return;
+    }
+    const fetchExtensionData = async () => {
+      setIsLoading(true);
+      try {
+        const [allExtensions, connectedExtensions] = await Promise.all([
+          getAllExtensions({ user: sessionData?.user as any, extension: { name: '' }, payload: {} }),
+          getConnectedExtensions({ user: sessionData?.user as any, extension: { name: '' }, payload: {} }),
+        ]);
+
+        setAllExtensions(allExtensions);
+        setConnectedExtensions(connectedExtensions.connectedApps);
+      } catch (error) {
+        console.error('Error fetching extension data: ', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchExtensionData();
+  }, []);
 
   const filteredExtensions = extensions
     .sort((a, b) =>
@@ -35,8 +85,8 @@ export default function ExtensionList() {
       extensionType === 'connected'
         ? extension.connected
         : extensionType === 'notConnected'
-        ? !extension.connected
-        : true
+          ? !extension.connected
+          : true
     )
     .filter((extension) =>
       extension.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -73,8 +123,8 @@ export default function ExtensionList() {
                   {extensionType === 'all'
                     ? 'All Extensions'
                     : extensionType === 'connected'
-                    ? 'Connected Apps'
-                    : 'Not Connected Apps'}
+                      ? 'Connected Apps'
+                      : 'Not Connected Apps'}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -130,11 +180,10 @@ export default function ExtensionList() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`${
-                    extension.connected
-                      ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
-                      : ''
-                  }`}
+                  className={`${extension.connected
+                    ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
+                    : ''
+                    }`}
                 >
                   {extension.connected ? 'Connected' : 'Connect'}
                 </Button>

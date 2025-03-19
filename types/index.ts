@@ -52,3 +52,14 @@ export interface LoginReponse {
   accessToken: string;
   refreshToken: string;
 }
+
+
+export interface ConnectedApp {
+  id: string;
+  user_id: string;
+  app_name: string;
+  connected_account_id: string;
+  auth_scheme: string;
+  auth_value: string | null;
+  created_at: string;
+}
