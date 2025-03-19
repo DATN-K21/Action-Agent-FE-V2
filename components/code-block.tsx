@@ -16,8 +16,13 @@ export function CodeBlock({
 
   if (match) {
     return (
-      <div className="text-sm w-full overflow-y-auto dark:bg-zinc-900 p-4 border border-zinc-3 bg-zinc-50 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900">
-        <code className="whitespace-pre-wrap break-words">{children}</code>
+      <div className="not-prose flex flex-col">
+        <pre
+          {...props}
+          className={`text-sm w-full overflow-x-auto dark:bg-zinc-900 p-4 bg-zinc-100 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900`}
+        >
+          <code className="whitespace-pre-wrap break-all">{children}</code>
+        </pre>
       </div>
     );
   } else {

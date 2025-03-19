@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -33,7 +33,7 @@ interface ExtensionDialogProps {
 }
 
 const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ isOpen, onClose }) => {
-  const [isConnecting, setIsConnecting] = React.useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
   const handleClickConnect = () => {
@@ -70,7 +70,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ isOpen, onClose }) =>
                     key={index}
                     className="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
                   >
-                    <span className="flex h-2 w-2 translate-y-1 rounded-full bg-sky-500" />
+                    <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
                     <div className="space-y-1">
                       <p className="text-sm font-medium leading-none">{feature.title}</p>
                       <p className="text-sm text-muted-foreground">
@@ -86,7 +86,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ isOpen, onClose }) =>
 
         <DialogFooter>
           <Button type="button" onClick={handleClickConnect} disabled={isConnecting}>
-            {isConnecting && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+            {isConnecting && <Icons.spinner className="mr-2 size-4 animate-spin" />}
             Connect
           </Button>
         </DialogFooter>

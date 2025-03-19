@@ -1,26 +1,29 @@
+import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
 import { Role } from '@/constants/data';
 import { generateUUID } from '@/lib/utils';
 import { User } from 'next-auth';
+import { notFound } from 'next/navigation';
 
 export default async function Page() {
-  const id = generateUUID();
+  const session = await auth();
+
+  if (!session || !session.user) {
+    return notFound();
+  }
 
   const user: User = {
-    id: '07ccb145-768f-424b-938e-bcc9b766014f',
-    email: '',
-    username: 'user',
-    image: '',
-    role: Role.USER,
-    accessToken: '',
-    expiresAt: 0,
-    refreshToken: '',
+    ...session.user,
+    accessToken: session.accessToken,
+    role: session.user.role,
+    refreshToken: session.refreshToken,
+    expiresAt: session.expiresAt,
   };
 
   return (
     <Chat
-      key={id}
-      id={id}
+      key={generateUUID()}
+      id={generateUUID()}
       user={user}
       initialMessages={[]}
     />

@@ -99,7 +99,7 @@ export function SignUpForm() {
 
   return (
     <>
-      <Card className="mx-auto max-w-sm bg-transparent border-none">
+      <Card className="mx-auto max-w-sm bg-white border border-gray-200 shadow-lg rounded-lg">
         <CardHeader>
           <CardTitle className="text-4xl">Create account</CardTitle>
           <CardDescription className="text-gray-600">
@@ -248,7 +248,7 @@ export function SignUpForm() {
 
               {/* Submit Button */}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
                 Create your account
               </Button>
             </form>
