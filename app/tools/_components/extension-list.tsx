@@ -109,7 +109,7 @@ export default function ExtensionList() {
       <div className="flex flex-col h-screen w-full px-4">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Extension Integrations</h1>
+          <h1 className="text-2xl font-bold tracking-tight mt-2">Extension Integrations</h1>
           <p className="text-muted-foreground">
             Here&apos;s a list of your extensions for the integration!
           </p>
