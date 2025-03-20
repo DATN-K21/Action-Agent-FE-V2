@@ -15,6 +15,10 @@ import {
   IconBrandTrello,
   IconBrandWhatsapp,
   IconBrandZoom,
+  IconBrandYoutube,
+  IconBrandGoogleMaps,
+  IconCalendarEvent,
+  IconVideoPlus,
 } from '@tabler/icons-react';
 
 export type User = {
@@ -204,11 +208,15 @@ export const navItems: NavItem[] = [
   
 ];
 
+export interface ExtensionResponse {
+  extensions: string[];
+}
 export interface Extension {
   name: string;
   logo: any;
   connected: boolean;
   desc: string;
+  key?: string;
 }
 
 export const appText = new Map<string, string>([
@@ -220,94 +228,137 @@ export const appText = new Map<string, string>([
 export const extensions: Extension[] = [
   {
     name: 'Telegram',
+    key: 'telegram',
     logo: IconBrandTelegram,
     connected: false,
     desc: 'Connect with Telegram for real-time communication.',
   },
   {
     name: 'Notion',
+    key: 'notion',
     logo: IconBrandNotion,
     connected: true,
     desc: 'Effortlessly sync Notion pages for seamless collaboration.',
   },
   {
     name: 'Figma',
+    key: 'figma',
     logo: IconBrandFigma,
     connected: true,
     desc: 'View and collaborate on Figma designs in one place.',
   },
   {
     name: 'Trello',
+    key: 'trello',
     logo: IconBrandTrello,
     connected: false,
     desc: 'Sync Trello cards for streamlined project management.',
   },
   {
     name: 'Slack',
+    key: 'slack',
     logo: IconBrandSlack,
     connected: false,
     desc: 'Integrate Slack for efficient team communication',
   },
   {
     name: 'Zoom',
+    key: 'zoom',
     logo: IconBrandZoom,
     connected: true,
     desc: 'Host Zoom meetings directly from the dashboard.',
   },
   {
     name: 'Stripe',
+    key: 'stripe',
     logo: IconBrandStripe,
     connected: false,
     desc: 'Easily manage Stripe transactions and payments.',
   },
   {
     name: 'Gmail',
+    key: 'gmail',
     logo: IconBrandGmail,
     connected: true,
     desc: 'Access and manage Gmail messages effortlessly.',
   },
   {
     name: 'Medium',
+    key: 'medium',
     logo: IconBrandMedium,
     connected: false,
     desc: 'Explore and share Medium stories on your dashboard.',
   },
   {
     name: 'Skype',
+    key: 'skype',
     logo: IconBrandSkype,
     connected: false,
     desc: 'Connect with Skype contacts seamlessly.',
   },
   {
     name: 'Docker',
+    key: 'docker',
     logo: IconBrandDocker,
     connected: false,
     desc: 'Effortlessly manage Docker containers on your dashboard.',
   },
   {
     name: 'GitHub',
+    key: 'github',
     logo: IconBrandGithub,
     connected: false,
     desc: 'Streamline code management with GitHub integration.',
   },
   {
     name: 'GitLab',
+    key: 'gitlab',
     logo: IconBrandGitlab,
     connected: false,
     desc: 'Efficiently manage code projects with GitLab integration.',
   },
   {
     name: 'Discord',
+    key: 'discord',
     logo: IconBrandDiscord,
     connected: false,
     desc: 'Connect with Discord for seamless team communication.',
   },
   {
     name: 'WhatsApp',
+    key: 'whatsapp',
     logo: IconBrandWhatsapp,
     connected: false,
     desc: 'Easily integrate WhatsApp for direct messaging.',
   },
+  {
+    name: 'YouTube',
+    key: 'youtube',
+    logo: IconBrandYoutube,
+    connected: false,
+    desc: 'View and manage YouTube videos directly from the dashboard.',
+  },
+  {
+    name: 'Google Maps',
+    key: 'googlemaps',
+    logo: IconBrandGoogleMaps,
+    connected: false,
+    desc: 'Access Google Maps for location-based services.',
+  },
+  {
+    name: 'Google Calendar',
+    key: 'googlecalendar',
+    logo: IconCalendarEvent,
+    connected: false,
+    desc: 'Sync and manage calendar events with ease.',
+  },
+  {
+    name: 'Google Meet',
+    key: 'googlemeet',
+    logo: IconVideoPlus,
+    connected: false,
+    desc: 'Host Google Meet meetings directly from the dashboard.',
+  }
 ];
 
 export const INVALID_LOGIN_ERROR_MESSAGE = 'Email or password is invalid';
