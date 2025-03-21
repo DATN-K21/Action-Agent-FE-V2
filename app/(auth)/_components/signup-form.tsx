@@ -124,6 +124,7 @@ export function SignUpForm() {
                         placeholder="m@example.com"
                         required
                         {...field}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -146,6 +147,7 @@ export function SignUpForm() {
                         placeholder="johndoe"
                         required
                         {...field}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -169,6 +171,7 @@ export function SignUpForm() {
                           placeholder="John"
                           required
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -190,6 +193,7 @@ export function SignUpForm() {
                           placeholder="Doe"
                           required
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -215,6 +219,7 @@ export function SignUpForm() {
                         placeholder="********"
                         required
                         {...field}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
@@ -239,6 +244,7 @@ export function SignUpForm() {
                         placeholder="********"
                         required
                         {...field}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
