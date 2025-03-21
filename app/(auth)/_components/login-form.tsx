@@ -32,6 +32,7 @@ import GoogleButton from './google-button';
 import SendOTPDialog from './forgot-password/send-otp-dialog';
 import ConfirmOTPDialog from './forgot-password/confirm-otp-dialog';
 import ResetPasswordDialog from './forgot-password/reset-password-dialog';
+import { SendLink } from '@/services/auth-service';
 
 export function LoginForm() {
   const router = useRouter();
@@ -75,49 +76,20 @@ export function LoginForm() {
       // Email or password is invalid
       toast({
         type: 'error',
-        description: 'Invalid credentials!',
-      });
-
-      // toast({
-      //   // variant: 'destructive',
-      //   // title: 'Oops! Something went wrong.',
-      //   description: result.code,
-      // });
-
-      form.setError('email', {
-        type: 'manual',
-        message: result.code,
-      });
-
-      form.setError('password', {
-        type: 'manual',
-        message: result.code,
+        description: INVALID_LOGIN_ERROR_MESSAGE,
       });
     } else if (result?.code === ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE) {
       // Account not verified
-      // toast({
-      //   // variant: 'destructive',
-      //   // title: 'Oops! Something went wrong.',
-      //   description: `${result.code}, please check your email for verification.`,
-      // });
-
       toast({
         type: 'error',
         description: `${result.code}, please check your email for verification.`,
       });
 
-      //await wretch('/api/access/verify/send-link').post({ email: data.email }).json();
+      await SendLink(data.email);
 
       // Reset the form
       form.reset();
     } else if (!result?.error) {
-      // Login successful
-      // toast({
-      //   // variant: 'success',
-      //   // title: 'Success!',
-      //   description: 'You have successfully logged in.',
-      // });
-
       toast({
         type: 'success',
         description: 'You have successfully logged in.',
@@ -173,13 +145,15 @@ export function LoginForm() {
                       <FormLabel htmlFor="email">Email</FormLabel>
                       <FormControl>
                         <Input
-                          className={`border-[#a996f6] ${form.formState.errors.email ? 'border-red-500' : ''
-                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
+                          className={`border-[#a996f6] ${
+                            form.formState.errors.email ? 'border-red-500' : ''
+                          } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
                           id="email"
                           type="email"
                           placeholder="m@example.com"
                           required
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -204,13 +178,15 @@ export function LoginForm() {
                       </div>
                       <FormControl>
                         <Input
-                          className={`border-[#a996f6] ${form.formState.errors.password ? 'border-red-500' : ''
-                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
+                          className={`border-[#a996f6] ${
+                            form.formState.errors.password ? 'border-red-500' : ''
+                          } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
                           id="password"
                           type="password"
                           placeholder="********"
                           required
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />

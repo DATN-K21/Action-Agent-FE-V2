@@ -26,7 +26,35 @@ export interface IResetPasswordParams {
   };
 }
 
-export const Login = async (params: ILoginParams): Promise<ILoginReponse> => {
+export interface IRefreshTokenParams {
+  refreshToken: string;
+  accessToken: string;
+  userId: string;
+}
+
+export const RefreshToken = async (params: IRefreshTokenParams): Promise<any> => {
+  try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${params.accessToken}`,
+      'x-client-id': params.userId,
+    };
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/invoke-new-tokens`,
+      method: 'POST',
+      body: {
+        refreshToken: params.refreshToken,
+      },
+      headers: headers,
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Error sending message: ', error);
+    throw error;
+  }
+};
+
+export const Login = async (params: ILoginParams): Promise<any> => {
   try {
     const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/login`,
@@ -37,7 +65,7 @@ export const Login = async (params: ILoginParams): Promise<ILoginReponse> => {
       },
     });
 
-    return response.data as ILoginReponse;
+    return response;
   } catch (error) {
     console.error('Error sending message: ', error);
     throw error;
@@ -131,6 +159,23 @@ export const ResetPassword = async (params: IResetPasswordParams): Promise<any> 
         confirmNewPassword: params.confirmNewPassword,
       },
       headers: headers,
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Error sending message: ', error);
+    throw error;
+  }
+};
+
+export const LoginWithGoogle = async (id_token: string): Promise<any> => {
+  try {
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/google/auth`,
+      method: 'POST',
+      body: {
+        id_token,
+      },
     });
 
     return response;
