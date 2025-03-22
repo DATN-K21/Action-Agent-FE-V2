@@ -16,13 +16,13 @@ import {
 } from 'react';
 import { useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { ArrowUpIcon, PaperclipIcon, StopIcon, GlobeIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
-import { ChatStatus, MessageRole } from '@/constants/ai-constant';
+import { AgentName, ChatStatus, MessageRole } from '@/constants/ai-constant';
 import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
 import { toast } from '@/components/toast';
@@ -38,7 +38,7 @@ interface MultimodalInputProps {
 
 function PureMultimodalInput(props: MultimodalInputProps) {
   const { chatId, user, status, attachments, setAttachments, className, } = props;
-  const { messages, input, setInput, append, stop, createThread, handleStreamChat } = useChatStore();
+  const { agent, messages, input, setAgent, setInput, append, stop, createThread, handleStreamChat } = useChatStore();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -209,6 +209,22 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+        <Button
+          data-testid="search-agent-button"
+          className={cx(
+            'rounded-md p-[7px] h-fit dark:border-zinc-700',
+            agent === AgentName.SEARCH
+              ? 'bg-zinc-600 text-white hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-700'
+              : 'hover:bg-zinc-300 dark:hover:bg-zinc-900'
+          )}
+          onClick={(e) => {
+            e.preventDefault();
+            setAgent(agent === AgentName.SEARCH ? AgentName.CHAT : AgentName.SEARCH);
+          }}
+          variant="ghost"
+        >
+          <GlobeIcon size={14} />
+        </Button>
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">

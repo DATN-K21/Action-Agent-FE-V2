@@ -28,31 +28,30 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   };
 
 
-  const reponse: IThreadHistoryResponse = await getThreadHistory({
-    user,
-    payload: {
-      threadId: id,
-    }
-  });
+  try {
+    const reponse: IThreadHistoryResponse = await getThreadHistory({
+      user,
+      payload: {
+        threadId: id,
+      }
+    });
+    const initialMessages: IMessage[] = reponse.messages?.map(message => {
+      return {
+        id: generateUUID(),
+        content: message.content,
+        role: message.role,
+      }
+    });
 
+    return (
+      <Chat
+        id={id}
+        user={user}
+        initialMessages={initialMessages}
+      />
+    );
 
-  if (!reponse) {
+  } catch (error) {
     notFound();
   }
-
-  const initialMessages: IMessage[] = reponse.messages?.map(message => {
-    return {
-      id: generateUUID(),
-      content: message.content,
-      role: message.role,
-    }
-  });
-
-  return (
-    <Chat
-      id={id}
-      user={user}
-      initialMessages={initialMessages}
-    />
-  );
 }

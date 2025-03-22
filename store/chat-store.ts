@@ -9,10 +9,12 @@ import { useThreadStore } from '@/store/thread-store';
 
 
 interface ChatState {
+    agent: AgentName;
     messages: IMessage[];
     input: string;
     status: ChatStatus;
     threadId: string;
+    setAgent: (agent: AgentName) => void;
     setMessages: (messages: IMessage[]) => void;
     setInput: (text: string) => void;
     setThreadId: (threadId: string) => void;
@@ -24,11 +26,13 @@ interface ChatState {
 }
 
 const useChatStore = create<ChatState>((set, get) => ({
+    agent: AgentName.CHAT,
     messages: [],
     input: "",
     status: ChatStatus.READY,
     threadId: "",
 
+    setAgent: (agent) => set({ agent: agent }),
     setMessages: (messages) => set({ messages }),
     setInput: (text) => set({ input: text }),
     setThreadId: (threadId) => set({ threadId }),
@@ -54,7 +58,7 @@ const useChatStore = create<ChatState>((set, get) => ({
 
     // Handle send message SSE
     handleStreamChat: async (user: User) => {
-        const { input, threadId, append, setInput } = get();
+        const { agent, input, threadId, append, setInput } = get();
 
         if (!input.trim()) return;
 
@@ -74,7 +78,7 @@ const useChatStore = create<ChatState>((set, get) => ({
             const params: ChatParams = {
                 user,
                 threadId,
-                agentName: AgentName.CHAT,
+                agentName: agent,
                 payload: { input: input, recursionLimit: 5 },
             };
 
@@ -119,19 +123,23 @@ const useChatStore = create<ChatState>((set, get) => ({
 
                             if (data?.length > 0) {
                                 const messageData = data[0].content;
-                                set((state) => {
-                                    const updatedMessages = [...state.messages];
-                                    const lastIndex = updatedMessages.length - 1;
 
-                                    if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
-                                        updatedMessages[lastIndex] = {
-                                            ...updatedMessages[lastIndex],
-                                            content: messageData,
-                                        };
-                                    }
+                                if (messageData) {
+                                    set((state) => {
+                                        const updatedMessages = [...state.messages];
+                                        const lastIndex = updatedMessages.length - 1;
 
-                                    return { messages: updatedMessages };
-                                });
+                                        if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
+                                            updatedMessages[lastIndex] = {
+                                                ...updatedMessages[lastIndex],
+                                                content: messageData,
+                                            };
+                                        }
+
+                                        return { messages: updatedMessages };
+                                    });
+                                }
+
                             }
                         } catch (error) {
                             console.error('Error parsing SSE data:', error);
