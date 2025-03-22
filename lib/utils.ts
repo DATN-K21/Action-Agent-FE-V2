@@ -73,14 +73,15 @@ export const sendRequest = async <T>(props: IRequest) => {
       return res.json() as T;
     } else {
       return res.json().then(function (json) {
-        // to be able to access error status when you catch the error 
-        return {
-          status: res.status,
-          message: json?.message ?? "",
-          code: json?.code ?? 0,
-          data: json?.data ?? null,
-          errorStack: json?.error ?? ""
-        } as T;
+        throw new Error(
+          JSON.stringify({
+            status: res.status,
+            message: json?.message ?? "Unknown error",
+            code: json?.code ?? 0,
+            data: json?.data ?? null,
+            errorStack: json?.error ?? ""
+          })
+        );
       });
     }
   });
