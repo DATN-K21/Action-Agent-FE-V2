@@ -14,7 +14,6 @@ import {
   type ChangeEvent,
   memo,
 } from 'react';
-import { toast } from 'sonner';
 import { useWindowSize } from 'usehooks-ts';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
@@ -23,9 +22,10 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
-import { ChatStatus } from '@/constants/ai-constant';
+import { ChatStatus, MessageRole } from '@/constants/ai-constant';
 import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
+import { toast } from '@/components/toast';
 
 interface MultimodalInputProps {
   chatId: string;
@@ -66,19 +66,34 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(async () => {
-    // Check if is a home page, create a new thread
-    if (window.location.pathname === '/') {
-      await createThread(user, chatId);
-      window.history.replaceState({}, '', `/chat/${chatId}`);
-    }
+    try {
+      // Check if is a home page, create a new thread
+      if (window.location.pathname === '/') {
+        await createThread(user, chatId);
+        window.history.replaceState({}, '', `/chat/${chatId}`);
+      }
 
-    handleStreamChat(user);
+      await handleStreamChat(user);
 
-    setAttachments([]);
-    resetHeight();
+      setAttachments([]);
+      resetHeight();
 
-    if (width && width > 768) {
-      textareaRef.current?.focus();
+      if (width && width > 768) {
+        textareaRef.current?.focus();
+      }
+    } catch (error) {
+      setInput('');
+      toast({
+        type: 'error',
+        description: 'Error sending message, please try again!',
+      })
+      // Apend error message to chat
+      append({
+        id: 'error',
+        role: MessageRole.AI,
+        content: 'Error sending message, please try again!',
+      });
+
     }
   }, [
     attachments,
@@ -89,30 +104,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   ]);
 
   const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
 
-    try {
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
-
-        return {
-          url,
-          name: pathname,
-          contentType: contentType,
-        };
-      }
-      const { error } = await response.json();
-      toast.error(error);
-    } catch (error) {
-      toast.error('Failed to upload file, please try again!');
-    }
   };
 
   const handleFileChange = useCallback(
@@ -203,8 +195,11 @@ function PureMultimodalInput(props: MultimodalInputProps) {
           ) {
             event.preventDefault();
 
-            if (status !== ChatStatus.READY) {
-              toast.error('Please wait for the model to finish its response!');
+            if (status === ChatStatus.STREAMING) {
+              toast({
+                type: 'infor',
+                description: 'Please wait for the current response to finish before sending another message.',
+              });
             } else {
               submitForm();
             }

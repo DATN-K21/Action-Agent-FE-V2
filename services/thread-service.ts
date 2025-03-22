@@ -27,6 +27,13 @@ export interface GetThreadHistoryParams {
     };
 }
 
+export interface DeleteThreadParams {
+    user: User;
+    payload: {
+        threadId: string;
+    };
+}
+
 export const createThread = async (params: CreateThreadParams): Promise<ICreateThreadResponse> => {
     try {
         if (!params.user.id) throw new Error("Missing 'userId'");
@@ -47,7 +54,7 @@ export const createThread = async (params: CreateThreadParams): Promise<ICreateT
 
         return response.data as ICreateThreadResponse;
     } catch (error) {
-        console.error("Error sending message: ", error);
+        console.error("Error create thread: ", error);
         throw error;
     }
 }
@@ -70,7 +77,7 @@ export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResp
 
         return response.data as IThreadsResponse;
     } catch (error) {
-        console.error("Error sending message: ", error);
+        console.error("Error get threads: ", error);
         throw error;
     }
 }
@@ -93,7 +100,53 @@ export const getThreadHistory = async (params: GetThreadHistoryParams): Promise<
 
         return response.data as IThreadHistoryResponse;
     } catch (error) {
-        console.error("Error sending message: ", error);
+        console.error("Error get history thread: ", error);
+        throw error;
+    }
+}
+
+export const updateThread = async (params: CreateThreadParams): Promise<ICreateThreadResponse> => {
+    try {
+        if (!params.user.id) throw new Error("Missing 'userId'");
+        if (!params.payload.id) throw new Error("Missing 'threadId'");
+        if (!params.payload.title) throw new Error("Missing 'title'");
+
+        const headers: IHeader = {
+            "x-user-id": params.user.id,
+            "x-user-role": params.user.role,
+        };
+
+        const response: IResponse<ICreateThreadResponse> = await sendRequest({
+            url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.payload.id}/update`,
+            method: HttpMethod.PATCH,
+            body: params.payload,
+            headers: headers
+        });
+
+        return response.data as ICreateThreadResponse;
+    } catch (error) {
+        console.error("Error update thread: ", error);
+        throw error;
+    }
+}
+
+export const deleteThread = async (params: DeleteThreadParams): Promise<void> => {
+    try {
+        if (!params.user.id) throw new Error("Missing 'userId'");
+        if (!params.payload.threadId) throw new Error("Missing 'threadId'");
+
+        const headers: IHeader = {
+            "x-user-id": params.user.id,
+            "x-user-role": params.user.role,
+        };
+
+        await sendRequest({
+            url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.payload.threadId}/delete`,
+            method: HttpMethod.DELETE,
+            headers: headers
+        });
+    } catch (error) {
+        console.error("Error delete thread: ", error);
         throw error;
     }
 }

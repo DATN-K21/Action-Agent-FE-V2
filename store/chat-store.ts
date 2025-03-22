@@ -5,6 +5,7 @@ import { ICreateThreadResponse, IMessage } from "@/types/ai";
 import { User } from "next-auth";
 import { ChatParams, sendMessage } from "@/services/chat-service";
 import { createThread } from "@/services/thread-service";
+import { useThreadStore } from '@/store/thread-store';
 
 
 interface ChatState {
@@ -37,8 +38,10 @@ const useChatStore = create<ChatState>((set, get) => ({
         try {
             const response: ICreateThreadResponse = await createThread({ user: user, payload: { id: threadId, title: "New Chat" } });
             set({ threadId: response.id });
+
+            const addThread = useThreadStore.getState().addThread;
+            addThread(response);
         } catch (error) {
-            console.error("Error creating thread: ", error);
             throw error;
         }
     },
@@ -140,8 +143,8 @@ const useChatStore = create<ChatState>((set, get) => ({
             // Set status to "ready" after AI response completes
             set({ status: ChatStatus.READY });
         } catch (error) {
-            console.log("An error occurred, please try again!");
-            set({ status: ChatStatus.ERROR }); // Update chat status to "error"
+            set({ status: ChatStatus.ERROR });
+            throw error;
         }
     },
 
@@ -154,7 +157,6 @@ const useChatStore = create<ChatState>((set, get) => ({
     // Reload chat
     reload: () => {
         set({ messages: [], status: ChatStatus.READY, threadId: "" });
-        console.log("Chat reloaded");
     },
 }));
 

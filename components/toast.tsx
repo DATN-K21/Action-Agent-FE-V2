@@ -3,8 +3,10 @@
 import React, { ReactNode } from 'react';
 import { toast as sonnerToast } from 'sonner';
 import { CheckCircleFillIcon, WarningIcon } from './icons';
+import { InfoIcon } from 'lucide-react';
 
-const iconsByType: Record<'success' | 'error', ReactNode> = {
+const iconsByType: Record<'infor' | 'success' | 'error', ReactNode> = {
+  infor: <InfoIcon />,
   success: <CheckCircleFillIcon />,
   error: <WarningIcon />,
 };
@@ -27,7 +29,7 @@ function Toast(props: ToastProps) {
       >
         <div
           data-type={type}
-          className="data-[type=error]:text-red-600 data-[type=success]:text-green-600"
+          className="data-[type=info]:text-zinc-900 data-[type=error]:text-red-600 data-[type=success]:text-green-600"
         >
           {iconsByType[type]}
         </div>
@@ -39,7 +41,7 @@ function Toast(props: ToastProps) {
 
 interface ToastProps {
   id: string | number;
-  type: 'success' | 'error';
+  type: 'infor' | 'success' | 'error';
   description: string;
   duration?: number;
 }
