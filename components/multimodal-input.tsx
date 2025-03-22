@@ -26,6 +26,9 @@ import { AgentName, ChatStatus, MessageRole } from '@/constants/ai-constant';
 import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
 import { toast } from '@/components/toast';
+import { Brain } from 'lucide-react';
+import { Tooltip,TooltipTrigger,TooltipContent } from './ui/tooltip';
+import { handleUploadFile } from '@/services/thread-service';
 
 interface MultimodalInputProps {
   chatId: string;
@@ -104,8 +107,48 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   ]);
 
   const uploadFile = async (file: File) => {
+    try{
+      const response = await handleUploadFile({
+        user,
+        threadId: chatId,
+        payload: { file },
+      });
+  
+      if (response.isSuccess) {
+        return {
+          url: response.output,
+          name: file.name,
+          contentType: file.type,
+        };
+      }
+      else {
+        toast({
+          type: 'error',
+          description: 'Error uploading file, please try again!',
+        });
+        // Apend error message to chat
+        append({
+          id: 'upload-file-error',
+          role: MessageRole.AI,
+          content: 'Error uploading file, please try again!',
+        });
+        return undefined;
+      }
+    }
+    catch (error) {
+      toast({
+        type: 'error',
+        description: 'Error uploading file, please try again!',
+      });
+      // Apend error message to chat
+      append({
+        id: 'error',
+        role: MessageRole.AI,
+        content: 'Error uploading file, please try again!',
+      });
+    }
 
-  };
+};
 
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
@@ -150,6 +193,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         multiple
         onChange={handleFileChange}
         tabIndex={-1}
+        accept=".txt, .pdf"
       />
 
       {(attachments.length > 0 || uploadQueue.length > 0) && (
@@ -208,23 +252,50 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       />
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-        <Button
-          data-testid="search-agent-button"
-          className={cx(
-            'rounded-md p-[7px] h-fit dark:border-zinc-700',
-            agent === AgentName.SEARCH
-              ? 'bg-zinc-600 text-white hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-700'
-              : 'hover:bg-zinc-300 dark:hover:bg-zinc-900'
-          )}
-          onClick={(e) => {
-            e.preventDefault();
-            setAgent(agent === AgentName.SEARCH ? AgentName.CHAT : AgentName.SEARCH);
-          }}
-          variant="ghost"
-        >
-          <GlobeIcon size={14} />
-        </Button>
+        <AttachmentsButton fileInputRef={fileInputRef} status={status}/>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              data-testid="search-agent-button"
+              className={cx(
+                'rounded-md p-[7px] h-fit dark:border-zinc-700',
+                agent === AgentName.SEARCH
+                  ? 'bg-zinc-600 text-white hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-700'
+                  : 'hover:bg-zinc-300 dark:hover:bg-zinc-900'
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                setAgent(agent === AgentName.SEARCH ? AgentName.CHAT : AgentName.SEARCH);
+              }}
+              variant="ghost"
+            >
+              <GlobeIcon size={14} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Search the web</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              data-testid="rag-agent-button"
+              className={cx(
+                'rounded-md p-[7px] h-fit dark:border-zinc-700',
+                agent === AgentName.RAG
+                  ? 'bg-zinc-600 text-white hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-700'
+                  : 'hover:bg-zinc-300 dark:hover:bg-zinc-900'
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                setAgent(agent === AgentName.RAG ? AgentName.CHAT : AgentName.RAG);
+              }}
+              variant="ghost"
+            >
+              <Brain size={16} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Real-time retrival</TooltipContent>
+        </Tooltip>
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
@@ -260,6 +331,8 @@ function PureAttachmentsButton({
   status: ChatStatus;
 }) {
   return (
+    <Tooltip>
+    <TooltipTrigger asChild>
     <Button
       data-testid="attachments-button"
       className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
@@ -272,6 +345,10 @@ function PureAttachmentsButton({
     >
       <PaperclipIcon size={14} />
     </Button>
+    </TooltipTrigger>
+    <TooltipContent>Attach a file</TooltipContent>
+  </Tooltip>
+ 
   );
 }
 
