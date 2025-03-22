@@ -153,7 +153,7 @@ export function SidebarHistory({ user }: { user: User }) {
 
   useEffect(() => {
     fetchThreads(user);
-  }, []);
+  }, [user, fetchThreads]);
 
   // Handle delete thread
   const handleDelete = async () => {

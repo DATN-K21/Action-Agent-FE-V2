@@ -15,20 +15,28 @@ import {
   IconSortDescendingLetters,
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
-import { extensions, Extension, ExtensionResponse, User, Role } from '@/constants/data';
+import { extensions, Extension, ExtensionResponse, Role } from '@/constants/data';
 import { Separator } from '@/components/ui/separator';
 import ExtensionDialog from './extension-dialog';
-import { getAllExtensions, getConnectedExtensions } from '@/services/extension-service';
+import { ExtensionParams, getAllExtensions, getConnectedExtensions } from '@/services/extension-service';
 import { IConnectedApp } from '@/types/extension';
+import { User } from 'next-auth';
+
+export type ExtensionListProps = {
+  user: User;
+};
 
 
-export default function ExtensionList() {
+export default function ExtensionList(props: ExtensionListProps) {
+  const { user } = props;
+
   const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
 
   const [allExtensions, setAllExtensions] = useState<ExtensionResponse>();
   const [connectedExtensions, setConnectedExtensions] = useState<IConnectedApp[]>([]);
   const [filteredExtensions, setFilteredExtensions] = useState<Extension[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedExtension, setSelectedExtension] = useState<Extension | null>(null);
 
   const [extensionType, setExtensionType] = useState<
     'all' | 'connected' | 'notConnected'
@@ -36,33 +44,21 @@ export default function ExtensionList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
 
-  // const { data: sessionData } = useSession();
-
 
   useEffect(() => {
-    // Mock session data
-    const sessionData = {
-      user: {
-        id: '07ccb145-768f-424b-938e-bcc9b766014f',
-        email: '',
-        username: 'user',
-        image: '',
-        role: Role.USER,
-        accessToken: '',
-        expiresAt: 0,
-        refreshToken: '',
-      }
-    };
-
-    if (!sessionData?.user === undefined || !sessionData?.user?.id) {
+    if (!user) {
+      console.log('User not found');
       return;
     }
+
     const fetchExtensionData = async () => {
       setIsLoading(true);
       try {
+        const extensionParams = { user } as ExtensionParams;
+
         const [allExtensionsData, connectedExtensionsData] = await Promise.all([
-          getAllExtensions({ user: sessionData?.user as any, extension: { name: '' }, payload: {} }),
-          getConnectedExtensions({ user: sessionData?.user as any, extension: { name: '' }, payload: {} }),
+          getAllExtensions(extensionParams),
+          getConnectedExtensions(extensionParams),
         ]);
 
         setAllExtensions(allExtensionsData);
@@ -100,9 +96,7 @@ export default function ExtensionList() {
     }
 
     fetchExtensionData();
-  }, [extensionType, searchTerm, sort]);
-
-
+  }, [user, extensionType, searchTerm, sort]);
 
   return (
     <>
@@ -111,7 +105,7 @@ export default function ExtensionList() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight mt-2">Extension Integrations</h1>
           <p className="text-muted-foreground">
-            Here&apos;s a list of your extensions for the integration!
+            {`Here's a list of your extensions for the integration!`}
           </p>
         </div>
 
@@ -181,7 +175,10 @@ export default function ExtensionList() {
             <li
               key={extension.name}
               className="rounded-lg border p-4 hover:shadow-md"
-              onClick={() => setIsOpenDialog(true)}
+              onClick={() => {
+                setSelectedExtension(extension)
+                setIsOpenDialog(true)
+              }}
             >
               <div className="mb-8 flex items-center justify-between">
                 <div
@@ -210,7 +207,7 @@ export default function ExtensionList() {
       </div>
 
       {/* Extension Dialog */}
-      <ExtensionDialog isOpen={isOpenDialog} onClose={() => setIsOpenDialog(false)} />
+      <ExtensionDialog user={user} extension={selectedExtension!} isOpen={isOpenDialog} onClose={() => setIsOpenDialog(false)} />
     </>
   );
 }

@@ -70,8 +70,7 @@ export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResp
 
         const response: IResponse<IThreadsResponse> = await sendRequest({
             url: `${API_ENDPOINT}/ai/thread/${params.user.id}/get-all`,
-            method: HttpMethod.POST,
-            body: params.payload,
+            method: HttpMethod.GET,
             headers: headers
         });
 
@@ -85,6 +84,10 @@ export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResp
 export const getThreadHistory = async (params: GetThreadHistoryParams): Promise<IThreadHistoryResponse> => {
     try {
         if (!params.user.id) throw new Error("Missing 'userId'");
+        if (!params.payload.threadId) throw new Error("Missing 'threadId'");
+        
+        console.log("User ID: ", params.user.id);
+        console.log("Thread ID: ", params.payload.threadId);
 
         const headers: IHeader = {
             "x-user-id": params.user.id,

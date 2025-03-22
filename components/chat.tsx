@@ -8,15 +8,18 @@ import { Messages } from './messages';
 import useChatStore from '@/store/chat-store';
 import { User } from 'next-auth';
 import { IMessage } from '@/types/ai';
+import { Extension } from '@/constants/data';
+import { MultimodalStreamInput } from './multimodal-stream-input';
 
 interface ChatProps {
   id: string;
   user: User;
   initialMessages: IMessage[];
+  extension?: Extension;
 }
 
 export function Chat(props: ChatProps) {
-  const { id, user, initialMessages } = props;
+  const { id, user, initialMessages, extension } = props;
   const { messages, status, setMessages, setThreadId } = useChatStore();
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
@@ -39,13 +42,22 @@ export function Chat(props: ChatProps) {
         />
 
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-4xl">
-          <MultimodalInput
-            chatId={id}
-            user={user}
-            status={status}
-            attachments={attachments}
-            setAttachments={setAttachments}
-          />
+          {extension
+            ? <MultimodalInput
+              chatId={id}
+              user={user}
+              status={status}
+              attachments={attachments}
+              setAttachments={setAttachments}
+            />
+            : <MultimodalStreamInput
+              user={user}
+              extension={extension!}
+              status={status}
+              attachments={attachments}
+              setAttachments={setAttachments}
+            />
+          }
         </form>
       </div>
     </>

@@ -16,3 +16,12 @@ export interface IConnectedApp {
 export interface IGetConnectedExtensions {
   connectedApps: IConnectedApp[];
 }
+
+export interface IGetExtensionActions {
+  actions: string[];
+}
+
+export interface IActiveExtension {
+  isExisted: boolean;
+  redirectUrl: string;
+}

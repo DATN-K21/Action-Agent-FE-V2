@@ -6,6 +6,9 @@ import { User } from "next-auth";
 import { ChatParams, sendMessage } from "@/services/chat-service";
 import { createThread } from "@/services/thread-service";
 import { useThreadStore } from '@/store/thread-store';
+import { ExtensionSocketService } from "@/services/socketio-service";
+import { IStreamEmitData, IStreamOnData } from "@/types/stream";
+import { Extension } from "@/constants/data";
 
 
 interface ChatState {
@@ -16,9 +19,10 @@ interface ChatState {
     setMessages: (messages: IMessage[]) => void;
     setInput: (text: string) => void;
     setThreadId: (threadId: string) => void;
-    createThread: (user: User, threadId: string) => Promise<void>;
+    createThread: (user: User, threadId: string, title?: string) => Promise<void>;
     append: (message: IMessage) => void;
     handleStreamChat: (user: User) => Promise<void>;
+    handleStreamExtensionChat: (user: User, extension: Extension) => Promise<void>;
     stop: () => void;
     reload: () => void;
 }
@@ -34,9 +38,9 @@ const useChatStore = create<ChatState>((set, get) => ({
     setThreadId: (threadId) => set({ threadId }),
 
     // Create a new chat thread
-    createThread: async (user: User, threadId: string) => {
+    createThread: async (user: User, threadId: string, title: string = "New Chat") => {
         try {
-            const response: ICreateThreadResponse = await createThread({ user: user, payload: { id: threadId, title: "New Chat" } });
+            const response: ICreateThreadResponse = await createThread({ user: user, payload: { id: threadId, title } });
             set({ threadId: response.id });
 
             const addThread = useThreadStore.getState().addThread;
@@ -146,6 +150,75 @@ const useChatStore = create<ChatState>((set, get) => ({
             set({ status: ChatStatus.ERROR });
             throw error;
         }
+    },
+
+    // 
+    handleStreamExtensionChat: async (user: User, extension: Extension) => { 
+        const { input, threadId, append, setInput } = get();
+
+        console.log("Stream user: ")
+        console.log(user);
+        console.log("Stream extension: ")
+        console.log(extension);
+    
+        if (!input.trim()) return;
+    
+        set({ status: ChatStatus.SUBMITTED });
+    
+        // Create a user message and add it to the chat
+        const userMessage: IMessage = {
+            id: generateUUID(),
+            role: MessageRole.HUMAN,
+            content: input,
+        };
+    
+        append(userMessage);
+        setInput("");
+
+        try {
+            const params: IStreamEmitData = {
+                user_id: user.id!,
+                thread_id: threadId,
+                extension_name: extension.key!,
+                input: input,
+            };
+
+            // Emit stream event to the server
+            ExtensionSocketService.emitStream(params);
+            set({ status: ChatStatus.STREAMING });
+
+            let aiMessage: IMessage = {
+                id: generateUUID(),
+                role: MessageRole.AI,
+                content: "",
+            };
+            append(aiMessage); // Show AI message placeholder immediately
+
+            // Listen for stream responses
+            ExtensionSocketService.onStreamResponse((data: IStreamOnData) => {
+                set((state) => {
+                    const updatedMessages = [...state.messages];
+                    const lastIndex = updatedMessages.length - 1;
+
+                    if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
+                        let responseContent = data.output ?? "";
+                        if (data?.interrupt === true) {
+                            responseContent = `Please confirm these information: ${JSON.stringify(data.output)}`;
+                        }
+                        updatedMessages[lastIndex] = {
+                            ...updatedMessages[lastIndex],
+                            content: responseContent,
+                        };
+                    }
+
+                    return { messages: updatedMessages };
+                });
+            });
+        } catch (error) {
+            set({ status: ChatStatus.ERROR });
+            throw error;
+        }
+    
     },
 
 

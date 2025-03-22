@@ -361,6 +361,32 @@ export const extensions: Extension[] = [
   }
 ];
 
+export interface IExtensionAction {
+  extension_key: string;
+  key: string;
+  name: string;
+  description: string;
+}
+
+export const extensionActionList: IExtensionAction[] = [
+  // GMAIL
+  { extension_key: 'gmail', key: 'GMAIL_SEND_EMAIL', name: 'Send Email', description: `Send an email using gmail's api.`},
+  { extension_key: 'gmail', key: 'GMAIL_FETCH_EMAILS', name: 'Fetch Email', description: `Action to fetch all emails from gmail.`},
+  { extension_key: 'gmail', key: 'GMAIL_REPLY_TO_THREAD', name: 'Reply to Thread', description: `Action to reply to an email thread in gmail.` },
+  { extension_key: 'gmail', key: 'GMAIL_SEARCH_PEOPLE', name: 'Search People', description: `Provides a list of contacts in the authenticated user's grouped contacts...` },
+  { extension_key: 'gmail', key: 'GMAIL_GET_CONTACTS', name: 'Get Contact', description: `Action to get info of contacts saved in google for an authorized account...` },
+  { extension_key: 'gmail', key: 'GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID', name: 'Fetch Message By Thread ID', description: `Fetch messages by thread id from gmail with pagination support. to use pagination, you can set the 'pagetoken' in the request to the value of the 'nextpagetoken' in the response of the previous action. the 'nextpagetoken' is returned in the response of this action (i.e 'fetchmessagebythreadid') if there are more results to be fetched. if not provided, the first page of results is returned.` },
+
+  // GOOGLE CAlENDAR
+  { extension_key: 'googlecalendar', key: 'GOOGLECALENDAR_FIND_EVENT', name: 'Find Event', description: `Find events in a google calendar based on a search query.` },
+  { extension_key: 'googlecalendar', key: 'GOOGLECALENDAR_CREATE_EVENT', name: 'Create Event', description: `Create a new event in a google calendar.` },
+  { extension_key: 'googlecalendar', key: 'GOOGLECALENDAR_FIND_FREE_SLOTS', name: 'Find Free Slots', description: `Find free slots in a google calendar based on for a specific time period.` },
+  { extension_key: 'googlecalendar', key: 'GOOGLECALENDAR_GET_CURRENT_DATE_TIME', name: 'Get Current Date & Time', description: `Action to get the current date and time of a specified timezone, given its utc offset value.` },
+  { extension_key: 'googlecalendar', key: 'GOOGLECALENDAR_DELETE_EVENT', name: 'Delete Event', description: `Delete an event from a google calendar.` },
+  { extension_key: 'googlecalendar', key: 'GOOGLECALENDAR_REMOVE_ATTENDEE', name: 'Remove Attendee From Event', description: `Remove an attendee from an existing event in a google calendar.` },
+  { extension_key: 'googlecalendar', key: 'GOOGLECALENDAR_UPDATE_EVENT', name: 'Update Google Event', description: `Update an existing event in a google calendar.` },
+];
+
 export const INVALID_LOGIN_ERROR_MESSAGE = 'Email or password is invalid';
 export const ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE = 'Account has not been verified';
 
