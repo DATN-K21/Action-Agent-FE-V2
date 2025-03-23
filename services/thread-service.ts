@@ -70,8 +70,7 @@ export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResp
 
         const response: IResponse<IThreadsResponse> = await sendRequest({
             url: `${API_ENDPOINT}/ai/thread/${params.user.id}/get-all`,
-            method: HttpMethod.POST,
-            body: params.payload,
+            method: HttpMethod.GET,
             headers: headers
         });
 
