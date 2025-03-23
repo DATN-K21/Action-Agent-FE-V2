@@ -1,6 +1,6 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import queryString from 'query-string';
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import queryString from "query-string";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,7 +16,7 @@ export const fetcher = async (url: string) => {
 
   if (!res.ok) {
     const error = new Error('An error occurred while fetching the data.') as ApplicationError;
-
+    
     error.info = await res.json();
     error.status = res.status;
 
@@ -27,16 +27,16 @@ export const fetcher = async (url: string) => {
 };
 
 export function getLocalStorage(key: string) {
-  if (typeof window !== 'undefined') {
-    return JSON.parse(localStorage.getItem(key) || '[]');
+  if (typeof window !== "undefined") {
+    return JSON.parse(localStorage.getItem(key) || "[]");
   }
   return [];
 }
 
 export function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -55,18 +55,23 @@ export const sendRequest = async <T>(props: IRequest) => {
   const options: any = {
     method: method,
     // by default setting the content-type to be json type
-    headers: new Headers({ 'content-type': 'application/json', ...headers }),
-    body: body ? JSON.stringify(body) : null,
+    headers: new Headers(headers),
+    body: body instanceof FormData ? body : body ? JSON.stringify(body) : null,
     ...nextOption,
   };
-  if (useCredentials) options.credentials = 'include';
+
+  if (!(body instanceof FormData)) {
+    options.headers.append("content-type", "application/json");
+  }
+
+  if (useCredentials) options.credentials = "include";
 
   if (Object.keys(queryParams).length !== 0) {
     console.log('check');
     url = `${url}?${queryString.stringify(queryParams)}`;
   }
 
-  return fetch(url, options).then(async (res) => {
+  return fetch(url, options).then((res) => {
     if (res.ok) {
       return res.json() as T;
     } else {
