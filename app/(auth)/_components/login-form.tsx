@@ -3,8 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
-// import wretch from 'wretch';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,25 +25,21 @@ import {
   INVALID_LOGIN_ERROR_MESSAGE,
   Providers,
 } from '@/constants/auth-constant';
-// import OtpDialog from './otp-dialog';
 import GoogleButton from './google-button';
 import SendOTPDialog from './forgot-password/send-otp-dialog';
 import ConfirmOTPDialog from './forgot-password/confirm-otp-dialog';
 import ResetPasswordDialog from './forgot-password/reset-password-dialog';
-import { SendLink } from '@/services/auth-service';
+import { sendAccountActivationEmail } from '@/services/auth-service';
 
 export function LoginForm() {
   const router = useRouter();
-  //const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isShowOtpDialog, setIsShowOtpDialog] = useState(false);
-  const [isShowForgotPasswordDialog, setIsShowForgotPasswordDialog] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState<string>('');
+  const [isForgotPasswordDialogOpen, setForgotPasswordDialogOpen] = useState(false);
+  const [isOTPDialogOpen, setOTPDialogOpen] = useState(false);
+  const [isResetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
 
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState<string>('');
-  const [isOtpDialogOpen, setIsOtpDiaLogOpen] = useState(false);
-  const [isOpenForgotPassword, setIsOpenForgotPassword] = useState(false);
-  const [infoForgotPassword, setInfoForgotPassword] = useState<{
+  const [forgotPasswordUserEmail, setForgotPasswordUserEmail] = useState<string>('');
+  const [forgotPasswordInfo, setForgotPasswordInfo] = useState<{
     userId: string;
     resetPasswordToken: string;
   }>({
@@ -61,9 +55,8 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = async (data: { email: string; password: string }) => {
+  const handleLogin = async (data: { email: string; password: string }) => {
     setIsLoading(true);
-    setVerificationEmail(data.email);
 
     // Sign in with credentials using NextAuth
     const result = await signIn(Providers.Credentials, {
@@ -72,54 +65,46 @@ export function LoginForm() {
       redirect: false,
     });
 
+    // Handle login result
     if (result?.code === INVALID_LOGIN_ERROR_MESSAGE) {
-      // Email or password is invalid
-      toast({
-        type: 'error',
-        description: INVALID_LOGIN_ERROR_MESSAGE,
-      });
+      // Credentials are invalid
+      toast({ type: 'error', description: INVALID_LOGIN_ERROR_MESSAGE });
+      form.setValue('password', '');
     } else if (result?.code === ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE) {
-      // Account not verified
-      toast({
-        type: 'error',
-        description: `${result.code}, please check your email for verification.`,
-      });
+      // Account is not verified
+      toast({ type: 'error', description: ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE });
 
-      await SendLink(data.email);
+      // Send verification email
+      await sendAccountActivationEmail(data.email);
 
-      // Reset the form
       form.reset();
     } else if (!result?.error) {
-      toast({
-        type: 'success',
-        description: 'You have successfully logged in.',
-      });
-
-      // Redirect to the home pages
+      // Login successful
+      toast({ type: 'success', description: 'Login successful' });
       router.push('/');
     }
 
     setIsLoading(false);
   };
 
-  const handleOpenForgetPasswordDialog = () => {
-    // Open the OTP dialog
-    setIsShowForgotPasswordDialog(true);
+  // Handle after sending OTP successfully
+  const handleSendOTPSucess = (email: string) => {
+    setForgotPasswordUserEmail(email);
+    setForgotPasswordDialogOpen(false);
+    setOTPDialogOpen(true);
   };
 
-  const handleEmailSubmit = (email: string) => {
-    setForgotPasswordEmail(email);
-    setIsShowForgotPasswordDialog(false);
-    setIsOtpDiaLogOpen(true);
+  // Handle after verifying OTP successfully
+  const handleVerifyOTPSucess = (userId: string, resetPasswordToken: string) => {
+    setForgotPasswordInfo({ userId, resetPasswordToken });
+    setOTPDialogOpen(false);
+    setResetPasswordDialogOpen(true);
   };
 
-  const handleOTPSubmit = (userId: string, resetPasswordToken: string) => {
-    setInfoForgotPassword({
-      userId,
-      resetPasswordToken,
-    });
-    setIsOtpDiaLogOpen(false);
-    setIsOpenForgotPassword(true);
+  // Handle after resetting password successfully
+  const handleResetPasswordSucess = () => {
+    form.reset();
+    setResetPasswordDialogOpen(false);
   };
 
   return (
@@ -135,7 +120,7 @@ export function LoginForm() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+              <form onSubmit={form.handleSubmit(handleLogin)} className="grid gap-4">
                 {/* Email Field */}
                 <FormField
                   control={form.control}
@@ -145,9 +130,8 @@ export function LoginForm() {
                       <FormLabel htmlFor="email">Email</FormLabel>
                       <FormControl>
                         <Input
-                          className={`border-[#a996f6] ${
-                            form.formState.errors.email ? 'border-red-500' : ''
-                          } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
+                          className={`border-[#a996f6] ${form.formState.errors.email ? 'border-red-500' : ''
+                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
                           id="email"
                           type="email"
                           placeholder="m@example.com"
@@ -171,16 +155,15 @@ export function LoginForm() {
                         <FormLabel htmlFor="password">Password</FormLabel>
                         <div
                           className="ml-auto inline-block text-sm underline cursor-pointer"
-                          onClick={() => handleOpenForgetPasswordDialog()}
+                          onClick={() => setForgotPasswordDialogOpen(true)}
                         >
                           Forgot your password?
                         </div>
                       </div>
                       <FormControl>
                         <Input
-                          className={`border-[#a996f6] ${
-                            form.formState.errors.password ? 'border-red-500' : ''
-                          } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
+                          className={`border-[#a996f6] ${form.formState.errors.password ? 'border-red-500' : ''
+                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
                           id="password"
                           type="password"
                           placeholder="********"
@@ -218,30 +201,23 @@ export function LoginForm() {
         </Card>
       </div>
 
-      {/* OTP Dialog */}
-      {/* <OtpDialog
-        isOpen={isShowOtpDialog}
-        onClose={() => setIsShowOtpDialog(false)}
-        email={verificationEmail}
-      /> */}
-
       <SendOTPDialog
-        isOpen={isShowForgotPasswordDialog}
-        onClose={() => setIsShowForgotPasswordDialog(false)}
-        onSuccess={handleEmailSubmit}
+        isOpen={isForgotPasswordDialogOpen}
+        onClose={() => setForgotPasswordDialogOpen(false)}
+        onSuccess={handleSendOTPSucess}
       />
 
       <ConfirmOTPDialog
-        email={forgotPasswordEmail}
-        isOpen={isOtpDialogOpen}
-        onClose={() => setIsOtpDiaLogOpen(false)}
-        onSuccess={handleOTPSubmit}
+        email={forgotPasswordUserEmail}
+        isOpen={isOTPDialogOpen}
+        onClose={() => setOTPDialogOpen(false)}
+        onSuccess={handleVerifyOTPSucess}
       />
 
       <ResetPasswordDialog
-        infoForgotPassword={infoForgotPassword}
-        isOpen={isOpenForgotPassword}
-        onClose={() => setIsOpenForgotPassword(false)}
+        forgotPasswordInfo={forgotPasswordInfo}
+        isOpen={isResetPasswordDialogOpen}
+        onClose={handleResetPasswordSucess}
       />
     </>
   );

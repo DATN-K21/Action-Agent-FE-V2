@@ -3,14 +3,15 @@ import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { jwtDecode } from 'jwt-decode';
 
-import { Login, LoginWithGoogle, RefreshToken } from '@/services/auth-service';
+import { login, loginWithGoogle, refreshToken } from '@/services/auth-service';
 import {
   INVALID_LOGIN_ERROR_MESSAGE,
   ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE,
   Providers,
   Role,
 } from '@/constants/auth-constant';
-import { ErrorCode, HttpStatus } from '@/constants/response-constant';
+import { ErrorCode } from '@/constants/response-constant';
+import { ILoginReponse } from '@/types/auth';
 
 class AccountNotVerifiedError extends CredentialsSignin {
   code = ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE;
@@ -30,40 +31,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorize: async (credentials) => {
         const { email, password } = credentials as { email: string; password: string };
 
-        const response = await Login({ email, password });
+        try {
+          const response: IResponse<ILoginReponse> = await login({ email, password });
 
-        if (response.status !== 200 || !response.data) {
-          const { status, code } = response;
+          const { user, accessToken, refreshToken } = response.data as ILoginReponse;
+          const decodedToken = jwtDecode<any>(accessToken);
+          const role = decodedToken?.role as Role;
+          const expiresAt = decodedToken?.exp;
 
-          if (status === HttpStatus.CONFLICT) {
-            if (code === ErrorCode.ACCOUNT_NOT_VERIFIED) {
-              throw new AccountNotVerifiedError();
-            } else if (
-              code === ErrorCode.EMAIL_NOT_FOUND ||
-              code === ErrorCode.INCORRECT_PASSWORD
-            ) {
-              throw new InvalidLoginError();
-            }
+          return {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            image: user.image,
+            accessToken,
+            refreshToken,
+            expiresAt,
+            role,
+          };
+        } catch (error: any) {
+
+          if (error.code === ErrorCode.ACCOUNT_NOT_VERIFIED) {
+            throw new AccountNotVerifiedError();
+          } else if (error.code === ErrorCode.INCORRECT_EMAIL || error.code === ErrorCode.INCORRECT_PASSWORD) {
+            throw new InvalidLoginError();
           }
 
-          throw new CredentialsSignin(response.message);
+          throw new CredentialsSignin(error.message);
         }
-
-        const { user, accessToken, refreshToken } = response.data;
-        const decodedToken = jwtDecode<any>(accessToken);
-        const role = decodedToken?.role as Role;
-        const expiresAt = decodedToken?.exp;
-
-        return {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          image: user.image,
-          accessToken,
-          refreshToken,
-          expiresAt,
-          role,
-        };
       },
     }),
     Google,
@@ -72,13 +67,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/login',
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       if (account?.provider === Providers.Google) {
         try {
           if (!account.id_token) {
             throw new CredentialsSignin('Missing id_token');
           }
-          const response = await LoginWithGoogle(account.id_token);
+          const response = await loginWithGoogle(account.id_token);
 
           // If the response does not contain the user data, throw an error
           if (!response.data) {
@@ -100,11 +95,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.expiresAt = expiresAt;
           user.role = role;
         } catch (error) {
-          console.error('Failed to call backend API:', error);
-          return false; // Return false to indicate sign in failure
+          console.log('Error login with google', error);
+          return false;
         }
       }
-      return true; // Return true to indicate sign in success
+      return true;
     },
     async jwt({ token, user }) {
       if (user) {
@@ -118,14 +113,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.expiresAt = user.expiresAt;
         token.role = user.role;
       } else if (Date.now() < token.expiresAt * 1000) {
-        // Subsequent logins, but the `access_token` is still valid
+        // Subsequent logins, but the accessToken is still valid
         return token;
       } else {
-        // Subsequent logins, but the `access_token` has expired, try to refresh it
+        // Subsequent logins, but the accessToken has expired, try to refresh it
         if (!token.refreshToken) throw new TypeError('Missing refresh_token');
 
         try {
-          const response = await RefreshToken({
+          const response = await refreshToken({
             refreshToken: token.refreshToken,
             accessToken: token.accessToken,
             userId: token.id as string,
@@ -143,7 +138,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           return token;
         } catch (error: any) {
-          token.error = 'RefreshTokenError';
+          token.error = true;
           return token;
         }
       }
