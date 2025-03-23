@@ -15,9 +15,7 @@ export const fetcher = async (url: string) => {
   const res = await fetch(url);
 
   if (!res.ok) {
-    const error = new Error(
-      'An error occurred while fetching the data.',
-    ) as ApplicationError;
+    const error = new Error('An error occurred while fetching the data.') as ApplicationError;
 
     error.info = await res.json();
     error.status = res.status;
@@ -51,7 +49,7 @@ export const sendRequest = async <T>(props: IRequest) => {
     queryParams = {},
     useCredentials = false,
     headers = {},
-    nextOption = {}
+    nextOption = {},
   } = props;
 
   const options: any = {
@@ -59,29 +57,26 @@ export const sendRequest = async <T>(props: IRequest) => {
     // by default setting the content-type to be json type
     headers: new Headers({ 'content-type': 'application/json', ...headers }),
     body: body ? JSON.stringify(body) : null,
-    ...nextOption
+    ...nextOption,
   };
-  if (useCredentials) options.credentials = "include";
+  if (useCredentials) options.credentials = 'include';
 
   if (Object.keys(queryParams).length !== 0) {
-    console.log("check");
+    console.log('check');
     url = `${url}?${queryString.stringify(queryParams)}`;
   }
 
-  return fetch(url, options).then(res => {
+  return fetch(url, options).then(async (res) => {
     if (res.ok) {
       return res.json() as T;
     } else {
-      return res.json().then(function (json) {
-        // to be able to access error status when you catch the error 
-        return {
-          status: res.status,
-          message: json?.message ?? "",
-          code: json?.code ?? 0,
-          data: json?.data ?? null,
-          errorStack: json?.error ?? ""
-        } as T;
-      });
+      const json = await res.json();
+      const error = new Error(json.message ?? 'Unknown error') as any;
+      error.status = res.status;
+      error.code = json.code ?? 0;
+      error.data = json.data ?? null;
+      error.errorStack = json.error ?? '';
+      throw error;
     }
   });
 };

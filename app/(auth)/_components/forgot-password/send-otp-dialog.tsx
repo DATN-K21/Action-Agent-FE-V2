@@ -56,36 +56,14 @@ const SendOTPDialog: React.FC<SendOTPProps> = ({ isOpen, onClose, onSuccess }) =
           type: 'success',
           description: response.message,
         });
-        // toast({
-        //   variant: 'success',
-        //   title: 'Success',
-        //   description: response.message,
-        // });
         onSuccess(data.email);
-      } else {
-        toast({
-          type: 'error',
-          description: response.message,
-        });
-        // toast({
-        //   variant: 'destructive',
-        //   title: 'Oops! Something went wrong.',
-        //   description: response.message,
-        // });
       }
     } catch (error: any) {
-      const errorResponse: IResponse<null> = error?.json || {};
-
+      const errorResponse: IResponse<null> = error || {};
       toast({
         type: 'error',
         description: errorResponse.message,
       });
-
-      // toast({
-      //   variant: 'destructive',
-      //   title: 'Oops! Something went wrong.',
-      //   description: errorResponse.message,
-      // });
     } finally {
       setIsLoading(false);
     }

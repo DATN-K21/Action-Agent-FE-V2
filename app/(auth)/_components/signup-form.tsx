@@ -61,12 +61,6 @@ export function SignUpForm() {
       const response: IResponse<IRegisterReponse> = await Register(dataToSend);
 
       if (response.status === 200 || response.status === 201) {
-        // toast({
-        //   variant: 'success',
-        //   title: 'Success',
-        //   description: 'Please check your email for verification.',
-        // });
-
         toast({
           type: 'success',
           description: 'Please check your email for verification.',
@@ -80,14 +74,9 @@ export function SignUpForm() {
         await SendLink(email);
 
         router.push('/login');
-      } else {
-        toast({
-          type: 'error',
-          description: response.message,
-        });
       }
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error?.json || {};
+      const errorReponse: IResponse<null> = error || {};
       toast({
         type: 'error',
         description: errorReponse.message,

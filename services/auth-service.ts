@@ -3,6 +3,7 @@ import { sendRequest } from '@/lib/utils';
 import { IHeader } from '@/types/auth';
 import { User } from 'next-auth';
 import { ILoginReponse, IRegisterReponse } from '@/types/auth';
+import { auth } from '@/auth';
 
 export interface ILoginParams {
   email: string;
@@ -54,23 +55,36 @@ export const RefreshToken = async (params: IRefreshTokenParams): Promise<any> =>
   }
 };
 
-export const Login = async (params: ILoginParams): Promise<any> => {
-  try {
-    const response: IResponse<ILoginReponse> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/login`,
-      method: 'POST',
-      body: {
-        email: params.email,
-        password: params.password,
-      },
-    });
+// export const Login = async (params: ILoginParams): Promise<any> => {
+//   try {
+//     const response: IResponse<ILoginReponse> = await sendRequest({
+//       url: `${API_ENDPOINT}/user/access/login`,
+//       method: 'POST',
+//       body: {
+//         email: params.email,
+//         password: params.password,
+//       },
+//     });
 
-    return response;
-  } catch (error) {
-    console.error('Error sending message: ', error);
-    throw error;
-  }
-};
+//     return response;
+//   } catch (error: any) {
+//     // Kiểm tra nếu error có response từ server
+//     if (error?.response?.json) {
+//       console.log('error', error);
+//       const errorJson = await error.response.json();
+//       // Ném ra lỗi có đầy đủ status, code, message
+//       throw {
+//         status: error.response.status,
+//         code: errorJson.code,
+//         message: errorJson.message,
+//         raw: errorJson,
+//       };
+//     }
+
+//     // Nếu không có JSON (lỗi mạng chẳng hạn)
+//     throw error;
+//   }
+// };
 
 export const Register = async (params: IRegisterParams): Promise<any> => {
   try {
@@ -176,6 +190,30 @@ export const LoginWithGoogle = async (id_token: string): Promise<any> => {
       body: {
         id_token,
       },
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Error sending message: ', error);
+    throw error;
+  }
+};
+
+export const Logout = async (): Promise<any> => {
+  console.log('Logout');
+  const session = await auth();
+  if (!session) {
+    throw new Error('Session is null');
+  }
+  try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${session.accessToken}`,
+      'x-client-id': session.user.id,
+    };
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/logout`,
+      method: 'POST',
+      headers: headers,
     });
 
     return response;
