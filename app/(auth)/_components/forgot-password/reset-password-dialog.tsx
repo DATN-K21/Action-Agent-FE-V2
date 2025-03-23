@@ -64,14 +64,9 @@ const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
         });
 
         onClose();
-      } else {
-        toast({
-          type: 'error',
-          description: response.message,
-        });
       }
     } catch (error: any) {
-      const errorResponse: IResponse<null> = error?.json || {};
+      const errorResponse: IResponse<null> = error || {};
       toast({
         type: 'error',
         description: errorResponse.message,

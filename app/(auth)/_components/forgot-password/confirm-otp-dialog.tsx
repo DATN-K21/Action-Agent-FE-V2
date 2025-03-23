@@ -47,14 +47,9 @@ const ConfirmOTPDialog: React.FC<ConfirmOTPProps> = ({ email, isOpen, onClose, o
           type: 'success',
           description: 'Resend OTP successfully - Please check your email',
         });
-      } else {
-        toast({
-          type: 'error',
-          description: response.message,
-        });
       }
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error?.json || {};
+      const errorReponse: IResponse<null> = error || {};
       toast({
         type: 'error',
         description: errorReponse.message,
@@ -72,19 +67,10 @@ const ConfirmOTPDialog: React.FC<ConfirmOTPProps> = ({ email, isOpen, onClose, o
     setIsLoading(true);
     try {
       const response = await ConfirmOTP(email, otp);
-      // const response: ApiResponse<{ userId: string; resetPasswordToken: string }> =
-      //   await wretch('/api/access/forgot-password/confirm-otp')
-      //     .post({ email, otp })
-      //     .json();
 
       if (response.status === 200) {
         toast({
           type: 'success',
-          description: response.message,
-        });
-      } else {
-        toast({
-          type: 'error',
           description: response.message,
         });
       }
@@ -93,7 +79,7 @@ const ConfirmOTPDialog: React.FC<ConfirmOTPProps> = ({ email, isOpen, onClose, o
         onSuccess(response.data.userId, response.data.resetPasswordToken);
       }
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error?.json || {};
+      const errorReponse: IResponse<null> = error || {};
       toast({
         type: 'error',
         description: errorReponse.message,

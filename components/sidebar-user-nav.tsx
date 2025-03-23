@@ -12,14 +12,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { Logout } from '@/services/auth-service';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, theme } = useTheme();
+
+  const handleLogOut = async () => {
+    try {
+      await Logout();
+    } catch (error: any) {
+      console.log(error);
+    } finally {
+      await signOut();
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -31,10 +38,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               <ChevronUp className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            side="top"
-            className="w-[--radix-popper-anchor-width]"
-          >
+          <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -46,11 +50,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               <button
                 type="button"
                 className="w-full cursor-pointer"
-                onClick={() => {
-                  signOut({
-                    redirectTo: '/',
-                  });
-                }}
+                onClick={() => handleLogOut()}
               >
                 Sign out
               </button>
