@@ -1,12 +1,14 @@
 'use client';
 
 import { toast } from '@/components/toast';
+import { logout } from '@/services/auth-service';
+import { User } from 'next-auth';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import React from 'react';
 
-export const LogoutForm = () => {
+export const LogoutForm = ({ user }: { user: User | undefined }) => {
     const router = useRouter();
 
     useEffect(() => {
@@ -15,12 +17,15 @@ export const LogoutForm = () => {
 
     const handleLogOut = async () => {
         try {
+            if (user) {
+                logout(user);
+            }
+
             toast({
                 type: 'success',
                 description: 'You need to log in again',
             });
         } catch (error: any) {
-            console.log(error);
             toast({
                 type: 'error',
                 description: error?.json?.message || 'An unexpected error occurred',

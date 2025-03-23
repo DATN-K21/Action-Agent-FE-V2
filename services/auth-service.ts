@@ -1,6 +1,7 @@
 import { API_ENDPOINT, HttpMethod } from '@/constants/response-constant';
 import { ILoginReponse, IRegisterReponse } from '@/types/auth';
 import { sendRequest } from '@/lib/utils';
+import { User } from 'next-auth';
 
 export interface ILoginParams {
   email: string;
@@ -186,6 +187,26 @@ export const loginWithGoogle = async (id_token: string): Promise<IResponse<ILogi
     return response;
   } catch (error) {
     console.error('Error login with google: ', error);
+    throw error;
+  }
+};
+
+export const logout = async (user: User): Promise<IResponse<null>> => {
+  try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${user.accessToken}`,
+      'x-client-id': user.id as string,
+    };
+
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/logout`,
+      method: HttpMethod.POST,
+      headers: headers,
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Error logout: ', error);
     throw error;
   }
 };
