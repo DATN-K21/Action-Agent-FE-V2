@@ -53,6 +53,28 @@ export interface UploadFileResponse {
   output: string;
 }
 
+export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResponse> => {
+    try {
+        if (!params.user.id) throw new Error("Missing 'userId'");
+
+        const headers: IHeader = {
+            "x-user-id": params.user.id,
+            "x-user-role": params.user.role,
+        };
+
+        const response: IResponse<IThreadsResponse> = await sendRequest({
+            url: `${API_ENDPOINT}/ai/thread/${params.user.id}/get-all`,
+            method: HttpMethod.GET,
+            headers: headers
+        });
+
+        return response.data as IThreadsResponse;
+    } catch (error) {
+        console.error("Error get threads: ", error);
+        throw error;
+    }
+}
+
 export const createThread = async (
   params: CreateThreadParams
 ): Promise<ICreateThreadResponse> => {

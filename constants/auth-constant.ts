@@ -1,5 +1,5 @@
 export const INVALID_LOGIN_ERROR_MESSAGE = 'Email or password is incorrect';
-export const ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE = 'Account is not verified';
+export const ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE = 'Account is not verified, please check your email for verification';
 
 export enum Providers {
     Credentials = 'credentials',

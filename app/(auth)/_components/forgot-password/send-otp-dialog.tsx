@@ -17,16 +17,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-import { Icons } from '@/components/icon';
-
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { EmailforgotPasswordSchema } from '@/validation-schemas/otp-schema';
+import { forgotPasswordEmailSchema } from '@/validation-schemas/auth-schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
-import { SendOTP } from '@/services/auth-service';
+import { sendResetPasswordOTP } from '@/services/auth-service';
 import { toast } from '@/components/toast';
+import { Icons } from '@/components/icon';
 
 interface SendOTPProps {
   isOpen: boolean;
@@ -37,55 +35,32 @@ interface SendOTPProps {
 const SendOTPDialog: React.FC<SendOTPProps> = ({ isOpen, onClose, onSuccess }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const router = useRouter();
-
   const form = useForm({
-    resolver: zodResolver(EmailforgotPasswordSchema),
+    resolver: zodResolver(forgotPasswordEmailSchema),
     defaultValues: {
       email: '',
     },
   });
 
+  // Hanlde send reset password OTP
   const handleSubmit = async (data: { email: string }) => {
     setIsLoading(true);
-    try {
-      const response = await SendOTP(data.email);
 
-      if (response.status === 200) {
-        toast({
-          type: 'success',
-          description: response.message,
-        });
-        // toast({
-        //   variant: 'success',
-        //   title: 'Success',
-        //   description: response.message,
-        // });
-        onSuccess(data.email);
-      } else {
-        toast({
-          type: 'error',
-          description: response.message,
-        });
-        // toast({
-        //   variant: 'destructive',
-        //   title: 'Oops! Something went wrong.',
-        //   description: response.message,
-        // });
-      }
+    try {
+      const response: IResponse<null> = await sendResetPasswordOTP(data.email);
+      toast({
+        type: 'success',
+        description: response.message,
+      });
+
+      onSuccess(data.email);
     } catch (error: any) {
-      const errorResponse: IResponse<null> = error?.json || {};
+      const errorResponse: IResponse<null> = error;
 
       toast({
         type: 'error',
-        description: errorResponse.message,
+        description: errorResponse.message || 'Failed to send OTP',
       });
-
-      // toast({
-      //   variant: 'destructive',
-      //   title: 'Oops! Something went wrong.',
-      //   description: errorResponse.message,
-      // });
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +100,7 @@ const SendOTPDialog: React.FC<SendOTPProps> = ({ isOpen, onClose, onSuccess }) =
             />
             <DialogFooter>
               <Button type="submit" disabled={isLoading}>
+                {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
                 Send OTP
               </Button>
             </DialogFooter>
