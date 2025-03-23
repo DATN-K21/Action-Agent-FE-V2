@@ -46,6 +46,8 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
 
+  const [pendingFiles, setPendingFiles] = useState<Array<File>>([]);
+
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -70,6 +72,30 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
   const submitForm = useCallback(async () => {
     try {
+
+      //Upload files before sending message
+      if (pendingFiles.length > 0) {
+
+        setUploadQueue(pendingFiles.map((file) => file.name)); // Hiển thị trạng thái đang upload
+        
+        const uploadPromises = pendingFiles.map((file) => uploadFile(file));
+        const uploadedAttachments = await Promise.all(uploadPromises);
+
+        const successfullyUploadedAttachments = uploadedAttachments.filter(
+          (attachment) => attachment !== undefined
+        );
+
+        // Set attachments after uploading
+        setAttachments((currentAttachments) => [
+          ...currentAttachments,
+          ...successfullyUploadedAttachments,
+        ]);
+
+        //Delete Queue
+        setPendingFiles([]); 
+        setUploadQueue([]);
+      }
+
       // Check if is a home page, create a new thread
       if (window.location.pathname === '/') {
         await createThread(user, chatId);
@@ -104,10 +130,17 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     setAttachments,
     width,
     chatId,
+    pendingFiles
   ]);
 
   const uploadFile = async (file: File) => {
     try{
+      //Create new thread if on home page
+      if (window.location.pathname === '/') {
+        await createThread(user, chatId);
+        window.history.replaceState({}, '', `/chat/${chatId}`);
+      }
+
       const response = await handleUploadFile({
         user,
         threadId: chatId,
@@ -154,26 +187,14 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
 
-      setUploadQueue(files.map((file) => file.name));
+      setPendingFiles((prev) => [...prev, ...files]); // Thêm file vào queue
+      setUploadQueue((prev) => [...prev, ...files.map((file) => file.name)]); // Cập nhật danh sách tên file để hiển thị
 
-      try {
-        const uploadPromises = files.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined,
-        );
-
-        setAttachments((currentAttachments) => [
-          ...currentAttachments,
-          ...successfullyUploadedAttachments,
-        ]);
-      } catch (error) {
-        console.error('Error uploading files!', error);
-      } finally {
-        setUploadQueue([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
     },
-    [setAttachments],
+    []
   );
 
   return (
@@ -213,7 +234,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
                 name: filename,
                 contentType: '',
               }}
-              isUploading={true}
+              isUploading={false}
             />
           ))}
         </div>
@@ -392,7 +413,7 @@ function PureSendButton({
         event.preventDefault();
         submitForm();
       }}
-      disabled={input.length === 0 || uploadQueue.length > 0}
+      disabled={input.length === 0 && uploadQueue.length === 0}
     >
       <ArrowUpIcon size={14} />
     </Button>
