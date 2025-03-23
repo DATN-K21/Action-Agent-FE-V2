@@ -14,7 +14,7 @@ declare module 'next-auth' {
     accessToken: string;
     refreshToken: string;
     expiresAt: number;
-    error?: 'RefreshTokenError';
+    error: boolean;
   }
 
   interface User {
@@ -39,6 +39,6 @@ declare module 'next-auth/jwt' {
     accessToken: string;
     expiresAt: number;
     refreshToken?: string;
-    error?: 'RefreshTokenError';
+    error: boolean;
   }
 }

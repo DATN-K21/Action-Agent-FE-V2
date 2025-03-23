@@ -70,13 +70,15 @@ export const sendRequest = async <T>(props: IRequest) => {
     if (res.ok) {
       return res.json() as T;
     } else {
-      const json = await res.json();
-      const error = new Error(json.message ?? 'Unknown error') as any;
-      error.status = res.status;
-      error.code = json.code ?? 0;
-      error.data = json.data ?? null;
-      error.errorStack = json.error ?? '';
-      throw error;
+      return res.json().then(function (json) {
+        throw {
+          status: json.status || 500,
+          message: json?.message ?? "Unknown error",
+          code: json?.code ?? 0,
+          data: json?.data ?? null,
+          errorStack: json?.errorStack ?? ""
+        };
+      });
     }
   });
 };

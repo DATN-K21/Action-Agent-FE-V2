@@ -17,21 +17,15 @@ import {
 import { registerSchema } from '@/validation-schemas/auth-schema';
 import { useState } from 'react';
 import GoogleButton from './google-button';
-// import { ApiResponse } from '@/types';
 import { Icons } from '@/components/icon';
-//import OtpDialog from '@/app/(auth)/_components/otp-dialog';
 import { useRouter } from 'next/navigation';
-import { Register, SendLink } from '@/services/auth-service';
+import { register, sendAccountActivationEmail } from '@/services/auth-service';
 import { toast } from '@/components/toast';
-import { IRegisterReponse } from '@/types/auth';
 
 export function SignUpForm() {
   const router = useRouter();
-  const [verificationEmail, setVerificationEmail] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isOtpDialogOpen, setIsOtpDialogOpen] = useState<boolean>(false);
-  //const { toast } = useToast();
-  // Use react-hook-form with validation and initial default values
+
   const form = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -44,7 +38,7 @@ export function SignUpForm() {
     },
   });
 
-  const onSubmit = async (data: {
+  const handleRegister = async (data: {
     email: string;
     username: string;
     firstName: string;
@@ -53,30 +47,21 @@ export function SignUpForm() {
     confirmPassword: string;
   }) => {
     setIsLoading(true);
-    setVerificationEmail(data.email);
 
     try {
       const { confirmPassword, ...dataToSend } = data;
+      await register(dataToSend);
+      await sendAccountActivationEmail(data.email);
 
-      const response: IResponse<IRegisterReponse> = await Register(dataToSend);
+      toast({
+        type: 'success',
+        description: 'Please check your email for verification.',
+      });
 
-      if (response.status === 200 || response.status === 201) {
-        toast({
-          type: 'success',
-          description: 'Please check your email for verification.',
-        });
-
-        // Clear the form
-        form.reset();
-
-        const { email } = data;
-
-        await SendLink(email);
-
-        router.push('/login');
-      }
+      form.reset();
+      router.push('/login');
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error || {};
+      const errorReponse: IResponse<null> = error;
       toast({
         type: 'error',
         description: errorReponse.message,
@@ -97,7 +82,7 @@ export function SignUpForm() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+            <form onSubmit={form.handleSubmit(handleRegister)} className="grid gap-4">
               {/* Email Field */}
               <FormField
                 control={form.control}

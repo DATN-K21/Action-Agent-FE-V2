@@ -13,16 +13,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { Logout } from '@/services/auth-service';
+import { logout } from '@/services/auth-service';
+import { toast } from '@/components/toast';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, theme } = useTheme();
 
   const handleLogOut = async () => {
     try {
-      await Logout();
+      await logout(user);
     } catch (error: any) {
-      console.log(error);
+      toast({
+        type: 'error',
+        description: error?.json?.message || 'An unexpected error occurred',
+      });
     } finally {
       await signOut();
     }

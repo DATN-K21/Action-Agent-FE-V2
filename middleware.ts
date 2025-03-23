@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // If refresh token error, redirect to logout
-  if (session?.error === 'RefreshTokenError' && pathname !== '/logout') {
+  if (session?.error && pathname !== '/logout') {
     return NextResponse.redirect(new URL('/logout', url));
   }
 
