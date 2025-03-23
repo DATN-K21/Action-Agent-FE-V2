@@ -19,6 +19,6 @@ export enum HttpMethod {
 
 export enum ErrorCode {
     ACCOUNT_NOT_VERIFIED = 1010210,
-    EMAIL_NOT_FOUND = 1010205,
+    INCORRECT_EMAIL = 1010205,
     INCORRECT_PASSWORD = 1010206,
 }

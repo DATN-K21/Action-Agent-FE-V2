@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // If refresh token error, redirect to logout
-  if (session?.error === 'RefreshTokenError' && pathname !== '/logout') {
+  if (session?.error && pathname !== '/logout') {
     return NextResponse.redirect(new URL('/logout', url));
   }
 
@@ -47,5 +47,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!unauthorized|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)'],
+  matcher: [
+    '/((?!unauthorized|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|fonts).*)',
+  ],
 };

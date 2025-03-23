@@ -20,3 +20,27 @@ export const registerSchema = z
     message: "Passwords don't match",
     path: ['confirmPassword'],
   });
+
+export const otpVerificationSchema = z.object({
+  otp: z.string().length(6, {
+    message: 'Your one-time password must be exactly 6 characters.',
+  }),
+});
+
+export const forgotPasswordEmailSchema = z.object({
+  email: z.string().email({
+    message: 'Please enter a valid email address.',
+  }),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+    newConfirmPassword: z
+      .string()
+      .min(6, { message: 'Confirm password must be at least 6 characters.' }),
+  })
+  .refine((data) => data.newPassword === data.newConfirmPassword, {
+    message: "Passwords don't match",
+    path: ['newConfirmPassword'],
+  });
