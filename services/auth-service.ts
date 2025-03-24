@@ -123,6 +123,27 @@ export const sendAccountActivationEmail = async (
   }
 };
 
+export const ActivateAccount = async (token: string): Promise<any> => {
+  try {
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/activate/confirm`,
+      method: "POST",
+      body: {
+        activationToken: token,
+      },
+    });
+
+    if (response.status === 200) {
+      return { message: "Account activated successfully" };
+    } else {
+      throw new Error("Account activation failed. Please request a new link.");
+    }
+  } catch (error) {
+    console.error("Error activating account: ", error);
+    throw error;
+  }
+};
+
 export const sendResetPasswordOTP = async (
   email: string
 ): Promise<IResponse<null>> => {
