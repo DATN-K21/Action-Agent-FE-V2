@@ -1,8 +1,6 @@
-import { API_ENDPOINT } from '@/constants/response-constant';
-import { sendRequest } from '@/lib/utils';
-import { IHeader } from '@/types/auth';
-import { User } from 'next-auth';
-import { ILoginReponse, IRegisterReponse } from '@/types/auth';
+import { API_ENDPOINT } from "@/constants/response-constant";
+import { sendRequest } from "@/lib/utils";
+import { ILoginReponse, IRegisterReponse } from "@/types/auth";
 
 export interface ILoginParams {
   email: string;
@@ -32,15 +30,17 @@ export interface IRefreshTokenParams {
   userId: string;
 }
 
-export const RefreshToken = async (params: IRefreshTokenParams): Promise<any> => {
+export const RefreshToken = async (
+  params: IRefreshTokenParams
+): Promise<any> => {
   try {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${params.accessToken}`,
-      'x-client-id': params.userId,
+      "x-client-id": params.userId,
     };
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/invoke-new-tokens`,
-      method: 'POST',
+      method: "POST",
       body: {
         refreshToken: params.refreshToken,
       },
@@ -49,7 +49,7 @@ export const RefreshToken = async (params: IRefreshTokenParams): Promise<any> =>
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
     throw error;
   }
 };
@@ -58,7 +58,7 @@ export const Login = async (params: ILoginParams): Promise<any> => {
   try {
     const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/login`,
-      method: 'POST',
+      method: "POST",
       body: {
         email: params.email,
         password: params.password,
@@ -67,7 +67,7 @@ export const Login = async (params: ILoginParams): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
     throw error;
   }
 };
@@ -76,7 +76,7 @@ export const Register = async (params: IRegisterParams): Promise<any> => {
   try {
     const response: IResponse<IRegisterReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/signup`,
-      method: 'POST',
+      method: "POST",
       body: {
         email: params.email,
         username: params.username,
@@ -88,7 +88,7 @@ export const Register = async (params: IRegisterParams): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
     throw error;
   }
 };
@@ -97,7 +97,7 @@ export const SendLink = async (email: string): Promise<any> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/activate/send-link`,
-      method: 'POST',
+      method: "POST",
       body: {
         email,
       },
@@ -105,7 +105,28 @@ export const SendLink = async (email: string): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
+    throw error;
+  }
+};
+
+export const ActivateAccount = async (token: string): Promise<any> => {
+  try {
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/activate/confirm`,
+      method: "POST",
+      body: {
+        activationToken: token,
+      },
+    });
+
+    if (response.status === 200) {
+      return { message: "Account activated successfully" };
+    } else {
+      throw new Error("Account activation failed. Please request a new link.");
+    }
+  } catch (error) {
+    console.error("Error activating account: ", error);
     throw error;
   }
 };
@@ -114,7 +135,7 @@ export const SendOTP = async (email: string): Promise<any> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/reset-password/send-otp`,
-      method: 'POST',
+      method: "POST",
       body: {
         email,
       },
@@ -122,7 +143,7 @@ export const SendOTP = async (email: string): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
     throw error;
   }
 };
@@ -131,7 +152,7 @@ export const ConfirmOTP = async (email: string, otp: string): Promise<any> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/reset-password/confirm-otp`,
-      method: 'POST',
+      method: "POST",
       body: {
         email,
         otp,
@@ -140,20 +161,22 @@ export const ConfirmOTP = async (email: string, otp: string): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
     throw error;
   }
 };
 
-export const ResetPassword = async (params: IResetPasswordParams): Promise<any> => {
+export const ResetPassword = async (
+  params: IResetPasswordParams
+): Promise<any> => {
   try {
     const headers = {
       Authorization: `Bearer ${params.infoForgotPassword.resetPasswordToken}`,
-      'x-client-id': params.infoForgotPassword.userId,
+      "x-client-id": params.infoForgotPassword.userId,
     };
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/reset-password`,
-      method: 'POST',
+      method: "POST",
       body: {
         newPassword: params.newPassword,
         confirmNewPassword: params.confirmNewPassword,
@@ -163,7 +186,7 @@ export const ResetPassword = async (params: IResetPasswordParams): Promise<any> 
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
     throw error;
   }
 };
@@ -172,7 +195,7 @@ export const LoginWithGoogle = async (id_token: string): Promise<any> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/google/auth`,
-      method: 'POST',
+      method: "POST",
       body: {
         id_token,
       },
@@ -180,7 +203,7 @@ export const LoginWithGoogle = async (id_token: string): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error('Error sending message: ', error);
+    console.error("Error sending message: ", error);
     throw error;
   }
 };
