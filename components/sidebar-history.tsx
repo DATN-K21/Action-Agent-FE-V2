@@ -38,6 +38,7 @@ import { IThread } from '@/types/ai';
 import { EditIcon } from 'lucide-react';
 import { toast } from '@/components/toast';
 import { useThreadStore } from '@/store/thread-store';
+import { ThreadType } from '@/constants/extension-constant';
 
 interface IThreadItemProps {
   thread: IThread;
@@ -81,7 +82,7 @@ const PureThreadItem = (props: IThreadItemProps) => {
             className="w-full px-2 py-1 text-sm border rounded"
           />
         ) : (
-          <Link href={`/chat/${thread.id}`} onClick={() => setOpenMobile(false)}>
+          <Link href={`/chat/${thread.threadType === ThreadType.DEFAULT ? thread.id : `${thread.threadType}/${thread.id}`}`} onClick={() => setOpenMobile(false)}>
             <span>{thread.title}</span>
           </Link>
         )}

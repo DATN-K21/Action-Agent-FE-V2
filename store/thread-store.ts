@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { subMonths, subWeeks, isToday, isYesterday } from 'date-fns';
 import { deleteThread, getThreads, updateThread } from '@/services/thread-service';
-import { ICreateThreadResponse, IThread } from '@/types/ai';
+import { ICreateThreadResponse, IThread, IThreadsResponse } from '@/types/ai';
 import type { User } from 'next-auth';
 
 interface GroupedThreads {
@@ -34,8 +34,8 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
     fetchThreads: async (user) => {
         set({ isLoading: true });
         try {
-            const response = await getThreads({ user, payload: {} });
-            set({ threads: response.threads });
+            const response: IThreadsResponse = await getThreads({ user, payload: {} });
+            set({ threads: response.threads as IThread[] });
         } catch (error) {
             throw error;
         } finally {

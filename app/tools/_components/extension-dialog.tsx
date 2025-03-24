@@ -111,13 +111,13 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
   };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[400px] md:max-w-[480px] overflow-y-auto max-h-[80vh]">
+      <DialogContent className="max-w-[400px] md:max-w-[680px] overflow-y-auto max-h-[80vh]">
         <DialogHeader>
           <DialogTitle> {extension.name} </DialogTitle>
           <DialogDescription>{`Integrate ${extension.name} into your chat!`}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
-          <Card className="w-full md:w-[380px]">
+          <Card className="w-full md:w-[600px]">
             <CardContent className="grid gap-4 p-4">
               <div>
                 {extensionActions.map((action, index) => (
@@ -144,7 +144,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
             {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
             Connect
           </Button>
-          <Button type="button" style={{ backgroundColor: "green", color: "white" }} onClick={handleClickStartChat}>
+          <Button type="button" style={{ backgroundColor: "green", color: "white" }} disabled={!isConnected} onClick={handleClickStartChat}>
             {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
             Start chat
           </Button>

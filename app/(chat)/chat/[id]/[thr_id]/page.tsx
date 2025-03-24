@@ -61,6 +61,7 @@ async function ExtensionChatPage(props: { params: Promise<{ id: string, thr_id: 
       id={thread_id}
       user={user!}
       initialMessages={initialMessages}
+      extensionName={extension_name}
     />
   );
 }

@@ -1,5 +1,5 @@
 // filepath: d:\Documents\UniversityReactApp\DATN-FE-2\front-end-v2\services\socket-service.ts
-import { API_ENDPOINT } from '@/constants/response-constant';
+import { AI_ENDPOINT, API_ENDPOINT } from '@/constants/response-constant';
 import { io, Socket } from 'socket.io-client';
 
 class SocketService {
@@ -12,13 +12,18 @@ class SocketService {
   }
 
   connect() {
-    this.socket = io(`${API_ENDPOINT}/ai`, {
-      path: '/api/v1/ai/',
+    // this.socket = io(`${API_ENDPOINT}/ai`, {
+      this.socket = io(`${AI_ENDPOINT}`, {
+      // path: '/socket.io',
       query: {
         namespace: this.namespace
-      }
+        },
+      // withCredentials: true,
+      // transports: ['websocket'],
     }); // Replace with your server URL
     
+    this.socket.connect();
+
     this.socket.on('connect', () => {
       if(!this.socket) {
         console.error('Socket is NOT connected to server successfully!');
@@ -65,7 +70,9 @@ class SocketService {
   }
 
   emitStream(data: any) {
+    console.log("Have reached emitStream function");
     if (this.socket) {
+      console.log("Emitting stream event with data: ", data);
       this.socket.emit('stream', data);
     }
   }

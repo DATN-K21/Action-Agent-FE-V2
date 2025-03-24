@@ -183,6 +183,8 @@ const useChatStore = create<ChatState>((set, get) => ({
                 input: input,
             };
 
+            console.log("Emitting stream event with params: ", params);
+
             // Emit stream event to the server
             ExtensionSocketService.emitStream(params);
             set({ status: ChatStatus.STREAMING });
@@ -196,6 +198,7 @@ const useChatStore = create<ChatState>((set, get) => ({
 
             // Listen for stream responses
             ExtensionSocketService.onStreamResponse((data: IStreamOnData) => {
+                console.log("Received stream response: ", data);
                 set((state) => {
                     const updatedMessages = [...state.messages];
                     const lastIndex = updatedMessages.length - 1;

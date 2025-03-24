@@ -39,10 +39,6 @@ interface MultimodalStreamInputProps {
 
 function PureMultimodalStreamInput(props: MultimodalStreamInputProps) {
   const { user, extension, status, attachments, setAttachments, className } = props;
-  console.log("User: ")
-  console.log(user)
-  console.log("Extension: ")
-  console.log(extension)
   const { messages, input, setInput, append, stop, handleStreamExtensionChat } = useChatStore();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -96,7 +92,7 @@ function PureMultimodalStreamInput(props: MultimodalStreamInputProps) {
       });
 
     }
-  }, [handleStreamExtensionChat, user, setAttachments, width, setInput, append]);
+  }, [handleStreamExtensionChat, user, extension, setAttachments, width, setInput, append]);
 
   const uploadFile = async (file: File) => {
     window.alert('This is a stub function. Implement this function to upload files.');

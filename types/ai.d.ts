@@ -1,4 +1,5 @@
 import { MessageRole } from "@/constants/ai-constant";
+import { ThreadType } from "@/constants/extension-constant";
 
 export interface IChatRequest {
     input: string,
@@ -25,6 +26,7 @@ export interface IThread {
     id: string;
     title: string;
     userId: string;
+    threadType: string;
     createdAt: string;
 }
 
@@ -39,6 +41,7 @@ export interface ICreateThreadResponse {
     id: string;
     title: string;
     userId: string;
+    threadType: string;
     createdAt: string;
 }
 

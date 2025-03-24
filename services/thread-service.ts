@@ -1,3 +1,4 @@
+import { ThreadType } from "@/constants/extension-constant"
 import { API_ENDPOINT, HttpMethod } from "@/constants/response-constant"
 import { sendRequest } from "@/lib/utils"
 import { ICreateThreadResponse, IMessage, IThreadHistoryResponse, IThreadsResponse } from "@/types/ai"
@@ -9,6 +10,7 @@ export interface CreateThreadParams {
     payload: {
         id: string;
         title: string;
+        threadType?: ThreadType;
     };
 }
 
