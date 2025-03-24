@@ -3,6 +3,8 @@ import React, { memo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/atom-one-dark.css';
 
 const components: Partial<Components> = {
   code: ({ node, className, children, ...props }) => {
@@ -22,9 +24,7 @@ const components: Partial<Components> = {
   p: ({ node, children }) => {
     // Check if the children contain a <pre> or <div> element
     const hasBlockChild = React.Children.toArray(children).some(
-      (child) =>
-        React.isValidElement(child) &&
-        (child.type === 'pre' || child.type === 'div')
+      (child) => React.isValidElement(child) && (child.type === 'pre' || child.type === 'div')
     );
 
     if (hasBlockChild) {
@@ -57,12 +57,7 @@ const components: Partial<Components> = {
   a: ({ node, children, ...props }) => {
     return (
       // @ts-expect-error
-      <Link
-        className="text-blue-500 hover:underline"
-        target="_blank"
-        rel="noreferrer"
-        {...props}
-      >
+      <Link className="text-blue-500 hover:underline" target="_blank" rel="noreferrer" {...props}>
         {children}
       </Link>
     );
@@ -115,7 +110,11 @@ const remarkPlugins = [remarkGfm];
 
 const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   return (
-    <ReactMarkdown remarkPlugins={remarkPlugins} components={components}>
+    <ReactMarkdown
+      remarkPlugins={remarkPlugins}
+      components={components}
+      rehypePlugins={[rehypeHighlight]}
+    >
       {children}
     </ReactMarkdown>
   );
@@ -123,5 +122,5 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
 
 export const Markdown = memo(
   NonMemoizedMarkdown,
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );

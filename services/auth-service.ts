@@ -1,6 +1,7 @@
-import { API_ENDPOINT } from "@/constants/response-constant";
-import { sendRequest } from "@/lib/utils";
+import { API_ENDPOINT, HttpMethod } from "@/constants/response-constant";
 import { ILoginReponse, IRegisterReponse } from "@/types/auth";
+import { sendRequest } from "@/lib/utils";
+import { User } from "next-auth";
 
 export interface ILoginParams {
   email: string;
@@ -17,8 +18,8 @@ export interface IRegisterParams {
 
 export interface IResetPasswordParams {
   newPassword: string;
-  confirmNewPassword: string;
-  infoForgotPassword: {
+  newConfirmPassword: string;
+  forgotPasswordInfo: {
     resetPasswordToken: string;
     userId: string;
   };
@@ -30,17 +31,23 @@ export interface IRefreshTokenParams {
   userId: string;
 }
 
-export const RefreshToken = async (
+export interface IConfirmResetPasswordOTPResponse {
+  userId: string;
+  resetPasswordToken: string;
+}
+
+export const refreshToken = async (
   params: IRefreshTokenParams
-): Promise<any> => {
+): Promise<IResponse<null>> => {
   try {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${params.accessToken}`,
       "x-client-id": params.userId,
     };
+
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/invoke-new-tokens`,
-      method: "POST",
+      method: HttpMethod.POST,
       body: {
         refreshToken: params.refreshToken,
       },
@@ -49,16 +56,18 @@ export const RefreshToken = async (
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
+    console.error("Error refresh token: ", error);
     throw error;
   }
 };
 
-export const Login = async (params: ILoginParams): Promise<any> => {
+export const login = async (
+  params: ILoginParams
+): Promise<IResponse<ILoginReponse>> => {
   try {
     const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/login`,
-      method: "POST",
+      method: HttpMethod.POST,
       body: {
         email: params.email,
         password: params.password,
@@ -67,16 +76,18 @@ export const Login = async (params: ILoginParams): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
-    throw error;
+    console.error("Error login: ", error);
+    throw error as ILoginReponse;
   }
 };
 
-export const Register = async (params: IRegisterParams): Promise<any> => {
+export const register = async (
+  params: IRegisterParams
+): Promise<IResponse<IRegisterReponse>> => {
   try {
     const response: IResponse<IRegisterReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/signup`,
-      method: "POST",
+      method: HttpMethod.POST,
       body: {
         email: params.email,
         username: params.username,
@@ -88,16 +99,18 @@ export const Register = async (params: IRegisterParams): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
+    console.error("Error register: ", error);
     throw error;
   }
 };
 
-export const SendLink = async (email: string): Promise<any> => {
+export const sendAccountActivationEmail = async (
+  email: string
+): Promise<IResponse<null>> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/activate/send-link`,
-      method: "POST",
+      method: HttpMethod.POST,
       body: {
         email,
       },
@@ -105,37 +118,18 @@ export const SendLink = async (email: string): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
+    console.error("Error sending account activation email: ", error);
     throw error;
   }
 };
 
-export const ActivateAccount = async (token: string): Promise<any> => {
-  try {
-    const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/activate/confirm`,
-      method: "POST",
-      body: {
-        activationToken: token,
-      },
-    });
-
-    if (response.status === 200) {
-      return { message: "Account activated successfully" };
-    } else {
-      throw new Error("Account activation failed. Please request a new link.");
-    }
-  } catch (error) {
-    console.error("Error activating account: ", error);
-    throw error;
-  }
-};
-
-export const SendOTP = async (email: string): Promise<any> => {
+export const sendResetPasswordOTP = async (
+  email: string
+): Promise<IResponse<null>> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/reset-password/send-otp`,
-      method: "POST",
+      method: HttpMethod.POST,
       body: {
         email,
       },
@@ -143,59 +137,66 @@ export const SendOTP = async (email: string): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
+    console.error("Error send reset password OTP: ", error);
     throw error;
   }
 };
 
-export const ConfirmOTP = async (email: string, otp: string): Promise<any> => {
+export const confirmResetPasswordOTP = async (
+  email: string,
+  otp: string
+): Promise<IResponse<IConfirmResetPasswordOTPResponse>> => {
   try {
-    const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/reset-password/confirm-otp`,
-      method: "POST",
-      body: {
-        email,
-        otp,
-      },
-    });
+    const response: IResponse<IConfirmResetPasswordOTPResponse> =
+      await sendRequest({
+        url: `${API_ENDPOINT}/user/access/reset-password/confirm-otp`,
+        method: HttpMethod.POST,
+        body: {
+          email,
+          otp,
+        },
+      });
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
+    console.error("Error confirm OTP: ", error);
     throw error;
   }
 };
 
-export const ResetPassword = async (
+export const resetPassword = async (
   params: IResetPasswordParams
-): Promise<any> => {
+): Promise<IResponse<null>> => {
   try {
     const headers = {
-      Authorization: `Bearer ${params.infoForgotPassword.resetPasswordToken}`,
-      "x-client-id": params.infoForgotPassword.userId,
+      Authorization: `Bearer ${params.forgotPasswordInfo.resetPasswordToken}`,
+      "x-client-id": params.forgotPasswordInfo.userId,
     };
+
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/reset-password`,
-      method: "POST",
+      method: HttpMethod.POST,
       body: {
         newPassword: params.newPassword,
-        confirmNewPassword: params.confirmNewPassword,
+        confirmNewPassword: params.newConfirmPassword,
       },
       headers: headers,
     });
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
+    console.error("Error reset password: ", error);
     throw error;
   }
 };
 
-export const LoginWithGoogle = async (id_token: string): Promise<any> => {
+export const loginWithGoogle = async (
+  id_token: string
+): Promise<IResponse<ILoginReponse>> => {
   try {
-    const response: IResponse<null> = await sendRequest({
+    const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/google/auth`,
-      method: "POST",
+      method: HttpMethod.POST,
       body: {
         id_token,
       },
@@ -203,7 +204,27 @@ export const LoginWithGoogle = async (id_token: string): Promise<any> => {
 
     return response;
   } catch (error) {
-    console.error("Error sending message: ", error);
+    console.error("Error login with google: ", error);
+    throw error;
+  }
+};
+
+export const logout = async (user: User): Promise<IResponse<null>> => {
+  try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${user.accessToken}`,
+      "x-client-id": user.id as string,
+    };
+
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/logout`,
+      method: HttpMethod.POST,
+      headers: headers,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error logout: ", error);
     throw error;
   }
 };

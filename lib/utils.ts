@@ -15,10 +15,8 @@ export const fetcher = async (url: string) => {
   const res = await fetch(url);
 
   if (!res.ok) {
-    const error = new Error(
-      "An error occurred while fetching the data."
-    ) as ApplicationError;
-
+    const error = new Error('An error occurred while fetching the data.') as ApplicationError;
+    
     error.info = await res.json();
     error.status = res.status;
 
@@ -69,7 +67,7 @@ export const sendRequest = async <T>(props: IRequest) => {
   if (useCredentials) options.credentials = "include";
 
   if (Object.keys(queryParams).length !== 0) {
-    console.log("check");
+    console.log('check');
     url = `${url}?${queryString.stringify(queryParams)}`;
   }
 
@@ -78,15 +76,13 @@ export const sendRequest = async <T>(props: IRequest) => {
       return res.json() as T;
     } else {
       return res.json().then(function (json) {
-        throw new Error(
-          JSON.stringify({
-            status: res.status,
-            message: json?.message ?? "Unknown error",
-            code: json?.code ?? 0,
-            data: json?.data ?? null,
-            errorStack: json?.error ?? "",
-          })
-        );
+        throw {
+          status: json.status || 500,
+          message: json?.message ?? "Unknown error",
+          code: json?.code ?? 0,
+          data: json?.data ?? null,
+          errorStack: json?.errorStack ?? ""
+        };
       });
     }
   });
