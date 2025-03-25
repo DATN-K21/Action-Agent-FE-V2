@@ -72,182 +72,181 @@ export function SignUpForm() {
   };
 
   return (
-    <>
-      <Card className="mx-auto max-w-sm bg-white border border-gray-200 shadow-lg rounded-lg">
-        <CardHeader>
-          <CardTitle className="text-4xl">Create account</CardTitle>
-          <CardDescription className="text-gray-600">
-            Enter your credentials to create your account!
-          </CardDescription>
+    <div className="flex flex-col gap-4">
+      <Card className="max-w-md mx-auto">
+        <CardHeader className="text-center py-4">
+          <CardTitle className="text-xl">Hey there! Welcome to Botion</CardTitle>
+          <CardDescription>Let’s set up your account in just a few steps</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleRegister)} className="grid gap-4">
-              {/* Email Field */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="email">Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="border-[#a996f6] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                        id="email"
-                        type="email"
-                        placeholder="m@example.com"
-                        required
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={form.handleSubmit(handleRegister)} className="space-y-3">
+              <div className="grid gap-3">
+                <div className="flex flex-col gap-2">
+                  <GoogleButton isLoading={isLoading} />
+                </div>
 
-              {/* Username Field */}
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="username">Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="border-[#a996f6] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                        id="username"
-                        type="text"
-                        placeholder="johndoe"
-                        required
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <div className="relative text-center text-xs after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                  <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
 
-              {/* Name Fields Row */}
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="firstName">First Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          className="border-[#a996f6] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                          id="firstName"
-                          type="text"
-                          placeholder="John"
-                          required
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-2">
+                  {/* Email Field */}
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel htmlFor="email" className="text-sm">Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="m@example.com"
+                            disabled={isLoading}
+                            className="h-8"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="lastName">Last Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          className="border-[#a996f6] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                          id="lastName"
-                          type="text"
-                          placeholder="Doe"
-                          required
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  {/* Username Field */}
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel htmlFor="username" className="text-sm">Username</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="username"
+                            type="text"
+                            placeholder="johndoe"
+                            disabled={isLoading}
+                            className="h-8"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Name Fields Row */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem className="space-y-0.5">
+                          <FormLabel htmlFor="firstName" className="text-sm">First Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="firstName"
+                              type="text"
+                              placeholder="John"
+                              disabled={isLoading}
+                              className="h-8"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem className="space-y-0.5">
+                          <FormLabel htmlFor="lastName" className="text-sm">Last Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="lastName"
+                              type="text"
+                              placeholder="Doe"
+                              disabled={isLoading}
+                              className="h-8"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Password Field */}
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel htmlFor="password" className="text-sm">Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="password"
+                            type="password"
+                            placeholder="********"
+                            disabled={isLoading}
+                            className="h-8"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Confirm Password Field */}
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem className="space-y-0.5">
+                        <FormLabel htmlFor="confirmPassword" className="text-sm">Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            placeholder="********"
+                            disabled={isLoading}
+                            className="h-8"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Submit Button */}
+                  <Button type="submit" className="w-full h-8 mt-1" disabled={isLoading}>
+                    {isLoading && <Icons.spinner className="mr-2 h-3 w-3 animate-spin" />}
+                    Create account
+                  </Button>
+
+                  <div className="text-center text-xs mt-1">
+                    Already have an account?{" "}
+                    <Link href="/login" className="underline underline-offset-4 hover:text-primary">
+                      Login
+                    </Link>
+                  </div>
+                </div>
               </div>
-
-              {/* Password Field */}
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center">
-                      <FormLabel htmlFor="password">Password</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Input
-                        className="border-[#a996f6] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                        id="password"
-                        type="password"
-                        placeholder="********"
-                        required
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Confirm Password Field */}
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center">
-                      <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Input
-                        className="border-[#a996f6] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="********"
-                        required
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Submit Button */}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
-                Create your account
-              </Button>
             </form>
           </Form>
-
-          {/* Social Login Buttons */}
-          <div className="flex items-center w-full gap-x-2 mt-2">
-            <GoogleButton isLoading={isLoading} />
-          </div>
-
-          {/* Login Link */}
-          <div className="mt-4 text-center text-sm">
-            Already have an account?{' '}
-            <Link href="/login" className="underline">
-              Login here
-            </Link>
-          </div>
         </CardContent>
       </Card>
-    </>
+      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
+        By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </div>
+    </div>
   );
 }

@@ -90,40 +90,65 @@ const ConfirmOTPDialog: React.FC<ConfirmOTPProps> = ({ email, isOpen, onClose, o
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[300px] md:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Enter OTP</DialogTitle>
-          <DialogDescription>Please enter the 6-digit OTP sent to your email.</DialogDescription>
+      <DialogContent className="sm:max-w-[425px] max-w-[90%] w-full p-5 sm:p-6">
+        <DialogHeader className="space-y-2 text-left">
+          <DialogTitle className="text-xl">Enter OTP</DialogTitle>
+          <DialogDescription className="text-sm">
+            Please enter the 6-digit OTP sent to your email.
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-center">
-          <InputOTP maxLength={6} onChange={handleChangeOTP} value={resetPasswordOTP} disabled={isLoading}>
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-            </InputOTPGroup>
-            <InputOTPSeparator />
-            <InputOTPGroup>
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
+
+        <div className="flex flex-col items-center py-4 gap-3">
+          <div className="text-xs text-center text-muted-foreground mb-2">
+            We have sent a verification code to<br />
+            <span className="font-medium text-foreground">{email}</span>
+          </div>
+
+          <div className="w-full flex justify-center">
+            <InputOTP
+              maxLength={6}
+              onChange={handleChangeOTP}
+              value={resetPasswordOTP}
+              disabled={isLoading}
+              className="flex-wrap justify-center gap-2"
+            >
+              <InputOTPGroup className="gap-2">
+                <InputOTPSlot index={0} className="size-9 sm:size-10" />
+                <InputOTPSlot index={1} className="size-9 sm:size-10" />
+                <InputOTPSlot index={2} className="size-9 sm:size-10" />
+              </InputOTPGroup>
+              <InputOTPSeparator className="mx-1" />
+              <InputOTPGroup className="gap-2">
+                <InputOTPSlot index={3} className="size-9 sm:size-10" />
+                <InputOTPSlot index={4} className="size-9 sm:size-10" />
+                <InputOTPSlot index={5} className="size-9 sm:size-10" />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
         </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant={'outline'}
-            onClick={handleReSendOTP}
-            disabled={isResendDisabled || isLoading}
-          >
-            {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
-            Resend OTP
-          </Button>
-          <Button type="button" onClick={handleConfirmOTP} disabled={resetPasswordOTP.length !== 6 || isLoading}>
-            {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
-            Submit
-          </Button>
+
+        <DialogFooter className="sm:flex-row flex-col gap-2 sm:gap-0">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end w-full gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleReSendOTP}
+              disabled={isResendDisabled || isLoading}
+              className="w-full sm:w-auto"
+            >
+              {isResendDisabled ? "Resend in 30s" : "Resend OTP"}
+            </Button>
+
+            <Button
+              type="button"
+              onClick={handleConfirmOTP}
+              disabled={resetPasswordOTP.length !== 6 || isLoading}
+              className="w-full sm:w-auto"
+            >
+              {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+              Verify OTP
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

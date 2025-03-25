@@ -17,6 +17,7 @@ const GoogleButton: React.FC<GoogleButtonProps> = ({ isLoading }) => {
     <Button
       variant="outline"
       className="w-full"
+      type='button'
       disabled={isLoading}
       onClick={handleLoginWithGoogle}
     >

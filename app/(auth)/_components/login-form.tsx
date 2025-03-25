@@ -110,95 +110,96 @@ export function LoginForm() {
   return (
     <>
       {/* Login Form */}
-      <div className="flex flex-col gap-2">
-        <Card className="mx-auto max-w-sm bg-white border border-gray-200 shadow-lg rounded-lg">
-          <CardHeader>
-            <CardTitle className="text-4xl">Login</CardTitle>
-            <CardDescription className="text-gray-600">
-              Enter your email below to login to your account
-            </CardDescription>
+      <div className="flex flex-col gap-6">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl">Welcome back to Botion</CardTitle>
+            <CardDescription>Login with your Google account</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleLogin)} className="grid gap-4">
-                {/* Email Field */}
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="email">Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          className={`border-[#a996f6] ${form.formState.errors.email ? 'border-red-500' : ''
-                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
-                          id="email"
-                          type="email"
-                          placeholder="m@example.com"
-                          required
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <form onSubmit={form.handleSubmit(handleLogin)}>
+                <div className="grid gap-6">
+                  <div className="flex flex-col gap-4">
+                    <GoogleButton isLoading={isLoading} />
+                  </div>
 
-                {/* Password Field */}
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center">
-                        <FormLabel htmlFor="password">Password</FormLabel>
-                        <div
-                          className="ml-auto inline-block text-sm underline cursor-pointer"
-                          onClick={() => setForgotPasswordDialogOpen(true)}
-                        >
-                          Forgot your password?
-                        </div>
-                      </div>
-                      <FormControl>
-                        <Input
-                          className={`border-[#a996f6] ${form.formState.errors.password ? 'border-red-500' : ''
-                            } focus:outline-none focus-visible:outline-none focus-visible:ring-0`}
-                          id="password"
-                          type="password"
-                          placeholder="********"
-                          required
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                    <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
 
-                {/* Submit Button */}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
-                  Login
-                </Button>
+                  <div className="grid gap-6">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-2">
+                          <FormLabel htmlFor="email">Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="m@example.com"
+                              disabled={isLoading}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-2">
+                          <div className="flex items-center">
+                            <FormLabel htmlFor="password">Password</FormLabel>
+                            <div
+                              className="ml-auto text-sm underline-offset-4 hover:underline cursor-pointer"
+                              onClick={() => setForgotPasswordDialogOpen(true)}
+                            >
+                              Forgot your password?
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Input
+                              id="password"
+                              type="password"
+                              required
+                              placeholder='********'
+                              disabled={isLoading}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+                      Login
+                    </Button>
+                  </div>
+
+                  <div className="text-center text-sm">
+                    Don&apos;t have an account?{" "}
+                    <Link href="/register" className="underline underline-offset-4">
+                      Sign up
+                    </Link>
+                  </div>
+                </div>
               </form>
             </Form>
-
-            {/* Social Login Buttons */}
-            <div className="flex items-center w-full gap-x-2 mt-2">
-              <GoogleButton isLoading={isLoading} />
-            </div>
-
-            {/* Sign-up Link */}
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{' '}
-              <Link href="/register" className="underline">
-                Sign up
-              </Link>
-            </div>
           </CardContent>
         </Card>
+        <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
+          By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </div>
       </div>
 
       <SendOTPDialog

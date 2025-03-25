@@ -6,7 +6,6 @@ import { User } from 'next-auth';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import React from 'react';
 
 export const LogoutForm = ({ user }: { user: User | undefined }) => {
     const router = useRouter();
