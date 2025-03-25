@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 
 import {
   Form,
@@ -15,67 +15,76 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@/components/ui/form'
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { forgotPasswordEmailSchema } from '@/validation-schemas/auth-schema';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Input } from '@/components/ui/input';
-import { sendResetPasswordOTP } from '@/services/auth-service';
-import { toast } from '@/components/toast';
-import { Icons } from '@/components/icon';
+import React, { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { forgotPasswordEmailSchema } from '@/validation-schemas/auth-schema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Input } from '@/components/ui/input'
+import { sendResetPasswordOTP } from '@/services/auth-service'
+import { toast } from '@/components/toast'
+import { Icons } from '@/components/icon'
 
 interface SendOTPProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: (email: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: (email: string) => void
 }
 
-const SendOTPDialog: React.FC<SendOTPProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+const SendOTPDialog: React.FC<SendOTPProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const form = useForm({
     resolver: zodResolver(forgotPasswordEmailSchema),
     defaultValues: {
       email: '',
     },
-  });
+  })
 
   // Hanlde send reset password OTP
   const handleSubmit = async (data: { email: string }) => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const response: IResponse<null> = await sendResetPasswordOTP(data.email);
+      const response: IResponse<null> = await sendResetPasswordOTP(data.email)
       toast({
         type: 'success',
         description: response.message,
-      });
+      })
 
-      onSuccess(data.email);
+      onSuccess(data.email)
     } catch (error: any) {
-      const errorResponse: IResponse<null> = error;
+      const errorResponse: IResponse<null> = error
 
       toast({
         type: 'error',
         description: errorResponse.message || 'Failed to send OTP',
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[300px] md:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Enter Email</DialogTitle>
-          <DialogDescription>Please enter the email address you used to sign up.</DialogDescription>
+          <DialogDescription>
+            Please enter the email address you used to sign up.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="grid gap-4"
+          >
             {/* Email Field */}
             <FormField
               control={form.control}
@@ -100,7 +109,9 @@ const SendOTPDialog: React.FC<SendOTPProps> = ({ isOpen, onClose, onSuccess }) =
             />
             <DialogFooter>
               <Button type="submit" disabled={isLoading}>
-                {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+                {isLoading && (
+                  <Icons.spinner className="mr-2 size-4 animate-spin" />
+                )}
                 Send OTP
               </Button>
             </DialogFooter>
@@ -108,7 +119,7 @@ const SendOTPDialog: React.FC<SendOTPProps> = ({ isOpen, onClose, onSuccess }) =
         </Form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default SendOTPDialog;
+export default SendOTPDialog

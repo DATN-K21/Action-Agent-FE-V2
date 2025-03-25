@@ -1,11 +1,17 @@
-'use client';
+'use client'
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Form,
   FormControl,
@@ -13,18 +19,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { registerSchema } from '@/validation-schemas/auth-schema';
-import { useState } from 'react';
-import GoogleButton from './google-button';
-import { Icons } from '@/components/icon';
-import { useRouter } from 'next/navigation';
-import { register, sendAccountActivationEmail } from '@/services/auth-service';
-import { toast } from '@/components/toast';
+} from '@/components/ui/form'
+import { registerSchema } from '@/validation-schemas/auth-schema'
+import { useState } from 'react'
+import GoogleButton from './google-button'
+import { Icons } from '@/components/icon'
+import { useRouter } from 'next/navigation'
+import { register, sendAccountActivationEmail } from '@/services/auth-service'
+import { toast } from '@/components/toast'
 
 export function SignUpForm() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const form = useForm({
     resolver: zodResolver(registerSchema),
@@ -36,40 +42,40 @@ export function SignUpForm() {
       password: '',
       confirmPassword: '',
     },
-  });
+  })
 
   const handleRegister = async (data: {
-    email: string;
-    username: string;
-    firstName: string;
-    lastName: string;
-    password: string;
-    confirmPassword: string;
+    email: string
+    username: string
+    firstName: string
+    lastName: string
+    password: string
+    confirmPassword: string
   }) => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const { confirmPassword, ...dataToSend } = data;
-      await register(dataToSend);
-      await sendAccountActivationEmail(data.email);
+      const { confirmPassword, ...dataToSend } = data
+      await register(dataToSend)
+      await sendAccountActivationEmail(data.email)
 
       toast({
         type: 'success',
         description: 'Please check your email for verification.',
-      });
+      })
 
-      form.reset();
-      router.push('/login');
+      form.reset()
+      router.push('/login')
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error;
+      const errorReponse: IResponse<null> = error
       toast({
         type: 'error',
         description: errorReponse.message,
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <>
@@ -82,7 +88,10 @@ export function SignUpForm() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleRegister)} className="grid gap-4">
+            <form
+              onSubmit={form.handleSubmit(handleRegister)}
+              className="grid gap-4"
+            >
               {/* Email Field */}
               <FormField
                 control={form.control}
@@ -208,7 +217,9 @@ export function SignUpForm() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center">
-                      <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
+                      <FormLabel htmlFor="confirmPassword">
+                        Confirm Password
+                      </FormLabel>
                     </div>
                     <FormControl>
                       <Input
@@ -228,7 +239,9 @@ export function SignUpForm() {
 
               {/* Submit Button */}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+                {isLoading && (
+                  <Icons.spinner className="mr-2 size-4 animate-spin" />
+                )}
                 Create your account
               </Button>
             </form>
@@ -249,5 +262,5 @@ export function SignUpForm() {
         </CardContent>
       </Card>
     </>
-  );
+  )
 }
