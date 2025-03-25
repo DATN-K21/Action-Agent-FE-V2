@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/icon';
-import { useToast } from '@/hooks/use-toast';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Icons } from '@/components/icon'
+import { useToast } from '@/hooks/use-toast'
 
 const features = [
   {
@@ -25,41 +25,46 @@ const features = [
     title: 'Mark email as read',
     description: 'You can mark an email as read.',
   },
-];
+]
 
 interface ExtensionDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
-const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ isOpen, onClose }) => {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const { toast } = useToast();
+const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
+  isOpen,
+  onClose,
+}) => {
+  const [isConnecting, setIsConnecting] = useState(false)
+  const { toast } = useToast()
 
   const handleClickConnect = () => {
-    setIsConnecting(true);
+    setIsConnecting(true)
     try {
       setTimeout(() => {
-        onClose();
+        onClose()
         toast({
           variant: 'success',
           title: 'Success!',
           description: 'Gmail connected successfully!',
-        });
-      }, 2000);
+        })
+      }, 2000)
     } catch (error) {
     } finally {
       setTimeout(() => {
-        setIsConnecting(false);
-      }, 2000);
+        setIsConnecting(false)
+      }, 2000)
     }
-  };
+  }
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[300px] md:max-w-[425px]">
         <DialogHeader>
           <DialogTitle> Gmail </DialogTitle>
-          <DialogDescription>Integare your Gmail account with Botion.</DialogDescription>
+          <DialogDescription>
+            Integare your Gmail account with Botion.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
           <Card className="w-full md:w-[380px]">
@@ -72,7 +77,9 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ isOpen, onClose }) =>
                   >
                     <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
                     <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{feature.title}</p>
+                      <p className="text-sm font-medium leading-none">
+                        {feature.title}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         {feature.description}
                       </p>
@@ -85,14 +92,20 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ isOpen, onClose }) =>
         </div>
 
         <DialogFooter>
-          <Button type="button" onClick={handleClickConnect} disabled={isConnecting}>
-            {isConnecting && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+          <Button
+            type="button"
+            onClick={handleClickConnect}
+            disabled={isConnecting}
+          >
+            {isConnecting && (
+              <Icons.spinner className="mr-2 size-4 animate-spin" />
+            )}
             Connect
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default ExtensionDialog;
+export default ExtensionDialog

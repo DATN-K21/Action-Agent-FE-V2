@@ -1,24 +1,24 @@
-'use client';
+'use client'
 
-import React, { ReactNode } from 'react';
-import { toast as sonnerToast } from 'sonner';
-import { CheckCircleFillIcon, WarningIcon } from './icons';
-import { InfoIcon } from 'lucide-react';
+import React, { ReactNode } from 'react'
+import { toast as sonnerToast } from 'sonner'
+import { CheckCircleFillIcon, WarningIcon } from './icons'
+import { InfoIcon } from 'lucide-react'
 
 const iconsByType: Record<'infor' | 'success' | 'error', ReactNode> = {
   infor: <InfoIcon />,
   success: <CheckCircleFillIcon />,
   error: <WarningIcon />,
-};
+}
 
 export function toast(props: Omit<ToastProps, 'id'>) {
   return sonnerToast.custom((id) => (
     <Toast id={id} type={props.type} description={props.description} />
-  ));
+  ))
 }
 
 function Toast(props: ToastProps) {
-  const { id, type, description } = props;
+  const { id, type, description } = props
 
   return (
     <div className="flex w-full toast-mobile:w-[356px] justify-center shadow-none">
@@ -36,12 +36,12 @@ function Toast(props: ToastProps) {
         <div className="text-zinc-950 text-sm">{description}</div>
       </div>
     </div>
-  );
+  )
 }
 
 interface ToastProps {
-  id: string | number;
-  type: 'infor' | 'success' | 'error';
-  description: string;
-  duration?: number;
+  id: string | number
+  type: 'infor' | 'success' | 'error'
+  description: string
+  duration?: number
 }

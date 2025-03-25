@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 
 import {
   Form,
@@ -15,20 +15,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { resetPasswordSchema } from '@/validation-schemas/auth-schema';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Input } from '@/components/ui/input';
-import { resetPassword } from '@/services/auth-service';
-import { toast } from '@/components/toast';
-import { Icons } from '@/components/icon';
+} from '@/components/ui/form'
+import React, { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { resetPasswordSchema } from '@/validation-schemas/auth-schema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Input } from '@/components/ui/input'
+import { resetPassword } from '@/services/auth-service'
+import { toast } from '@/components/toast'
+import { Icons } from '@/components/icon'
 
 interface ResetPasswordProps {
-  forgotPasswordInfo: { userId: string; resetPasswordToken: string };
-  isOpen: boolean;
-  onClose: () => void;
+  forgotPasswordInfo: { userId: string; resetPasswordToken: string }
+  isOpen: boolean
+  onClose: () => void
 }
 
 const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
@@ -36,7 +36,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const form = useForm({
     resolver: zodResolver(resetPasswordSchema),
@@ -44,36 +44,39 @@ const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
       newPassword: '',
       newConfirmPassword: '',
     },
-  });
+  })
 
   // Handle reset password
-  const handleSubmit = async (data: { newPassword: string; newConfirmPassword: string }) => {
-    setIsLoading(true);
+  const handleSubmit = async (data: {
+    newPassword: string
+    newConfirmPassword: string
+  }) => {
+    setIsLoading(true)
 
     try {
       const response = await resetPassword({
         newPassword: data.newPassword,
         newConfirmPassword: data.newConfirmPassword,
         forgotPasswordInfo,
-      });
+      })
 
       toast({
         type: 'success',
         description: response.message,
-      });
+      })
 
-      onClose();
+      onClose()
     } catch (error: any) {
-      const errorResponse: IResponse<null> = error;
+      const errorResponse: IResponse<null> = error
 
       toast({
         type: 'error',
         description: errorResponse.message || 'Failed to reset password',
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -86,7 +89,10 @@ const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="grid gap-4"
+          >
             {/* Password Field */}
             <FormField
               control={form.control}
@@ -119,7 +125,9 @@ const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center">
-                    <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
+                    <FormLabel htmlFor="confirmPassword">
+                      Confirm Password
+                    </FormLabel>
                   </div>
                   <FormControl>
                     <Input
@@ -138,7 +146,9 @@ const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
             />
             <DialogFooter>
               <Button type="submit" disabled={isLoading}>
-                {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+                {isLoading && (
+                  <Icons.spinner className="mr-2 size-4 animate-spin" />
+                )}
                 Reset Password
               </Button>
             </DialogFooter>
@@ -146,7 +156,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordProps> = ({
         </Form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default ResetPasswordDialog;
+export default ResetPasswordDialog

@@ -1,15 +1,15 @@
-import type { Attachment } from 'ai';
+import type { Attachment } from 'ai'
 
-import { LoaderIcon } from './icons';
+import { LoaderIcon } from './icons'
 
 export const PreviewAttachment = ({
   attachment,
   isUploading = false,
 }: {
-  attachment: Attachment;
-  isUploading?: boolean;
+  attachment: Attachment
+  isUploading?: boolean
 }) => {
-  const { name, url, contentType } = attachment;
+  const { name, url, contentType } = attachment
 
   return (
     <div data-testid="input-attachment-preview" className="flex flex-col gap-2">
@@ -42,5 +42,5 @@ export const PreviewAttachment = ({
       </div>
       <div className="text-xs text-zinc-500 max-w-16 truncate">{name}</div>
     </div>
-  );
-};
+  )
+}

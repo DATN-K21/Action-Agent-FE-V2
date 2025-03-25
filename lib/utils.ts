@@ -1,44 +1,46 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import queryString from "query-string";
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+import queryString from 'query-string'
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 interface ApplicationError extends Error {
-  info: string;
-  status: number;
+  info: string
+  status: number
 }
 
 export const fetcher = async (url: string) => {
-  const res = await fetch(url);
+  const res = await fetch(url)
 
   if (!res.ok) {
-    const error = new Error('An error occurred while fetching the data.') as ApplicationError;
-    
-    error.info = await res.json();
-    error.status = res.status;
+    const error = new Error(
+      'An error occurred while fetching the data.',
+    ) as ApplicationError
 
-    throw error;
+    error.info = await res.json()
+    error.status = res.status
+
+    throw error
   }
 
-  return res.json();
-};
+  return res.json()
+}
 
 export function getLocalStorage(key: string) {
-  if (typeof window !== "undefined") {
-    return JSON.parse(localStorage.getItem(key) || "[]");
+  if (typeof window !== 'undefined') {
+    return JSON.parse(localStorage.getItem(key) || '[]')
   }
-  return [];
+  return []
 }
 
 export function generateUUID(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
 }
 
 export const sendRequest = async <T>(props: IRequest) => {
@@ -50,7 +52,7 @@ export const sendRequest = async <T>(props: IRequest) => {
     useCredentials = false,
     headers = {},
     nextOption = {},
-  } = props;
+  } = props
 
   const options: any = {
     method: method,
@@ -58,32 +60,32 @@ export const sendRequest = async <T>(props: IRequest) => {
     headers: new Headers(headers),
     body: body instanceof FormData ? body : body ? JSON.stringify(body) : null,
     ...nextOption,
-  };
-
-  if (!(body instanceof FormData)) {
-    options.headers.append("content-type", "application/json");
   }
 
-  if (useCredentials) options.credentials = "include";
+  if (!(body instanceof FormData)) {
+    options.headers.append('content-type', 'application/json')
+  }
+
+  if (useCredentials) options.credentials = 'include'
 
   if (Object.keys(queryParams).length !== 0) {
-    console.log('check');
-    url = `${url}?${queryString.stringify(queryParams)}`;
+    console.log('check')
+    url = `${url}?${queryString.stringify(queryParams)}`
   }
 
   return fetch(url, options).then((res) => {
     if (res.ok) {
-      return res.json() as T;
+      return res.json() as T
     } else {
       return res.json().then(function (json) {
         throw {
           status: json.status || 500,
-          message: json?.message ?? "Unknown error",
+          message: json?.message ?? 'Unknown error',
           code: json?.code ?? 0,
           data: json?.data ?? null,
-          errorStack: json?.errorStack ?? ""
-        };
-      });
+          errorStack: json?.errorStack ?? '',
+        }
+      })
     }
-  });
-};
+  })
+}

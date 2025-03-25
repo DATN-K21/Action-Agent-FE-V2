@@ -1,26 +1,25 @@
-'use client';
+'use client'
 
-import cx from 'classnames';
-import { AnimatePresence, motion } from 'framer-motion';
-import { memo } from 'react';
-import { SparklesIcon } from './icons';
-import { Markdown } from './markdown';
-import { PreviewAttachment } from './preview-attachment';
-import { cn } from '@/lib/utils';
-import { IMessage } from '@/types/ai';
-import { MessageRole } from '@/constants/ai-constant';
-import { MessageActions } from '@/components/ui/message-actions';
+import cx from 'classnames'
+import { AnimatePresence, motion } from 'framer-motion'
+import { memo } from 'react'
+import { SparklesIcon } from './icons'
+import { Markdown } from './markdown'
+import { PreviewAttachment } from './preview-attachment'
+import { cn } from '@/lib/utils'
+import { IMessage } from '@/types/ai'
+import { MessageRole } from '@/constants/ai-constant'
+import { MessageActions } from '@/components/ui/message-actions'
 
 const PurePreviewMessage = ({
   chatId,
   message,
   isLoading,
 }: {
-  chatId: string;
-  message: IMessage;
-  isLoading: boolean;
+  chatId: string
+  message: IMessage
+  isLoading: boolean
 }) => {
-
   return (
     <AnimatePresence>
       <motion.div
@@ -32,7 +31,7 @@ const PurePreviewMessage = ({
       >
         <div
           className={cn(
-            'flex gap-4 w-full group-data-[role=human]/message:ml-auto group-data-[role=human]/message:max-w-2xl group-data-[role=human]/message:w-fit'
+            'flex gap-4 w-full group-data-[role=human]/message:ml-auto group-data-[role=human]/message:max-w-2xl group-data-[role=human]/message:w-fit',
           )}
         >
           {message.role === MessageRole.AI && (
@@ -58,7 +57,7 @@ const PurePreviewMessage = ({
               </div>
             )} */}
 
-            {(message.content) && (
+            {message.content && (
               <div
                 data-testid="message-content"
                 className="flex flex-row gap-2 items-start"
@@ -83,21 +82,21 @@ const PurePreviewMessage = ({
         </div>
       </motion.div>
     </AnimatePresence>
-  );
-};
+  )
+}
 
 export const PreviewMessage = memo(
   PurePreviewMessage,
   (prevProps, nextProps) => {
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.message.content !== nextProps.message.content) return false;
+    if (prevProps.isLoading !== nextProps.isLoading) return false
+    if (prevProps.message.content !== nextProps.message.content) return false
 
-    return true;
+    return true
   },
-);
+)
 
 export const ThinkingMessage = () => {
-  const role = MessageRole.AI;
+  const role = MessageRole.AI
 
   return (
     <motion.div
@@ -126,5 +125,5 @@ export const ThinkingMessage = () => {
         </div>
       </div>
     </motion.div>
-  );
-};
+  )
+}

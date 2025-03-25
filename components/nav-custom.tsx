@@ -1,22 +1,22 @@
-'use client';
+'use client'
 
-import { Collapsible } from '@/components/ui/collapsible';
+import { Collapsible } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import Link from 'next/link';
+} from '@/components/ui/sidebar'
+import Link from 'next/link'
 
 export function NavCustom({
   items,
 }: {
   items: {
-    title: string;
-    url: string;
-    icon: any;
-  }[];
+    title: string
+    url: string
+    icon: any
+  }[]
 }) {
   return (
     <SidebarGroup>
@@ -35,5 +35,5 @@ export function NavCustom({
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  );
+  )
 }

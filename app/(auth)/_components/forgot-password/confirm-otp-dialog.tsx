@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from '@/components/ui/input-otp';
+} from '@/components/ui/input-otp'
 
 import {
   Dialog,
@@ -14,89 +14,106 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 
-import React, { useState } from 'react';
-import { confirmResetPasswordOTP, IConfirmResetPasswordOTPResponse, sendResetPasswordOTP } from '@/services/auth-service';
-import { toast } from '@/components/toast';
-import { Icons } from '@/components/icon';
+import React, { useState } from 'react'
+import {
+  confirmResetPasswordOTP,
+  IConfirmResetPasswordOTPResponse,
+  sendResetPasswordOTP,
+} from '@/services/auth-service'
+import { toast } from '@/components/toast'
+import { Icons } from '@/components/icon'
 
 interface ConfirmOTPProps {
-  email: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: (userId: string, resetPasswordToken: string) => void;
+  email: string
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: (userId: string, resetPasswordToken: string) => void
 }
 
-const ConfirmOTPDialog: React.FC<ConfirmOTPProps> = ({ email, isOpen, onClose, onSuccess }) => {
-  const [resetPasswordOTP, setResetPasswordOTP] = useState<string>('');
-  const [isResendDisabled, setIsResendDisabled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+const ConfirmOTPDialog: React.FC<ConfirmOTPProps> = ({
+  email,
+  isOpen,
+  onClose,
+  onSuccess,
+}) => {
+  const [resetPasswordOTP, setResetPasswordOTP] = useState<string>('')
+  const [isResendDisabled, setIsResendDisabled] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const handleReSendOTP = async () => {
     try {
-      setIsResendDisabled(true);
-      await sendResetPasswordOTP(email);
+      setIsResendDisabled(true)
+      await sendResetPasswordOTP(email)
 
       // Enable resend button after 30 seconds
       setTimeout(() => {
-        setIsResendDisabled(false);
-      }, 30000); // 30 seconds
+        setIsResendDisabled(false)
+      }, 30000) // 30 seconds
 
       toast({
         type: 'success',
         description: 'Resend OTP successfully - Please check your email',
-      });
-
+      })
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error;
+      const errorReponse: IResponse<null> = error
       toast({
         type: 'error',
         description: errorReponse.message || 'Failed to resend OTP',
-      });
+      })
     }
-  };
+  }
 
   const handleChangeOTP = (value: string) => {
     if (!isNaN(Number(value))) {
-      setResetPasswordOTP(value);
+      setResetPasswordOTP(value)
     }
-  };
+  }
 
   const handleConfirmOTP = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const response: IResponse<IConfirmResetPasswordOTPResponse> = await confirmResetPasswordOTP(email, resetPasswordOTP);
+      const response: IResponse<IConfirmResetPasswordOTPResponse> =
+        await confirmResetPasswordOTP(email, resetPasswordOTP)
 
       toast({
         type: 'success',
         description: response.message,
-      });
+      })
 
-      const { userId, resetPasswordToken } = response.data as IConfirmResetPasswordOTPResponse;
-      onSuccess(userId, resetPasswordToken);
+      const { userId, resetPasswordToken } =
+        response.data as IConfirmResetPasswordOTPResponse
+      onSuccess(userId, resetPasswordToken)
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error;
+      const errorReponse: IResponse<null> = error
       toast({
         type: 'error',
         description: errorReponse.message,
-      });
+      })
     } finally {
-      setIsLoading(false);
-      setResetPasswordOTP('');
+      setIsLoading(false)
+      setResetPasswordOTP('')
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[300px] md:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Enter OTP</DialogTitle>
-          <DialogDescription>Please enter the 6-digit OTP sent to your email.</DialogDescription>
+          <DialogDescription>
+            Please enter the 6-digit OTP sent to your email.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
-          <InputOTP maxLength={6} onChange={handleChangeOTP} value={resetPasswordOTP} disabled={isLoading}>
+          <InputOTP
+            maxLength={6}
+            onChange={handleChangeOTP}
+            value={resetPasswordOTP}
+            disabled={isLoading}
+          >
             <InputOTPGroup>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
@@ -117,17 +134,25 @@ const ConfirmOTPDialog: React.FC<ConfirmOTPProps> = ({ email, isOpen, onClose, o
             onClick={handleReSendOTP}
             disabled={isResendDisabled || isLoading}
           >
-            {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+            {isLoading && (
+              <Icons.spinner className="mr-2 size-4 animate-spin" />
+            )}
             Resend OTP
           </Button>
-          <Button type="button" onClick={handleConfirmOTP} disabled={resetPasswordOTP.length !== 6 || isLoading}>
-            {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
+          <Button
+            type="button"
+            onClick={handleConfirmOTP}
+            disabled={resetPasswordOTP.length !== 6 || isLoading}
+          >
+            {isLoading && (
+              <Icons.spinner className="mr-2 size-4 animate-spin" />
+            )}
             Submit
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default ConfirmOTPDialog;
+export default ConfirmOTPDialog
