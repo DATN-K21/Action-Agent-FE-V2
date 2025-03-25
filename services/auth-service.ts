@@ -1,7 +1,7 @@
-import { API_ENDPOINT, HttpMethod } from '@/constants/response-constant';
-import { ILoginReponse, IRegisterReponse } from '@/types/auth';
-import { sendRequest } from '@/lib/utils';
-import { User } from 'next-auth';
+import { API_ENDPOINT, HttpMethod } from "@/constants/response-constant";
+import { ILoginReponse, IRegisterReponse } from "@/types/auth";
+import { sendRequest } from "@/lib/utils";
+import { User } from "next-auth";
 
 export interface ILoginParams {
   email: string;
@@ -36,11 +36,13 @@ export interface IConfirmResetPasswordOTPResponse {
   resetPasswordToken: string;
 }
 
-export const refreshToken = async (params: IRefreshTokenParams): Promise<IResponse<null>> => {
+export const refreshToken = async (
+  params: IRefreshTokenParams
+): Promise<IResponse<null>> => {
   try {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${params.accessToken}`,
-      'x-client-id': params.userId,
+      "x-client-id": params.userId,
     };
 
     const response: IResponse<null> = await sendRequest({
@@ -54,12 +56,14 @@ export const refreshToken = async (params: IRefreshTokenParams): Promise<IRespon
 
     return response;
   } catch (error) {
-    console.error('Error refresh token: ', error);
+    console.error("Error refresh token: ", error);
     throw error;
   }
 };
 
-export const login = async (params: ILoginParams): Promise<IResponse<ILoginReponse>> => {
+export const login = async (
+  params: ILoginParams
+): Promise<IResponse<ILoginReponse>> => {
   try {
     const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/login`,
@@ -72,12 +76,14 @@ export const login = async (params: ILoginParams): Promise<IResponse<ILoginRepon
 
     return response;
   } catch (error) {
-    console.error('Error login: ', error);
+    console.error("Error login: ", error);
     throw error as ILoginReponse;
   }
 };
 
-export const register = async (params: IRegisterParams): Promise<IResponse<IRegisterReponse>> => {
+export const register = async (
+  params: IRegisterParams
+): Promise<IResponse<IRegisterReponse>> => {
   try {
     const response: IResponse<IRegisterReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/signup`,
@@ -93,12 +99,14 @@ export const register = async (params: IRegisterParams): Promise<IResponse<IRegi
 
     return response;
   } catch (error) {
-    console.error('Error register: ', error);
+    console.error("Error register: ", error);
     throw error;
   }
 };
 
-export const sendAccountActivationEmail = async (email: string): Promise<IResponse<null>> => {
+export const sendAccountActivationEmail = async (
+  email: string
+): Promise<IResponse<null>> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/activate/send-link`,
@@ -110,12 +118,35 @@ export const sendAccountActivationEmail = async (email: string): Promise<IRespon
 
     return response;
   } catch (error) {
-    console.error('Error sending account activation email: ', error);
+    console.error("Error sending account activation email: ", error);
     throw error;
   }
 };
 
-export const sendResetPasswordOTP = async (email: string): Promise<IResponse<null>> => {
+export const ActivateAccount = async (token: string): Promise<any> => {
+  try {
+    const response: IResponse<null> = await sendRequest({
+      url: `${API_ENDPOINT}/user/access/activate/confirm`,
+      method: "POST",
+      body: {
+        activationToken: token,
+      },
+    });
+
+    if (response.status === 200) {
+      return { message: "Account activated successfully" };
+    } else {
+      throw new Error("Account activation failed. Please request a new link.");
+    }
+  } catch (error) {
+    console.error("Error activating account: ", error);
+    throw error;
+  }
+};
+
+export const sendResetPasswordOTP = async (
+  email: string
+): Promise<IResponse<null>> => {
   try {
     const response: IResponse<null> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/reset-password/send-otp`,
@@ -127,34 +158,40 @@ export const sendResetPasswordOTP = async (email: string): Promise<IResponse<nul
 
     return response;
   } catch (error) {
-    console.error('Error send reset password OTP: ', error);
+    console.error("Error send reset password OTP: ", error);
     throw error;
   }
 };
 
-export const confirmResetPasswordOTP = async (email: string, otp: string): Promise<IResponse<IConfirmResetPasswordOTPResponse>> => {
+export const confirmResetPasswordOTP = async (
+  email: string,
+  otp: string
+): Promise<IResponse<IConfirmResetPasswordOTPResponse>> => {
   try {
-    const response: IResponse<IConfirmResetPasswordOTPResponse> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/reset-password/confirm-otp`,
-      method: HttpMethod.POST,
-      body: {
-        email,
-        otp,
-      },
-    });
+    const response: IResponse<IConfirmResetPasswordOTPResponse> =
+      await sendRequest({
+        url: `${API_ENDPOINT}/user/access/reset-password/confirm-otp`,
+        method: HttpMethod.POST,
+        body: {
+          email,
+          otp,
+        },
+      });
 
     return response;
   } catch (error) {
-    console.error('Error confirm OTP: ', error);
+    console.error("Error confirm OTP: ", error);
     throw error;
   }
 };
 
-export const resetPassword = async (params: IResetPasswordParams): Promise<IResponse<null>> => {
+export const resetPassword = async (
+  params: IResetPasswordParams
+): Promise<IResponse<null>> => {
   try {
     const headers = {
       Authorization: `Bearer ${params.forgotPasswordInfo.resetPasswordToken}`,
-      'x-client-id': params.forgotPasswordInfo.userId,
+      "x-client-id": params.forgotPasswordInfo.userId,
     };
 
     const response: IResponse<null> = await sendRequest({
@@ -169,12 +206,14 @@ export const resetPassword = async (params: IResetPasswordParams): Promise<IResp
 
     return response;
   } catch (error) {
-    console.error('Error reset password: ', error);
+    console.error("Error reset password: ", error);
     throw error;
   }
 };
 
-export const loginWithGoogle = async (id_token: string): Promise<IResponse<ILoginReponse>> => {
+export const loginWithGoogle = async (
+  id_token: string
+): Promise<IResponse<ILoginReponse>> => {
   try {
     const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${API_ENDPOINT}/user/access/google/auth`,
@@ -186,7 +225,7 @@ export const loginWithGoogle = async (id_token: string): Promise<IResponse<ILogi
 
     return response;
   } catch (error) {
-    console.error('Error login with google: ', error);
+    console.error("Error login with google: ", error);
     throw error;
   }
 };
@@ -195,7 +234,7 @@ export const logout = async (user: User): Promise<IResponse<null>> => {
   try {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${user.accessToken}`,
-      'x-client-id': user.id as string,
+      "x-client-id": user.id as string,
     };
 
     const response: IResponse<null> = await sendRequest({
@@ -206,7 +245,7 @@ export const logout = async (user: User): Promise<IResponse<null>> => {
 
     return response;
   } catch (error) {
-    console.error('Error logout: ', error);
+    console.error("Error logout: ", error);
     throw error;
   }
 };
