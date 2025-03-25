@@ -72,46 +72,54 @@ const SendOTPDialog: React.FC<SendOTPProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[300px] md:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Enter Email</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[425px] max-w-[90%] w-full p-5 sm:p-6">
+        <DialogHeader className="space-y-2 text-left">
+          <DialogTitle className="text-xl">Enter Email</DialogTitle>
+          <DialogDescription className="text-sm">
             Please enter the email address you used to sign up.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="grid gap-4"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-4 py-2">
             {/* Email Field */}
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel htmlFor="email">Email</FormLabel>
+                <FormItem className="space-y-1.5">
+                  <FormLabel htmlFor="email" className="text-sm font-medium">Email</FormLabel>
                   <FormControl>
                     <Input
-                      className="border-[#a996f6] focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+                      className="w-full"
                       id="email"
                       type="email"
-                      placeholder="m@example@gmail.com"
+                      placeholder="m@example.com"
                       required
                       {...field}
                       disabled={isLoading}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
-            <DialogFooter>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && (
-                  <Icons.spinner className="mr-2 size-4 animate-spin" />
-                )}
+            <DialogFooter className="sm:flex-row flex-col gap-2 sm:gap-0 mt-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="w-full sm:w-auto order-2 sm:order-1"
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="w-full sm:w-auto order-1 sm:order-2"
+                disabled={isLoading}
+              >
+                {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />}
                 Send OTP
               </Button>
             </DialogFooter>
@@ -122,4 +130,4 @@ const SendOTPDialog: React.FC<SendOTPProps> = ({
   )
 }
 
-export default SendOTPDialog
+export default SendOTPDialog;

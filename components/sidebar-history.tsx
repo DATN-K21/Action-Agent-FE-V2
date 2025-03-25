@@ -35,6 +35,7 @@ import { IThread } from '@/types/ai'
 import { EditIcon } from 'lucide-react'
 import { toast } from '@/components/toast'
 import { useThreadStore } from '@/store/thread-store'
+import useChatStore from '@/store/chat-store'
 
 interface IThreadItemProps {
   thread: IThread
@@ -143,6 +144,8 @@ export function SidebarHistory({ user }: { user: User }) {
     groupThreadsByDate,
   } = useThreadStore()
 
+  const { reload } = useChatStore();
+
   const [deleteId, setDeleteId] = useState<string>('')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const pathname = usePathname()
@@ -160,7 +163,8 @@ export function SidebarHistory({ user }: { user: User }) {
     try {
       await deleteThreadById(user, deleteId)
       if (deleteId === id) {
-        router.push('/')
+        router.push('/');
+        reload();
       }
       toast({
         type: 'success',
