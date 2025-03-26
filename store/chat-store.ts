@@ -9,6 +9,7 @@ import { useThreadStore } from '@/store/thread-store';
 import { ExtensionSocketService } from "@/services/socketio-service";
 import { IStreamEmitData, IStreamOnData } from "@/types/stream";
 import { Extension } from "@/constants/data";
+import { ThreadType } from "@/constants/extension-constant";
 
 
 interface ChatState {
@@ -19,13 +20,57 @@ interface ChatState {
     setMessages: (messages: IMessage[]) => void;
     setInput: (text: string) => void;
     setThreadId: (threadId: string) => void;
-    createThread: (user: User, threadId: string, title?: string) => Promise<void>;
+    createThread: (user: User, threadId: string, title?: string, type?: ThreadType) => Promise<void>;
     append: (message: IMessage) => void;
+    pop: () => void;
     handleStreamChat: (user: User) => Promise<void>;
     handleStreamExtensionChat: (user: User, extension: Extension) => Promise<void>;
     stop: () => void;
     reload: () => void;
 }
+
+interface StreamResponseParams {
+    user: User,
+    threadId: string,
+    extension: Extension,
+    messages: IMessage[],
+    set: any,
+}
+
+// const onStreamResponseHandler = async (params: StreamResponseParams, data: IStreamOnData) => { 
+//     const { user, threadId, extension, messages, set } = params;
+    
+//     if (data.interrupted === true) {
+//         ExtensionSocketService.emitStreamInterrupt({
+//             user_id: user.id!,
+//             thread_id: threadId,
+//             extension_name: extension.key!,
+//             execute: true,
+//             tool_calls: (data.output as []).map(x => x),
+//         });
+
+//         ExtensionSocketService.offStreamResponse(() => {
+//             console.log("Stream response event listener removed");
+//         });
+//         return;
+//     }
+
+//     console.log("Received stream response: ", data);
+//     set({ status: ChatStatus.STREAMING });
+
+//     const updatedMessages: IMessage[] = messages.map(x => x);
+//     const lastIndex = updatedMessages.length - 1;
+//     if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
+//         let responseContent = data.output.toString() ?? "";
+//         updatedMessages[lastIndex] = {
+//             ...updatedMessages[lastIndex],
+//             content: responseContent,
+//         };
+//     }
+
+//     set({ messages: updatedMessages });
+
+// }
 
 const useChatStore = create<ChatState>((set, get) => ({
     messages: [],
@@ -38,9 +83,9 @@ const useChatStore = create<ChatState>((set, get) => ({
     setThreadId: (threadId) => set({ threadId }),
 
     // Create a new chat thread
-    createThread: async (user: User, threadId: string, title: string = "New Chat") => {
+    createThread: async (user: User, threadId: string, title: string = "New Chat", type: ThreadType = ThreadType.DEFAULT) => {
         try {
-            const response: ICreateThreadResponse = await createThread({ user: user, payload: { id: threadId, title } });
+            const response: ICreateThreadResponse = await createThread({ user: user, payload: { id: threadId, title, threadType: type } });
             set({ threadId: response.id });
 
             const addThread = useThreadStore.getState().addThread;
@@ -55,6 +100,14 @@ const useChatStore = create<ChatState>((set, get) => ({
         set((state) => ({
             messages: [...state.messages, { ...message }],
         })),
+    
+    pop: () =>
+        set((state) => {
+            const updatedMessages = [...state.messages];
+            updatedMessages.pop();
+            return { messages: updatedMessages };
+        }
+    ),
 
     // Handle send message SSE
     handleStreamChat: async (user: User) => {
@@ -152,19 +205,14 @@ const useChatStore = create<ChatState>((set, get) => ({
         }
     },
 
-    // 
+    // Handle send message SSE for extension
     handleStreamExtensionChat: async (user: User, extension: Extension) => { 
-        const { input, threadId, append, setInput } = get();
-
-        console.log("Stream user: ")
-        console.log(user);
-        console.log("Stream extension: ")
-        console.log(extension);
-    
-        if (!input.trim()) return;
+        const { input, threadId, append, pop, setInput, messages } = get();    
+        if (!input.trim()) {
+            return;
+        };
     
         set({ status: ChatStatus.SUBMITTED });
-    
         // Create a user message and add it to the chat
         const userMessage: IMessage = {
             id: generateUUID(),
@@ -183,45 +231,112 @@ const useChatStore = create<ChatState>((set, get) => ({
                 input: input,
             };
 
-            console.log("Emitting stream event with params: ", params);
-
             // Emit stream event to the server
             ExtensionSocketService.emitStream(params);
-            set({ status: ChatStatus.STREAMING });
+            let outputToolCalls: any[] = [];
+            let streamInterruptOutput = "";
 
-            let aiMessage: IMessage = {
-                id: generateUUID(),
-                role: MessageRole.AI,
-                content: "",
-            };
-            append(aiMessage); // Show AI message placeholder immediately
+            let isEmptyAiMessageAdded = false;
+            
 
-            // Listen for stream responses
-            ExtensionSocketService.onStreamResponse((data: IStreamOnData) => {
-                console.log("Received stream response: ", data);
-                set((state) => {
-                    const updatedMessages = [...state.messages];
+            const streamResponseHandler = (data: IStreamOnData) => {
+                // Check for interrupted response
+                if (data.interrupted === true) {
+                    if (isEmptyAiMessageAdded === false) {
+                        let aiMessage: IMessage = {
+                            id: generateUUID(),
+                            role: MessageRole.AI,
+                            content: "",
+                        };            
+                        append(aiMessage); // Show AI message placeholder immediately
+                        isEmptyAiMessageAdded = true;
+                    }
+
+                    if (data.output && data.output.length > 0) {
+                        outputToolCalls = data.output;
+                    } else if (data.streaming === false) {
+                        // Remove the last message - empty AI message
+                        pop();
+
+                        const payload = {
+                            user_id: user.id!,
+                            thread_id: threadId,
+                            extension_name: extension.key!,
+                            execute: true,
+                            tool_calls: outputToolCalls,
+                        };
+                        set({ status: ChatStatus.SUBMITTED });
+
+                        ExtensionSocketService.emitStreamInterrupt(payload);
+
+                        // Remove this listener
+                        outputToolCalls = [];
+                        ExtensionSocketService.offStreamResponse(streamResponseHandler);
+                        return;
+                    }
+                } else {
+                    // Otherwise, handle the normal response
+                    set({ status: ChatStatus.STREAMING });
+                    if (isEmptyAiMessageAdded === false) {
+                        let aiMessage: IMessage = {
+                            id: generateUUID(),
+                            role: MessageRole.AI,
+                            content: "",
+                        };            
+                        append(aiMessage); // Show AI message placeholder immediately
+                        isEmptyAiMessageAdded = true;
+                    }
+                    
+                    const updatedMessages: IMessage[] = messages.map(x => x);
                     const lastIndex = updatedMessages.length - 1;
-
                     if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
-                        let responseContent = data.output ?? "";
-                        if (data?.interrupt === true) {
-                            responseContent = `Please confirm these information: ${JSON.stringify(data.output)}`;
-                        }
+                        let responseContent = data.output.toString() ?? "";
                         updatedMessages[lastIndex] = {
                             ...updatedMessages[lastIndex],
                             content: responseContent,
                         };
                     }
+            
+                    set({ messages: updatedMessages });
+                }
+            };
 
-                    return { messages: updatedMessages };
-                });
-            });
+            // Listen for stream responses
+            ExtensionSocketService.onStreamResponse(streamResponseHandler);
+            
+            const streamInterruptHandler = (data: IStreamOnData) => { 
+                set({ status: ChatStatus.STREAMING });
+                if (data.interrupted === true || data.streaming === false) {
+                    // Remove this listener
+                    streamInterruptOutput = "";
+                    ExtensionSocketService.offStreamInterrupt(streamInterruptHandler);
+                }
+
+                if (data.output) {
+                    streamInterruptOutput = data.output.toString();
+                    const updatedMessages: IMessage[] = messages.map(x => x);
+                    const lastIndex = updatedMessages.length - 1;
+
+                    if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
+                        updatedMessages[lastIndex] = {
+                            ...updatedMessages[lastIndex],
+                            content: streamInterruptOutput,
+                        };
+                    }
+    
+                    set({ messages: updatedMessages });
+                }
+            }
+
+            // Incase of stream interrupt
+            ExtensionSocketService.onStreamInterrupt(streamInterruptHandler);
+
+            // Set status to "ready" after AI response completes
+            set({ status: ChatStatus.READY });
         } catch (error) {
             set({ status: ChatStatus.ERROR });
             throw error;
         }
-    
     },
 
 

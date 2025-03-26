@@ -9,8 +9,9 @@ export interface IStreamOnData {
   user_id: string;
   thread_id: string;
   extension_name: string;
-  interrupt: boolean;
+  interrupted: boolean;
   output: any;
+  streaming?: boolean;
 }
 
 export interface IToolCall {

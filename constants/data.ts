@@ -23,6 +23,7 @@ import {
   Icon,
 } from '@tabler/icons-react';
 import { ForwardRefExoticComponent, RefAttributes } from 'react';
+import { ThreadType } from './extension-constant';
 
 export type User = {
   id: number;
@@ -219,7 +220,7 @@ export interface Extension {
   logo: ForwardRefExoticComponent<IconProps & RefAttributes<Icon>>;
   connected: boolean;
   desc: string;
-  key?: string;
+  key: string;
 }
 
 export const appText = new Map<string, string>([

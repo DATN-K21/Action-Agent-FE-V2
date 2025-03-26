@@ -19,6 +19,7 @@ import { User } from 'next-auth';
 import { IActiveExtension, IGetExtensionActions } from '@/types/extension';
 import useChatStore from '@/store/chat-store';
 import { generateUUID } from '@/lib/utils';
+import { ThreadType } from '@/constants/extension-constant';
 
 interface ExtensionDialogProps {
   user: User;
@@ -95,7 +96,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
     // Start new thread
     const newThreadId = generateUUID();
     try {
-      await createThread(user, newThreadId, `New ${extension.name} Chat`);
+      await createThread(user, newThreadId, `New ${extension.name} Chat`, extension.key as ThreadType);
       toast({ variant: 'success', title: 'Success', description: 'Chat started' });
       window.location.replace(`/chat/${extension.key}/${newThreadId}`);
     } catch (error) {

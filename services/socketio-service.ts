@@ -12,14 +12,12 @@ class SocketService {
   }
 
   connect() {
-    // this.socket = io(`${API_ENDPOINT}/ai`, {
-      this.socket = io(`${AI_ENDPOINT}`, {
-      // path: '/socket.io',
-      query: {
-        namespace: this.namespace
-        },
-      // withCredentials: true,
-      // transports: ['websocket'],
+      this.socket = io(`${AI_ENDPOINT}/${this.namespace}`, {
+      // query: {
+      //   namespace: this.namespace
+      //   },
+      withCredentials: true,
+      transports: ['websocket'],
     }); // Replace with your server URL
     
     this.socket.connect();
@@ -63,16 +61,26 @@ class SocketService {
     }
   }
 
+  offStreamResponse(callback: (data: any) => void) { 
+    if (this.socket) {
+      this.socket.off('stream_response', callback);
+    }
+  }
+
   onStreamInterrupt(callback: (data: any) => void) { 
     if (this.socket) {
       this.socket.on('stream_interrupt', callback);
     }
   }
 
-  emitStream(data: any) {
-    console.log("Have reached emitStream function");
+  offStreamInterrupt(callback: (data: any) => void) {
     if (this.socket) {
-      console.log("Emitting stream event with data: ", data);
+      this.socket.off('stream_interrupt', callback);
+    }
+  }
+
+  emitStream(data: any) {
+    if (this.socket) {
       this.socket.emit('stream', data);
     }
   }
