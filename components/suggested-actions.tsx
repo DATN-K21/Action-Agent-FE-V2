@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import { motion } from 'framer-motion';
-import { Button } from './ui/button';
-import { memo } from 'react';
-import { IMessage } from '@/types/ai';
-import { MessageRole } from '@/constants/ai-constant';
-import { generateUUID } from '@/lib/utils';
-import useChatStore from '@/store/chat-store';
+import { motion } from 'framer-motion'
+import { Button } from './ui/button'
+import { memo } from 'react'
+import { IMessage } from '@/types/ai'
+import { MessageRole } from '@/constants/ai-constant'
+import { generateUUID } from '@/lib/utils'
+import useChatStore from '@/store/chat-store'
 
 interface SuggestedActionsProps {
-  onSubmission: () => Promise<void>;
+  onSubmission: () => Promise<void>
 }
 
 function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
-  const { setInput } = useChatStore();
+  const { setInput } = useChatStore()
 
   const suggestedActions = [
     {
@@ -36,7 +36,7 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
       label: 'in San Francisco?',
       action: 'What is the weather in San Francisco?',
     },
-  ];
+  ]
 
   return (
     <div
@@ -55,9 +55,9 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async (event) => {
-              event.preventDefault();
-              setInput(suggestedAction.action);
-              await onSubmission();
+              event.preventDefault()
+              setInput(suggestedAction.action)
+              await onSubmission()
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
@@ -69,7 +69,7 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
         </motion.div>
       ))}
     </div>
-  );
+  )
 }
 
-export const SuggestedActions = memo(PureSuggestedActions, () => true);
+export const SuggestedActions = memo(PureSuggestedActions, () => true)

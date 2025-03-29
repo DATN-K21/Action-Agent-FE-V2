@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { useEffect, useState } from 'react'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 import {
   IconAdjustmentsHorizontal,
   IconSortAscendingLetters,
@@ -40,9 +40,9 @@ export default function ExtensionList(props: ExtensionListProps) {
 
   const [extensionType, setExtensionType] = useState<
     'all' | 'connected' | 'notConnected'
-  >('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
+  >('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false)
 
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function ExtensionList(props: ExtensionListProps) {
     }
 
     const fetchExtensionData = async () => {
-      setIsLoading(true);
+      setIsLoading(true)
       try {
         const extensionParams = { user } as ExtensionParams;
 
@@ -61,37 +61,42 @@ export default function ExtensionList(props: ExtensionListProps) {
           getConnectedExtensions(extensionParams),
         ]);
 
-        setAllExtensions(allExtensionsData);
-        setConnectedExtensions(connectedExtensionsData.connectedApps);
+        setAllExtensions(allExtensionsData)
+        setConnectedExtensions(connectedExtensionsData.connectedApps)
 
         const getExtensions = extensions.filter(
-          (ext) => ext.key && allExtensionsData?.extensions.includes(ext.key)
-        );
+          (ext) => ext.key && allExtensionsData?.extensions.includes(ext.key),
+        )
         const updatedExtensions = getExtensions.map((extension) => ({
           ...extension,
-          connected: connectedExtensionsData.connectedApps?.some((ext) => ext.appName === extension.key) || false,
-        }));
+          connected:
+            connectedExtensionsData.connectedApps?.some(
+              (ext) => ext.appName === extension.key,
+            ) || false,
+        }))
 
         const newFilteredExtensions = updatedExtensions
           .sort((a, b) =>
-            sort === 'ascending' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+            sort === 'ascending'
+              ? a.name.localeCompare(b.name)
+              : b.name.localeCompare(a.name),
           )
           .filter((extension) =>
             extensionType === 'connected'
               ? extension.connected
               : extensionType === 'notConnected'
                 ? !extension.connected
-                : true
+                : true,
           )
           .filter((extension) =>
-            extension.name.toLowerCase().includes(searchTerm.toLowerCase())
-          );
+            extension.name.toLowerCase().includes(searchTerm.toLowerCase()),
+          )
 
-        setFilteredExtensions(newFilteredExtensions);
+        setFilteredExtensions(newFilteredExtensions)
       } catch (error) {
-        console.error('Error fetching extension data: ', error);
+        console.error('Error fetching extension data: ', error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
@@ -103,7 +108,9 @@ export default function ExtensionList(props: ExtensionListProps) {
       <div className="flex flex-col h-screen w-full px-4">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight mt-2">Extension Integrations</h1>
+          <h1 className="text-2xl font-bold tracking-tight mt-2">
+            Extension Integrations
+          </h1>
           <p className="text-muted-foreground">
             {`Here's a list of your extensions for the integration!`}
           </p>
@@ -143,7 +150,9 @@ export default function ExtensionList(props: ExtensionListProps) {
 
           <Select
             value={sort}
-            onValueChange={(value) => setSort(value as 'ascending' | 'descending')}
+            onValueChange={(value) =>
+              setSort(value as 'ascending' | 'descending')
+            }
           >
             <SelectTrigger className="w-16">
               <SelectValue>
@@ -209,5 +218,5 @@ export default function ExtensionList(props: ExtensionListProps) {
       {/* Extension Dialog */}
       <ExtensionDialog user={user} extension={selectedExtension!} isOpen={isOpenDialog} onClose={() => setIsOpenDialog(false)} />
     </>
-  );
+  )
 }

@@ -20,6 +20,20 @@ import { IActiveExtension, IGetExtensionActions } from '@/types/extension';
 import useChatStore from '@/store/chat-store';
 import { generateUUID } from '@/lib/utils';
 import { ThreadType } from '@/constants/extension-constant';
+const features = [
+  {
+    title: 'Send email',
+    description: 'You can send an email to other users.',
+  },
+  {
+    title: 'Delete email',
+    description: 'You can delete an email.',
+  },
+  {
+    title: 'Mark email as read',
+    description: 'You can mark an email as read.',
+  },
+];
 
 interface ExtensionDialogProps {
   user: User;
@@ -32,7 +46,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
   const [isConnected, setIsConnected] = useState(extension?.connected || false);
   const [extensionActions, setExtensionActions] = useState<IExtensionAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
   const { createThread } = useChatStore();
 
   const { toast } = useToast();
@@ -150,7 +163,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default ExtensionDialog;
+export default ExtensionDialog

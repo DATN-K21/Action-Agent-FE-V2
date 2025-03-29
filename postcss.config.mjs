@@ -4,6 +4,6 @@ const config = {
     tailwindcss: {},
     'tailwindcss/nesting': {},
   },
-};
+}
 
-export default config;
+export default config

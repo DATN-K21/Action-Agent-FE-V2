@@ -1,14 +1,11 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import type { User } from 'next-auth';
-import { memo, useEffect, useState } from 'react';
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import type { User } from 'next-auth'
+import { memo, useEffect, useState } from 'react'
 
-import {
-  MoreHorizontalIcon,
-  TrashIcon,
-} from '@/components/icons';
+import { MoreHorizontalIcon, TrashIcon } from '@/components/icons'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,13 +15,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -41,32 +38,32 @@ import { useThreadStore } from '@/store/thread-store';
 import { ThreadType } from '@/constants/extension-constant';
 
 interface IThreadItemProps {
-  thread: IThread;
-  isActive: boolean;
-  onRename: (id: string, title: string) => Promise<void>;
-  onDelete: () => void;
-  setOpenMobile: (open: boolean) => void;
+  thread: IThread
+  isActive: boolean
+  onRename: (id: string, title: string) => Promise<void>
+  onDelete: () => void
+  setOpenMobile: (open: boolean) => void
 }
 
 const PureThreadItem = (props: IThreadItemProps) => {
-  const { thread, isActive, onRename, onDelete, setOpenMobile, } = props;
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [newtitle, setNewTitle] = useState(thread.title);
+  const { thread, isActive, onRename, onDelete, setOpenMobile } = props
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [newtitle, setNewTitle] = useState(thread.title)
 
   const onEventRename = async () => {
-    const trimmedTitle = newtitle.trim();
+    const trimmedTitle = newtitle.trim()
 
     if (!trimmedTitle) {
       toast({
         type: 'error',
         description: 'Title cannot be empty',
-      });
+      })
     } else if (trimmedTitle !== thread.title) {
-      await onRename(thread.id, trimmedTitle);
+      await onRename(thread.id, trimmedTitle)
     }
 
-    setIsRenaming(false);
-  };
+    setIsRenaming(false)
+  }
 
   return (
     <SidebarMenuItem>
@@ -104,8 +101,8 @@ const PureThreadItem = (props: IThreadItemProps) => {
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => {
-                setNewTitle(thread.title);
-                setIsRenaming(true);
+                setNewTitle(thread.title)
+                setIsRenaming(true)
               }}
             >
               <EditIcon />
@@ -120,19 +117,19 @@ const PureThreadItem = (props: IThreadItemProps) => {
               <span>Delete</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>)
-      }
+        </DropdownMenu>
+      )}
     </SidebarMenuItem>
-  );
-};
+  )
+}
 
 export const ThreadItem = memo(PureThreadItem, (prev, next) => {
   return (
     prev.isActive === next.isActive &&
     prev.thread.id === next.thread.id &&
     prev.thread.title === next.thread.title
-  );
-});
+  )
+})
 
 export function SidebarHistory({ user }: { user: User }) {
   const {
@@ -142,15 +139,15 @@ export function SidebarHistory({ user }: { user: User }) {
     deleteThreadById,
     renameThread,
     groupThreadsByDate,
-  } = useThreadStore();
+  } = useThreadStore()
 
-  const [deleteId, setDeleteId] = useState<string>('');
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-  const { setOpenMobile } = useSidebar();
+  const [deleteId, setDeleteId] = useState<string>('')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const pathname = usePathname()
+  const router = useRouter()
+  const { setOpenMobile } = useSidebar()
 
-  const id = pathname.split('/').pop();
+  const id = pathname?.split('/').pop()
 
   useEffect(() => {
     fetchThreads(user);
@@ -159,33 +156,39 @@ export function SidebarHistory({ user }: { user: User }) {
   // Handle delete thread
   const handleDelete = async () => {
     try {
-      await deleteThreadById(user, deleteId);
+      await deleteThreadById(user, deleteId)
       if (deleteId === id) {
         router.push('/');
       }
-      toast({ type: 'success', description: 'Thread deleted successfully' });
+      toast({
+        type: 'success',
+        description: 'Thread deleted successfully',
+      })
     } catch (error) {
       toast({
         type: 'error',
         description: 'Failed to delete thread',
-      });
+      })
     } finally {
-      setShowDeleteDialog(false);
+      setShowDeleteDialog(false)
     }
-  };
+  }
 
   // Handle rename thread
   const handleRename = async (id: string, title: string) => {
     try {
-      await renameThread(user, id, title);
-      toast({ type: 'success', description: 'Thread renamed successfully' });
+      await renameThread(user, id, title)
+      toast({
+        type: 'success',
+        description: 'Thread renamed successfully',
+      })
     } catch (error) {
       toast({
         type: 'error',
         description: 'Failed to rename thread',
-      });
+      })
     }
-  };
+  }
 
   // Loading skeleton
   if (isLoading) {
@@ -214,7 +217,7 @@ export function SidebarHistory({ user }: { user: User }) {
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
-    );
+    )
   }
 
   // Empty threads
@@ -227,7 +230,7 @@ export function SidebarHistory({ user }: { user: User }) {
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
-    );
+    )
   }
 
   return (
@@ -237,7 +240,7 @@ export function SidebarHistory({ user }: { user: User }) {
           <SidebarMenu>
             {threads &&
               (() => {
-                const groupedThreads = groupThreadsByDate();
+                const groupedThreads = groupThreadsByDate()
 
                 return (
                   <>
@@ -252,8 +255,8 @@ export function SidebarHistory({ user }: { user: User }) {
                             thread={thread}
                             isActive={thread.id === id}
                             onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
+                              setDeleteId(thread.id)
+                              setShowDeleteDialog(true)
                             }}
                             onRename={handleRename}
                             setOpenMobile={setOpenMobile}
@@ -274,8 +277,8 @@ export function SidebarHistory({ user }: { user: User }) {
                             isActive={thread.id === id}
                             onRename={handleRename}
                             onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
+                              setDeleteId(thread.id)
+                              setShowDeleteDialog(true)
                             }}
                             setOpenMobile={setOpenMobile}
                           />
@@ -295,8 +298,8 @@ export function SidebarHistory({ user }: { user: User }) {
                             isActive={thread.id === id}
                             onRename={handleRename}
                             onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
+                              setDeleteId(thread.id)
+                              setShowDeleteDialog(true)
                             }}
                             setOpenMobile={setOpenMobile}
                           />
@@ -316,8 +319,8 @@ export function SidebarHistory({ user }: { user: User }) {
                             isActive={thread.id === id}
                             onRename={handleRename}
                             onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
+                              setDeleteId(thread.id)
+                              setShowDeleteDialog(true)
                             }}
                             setOpenMobile={setOpenMobile}
                           />
@@ -337,8 +340,8 @@ export function SidebarHistory({ user }: { user: User }) {
                             isActive={thread.id === id}
                             onRename={handleRename}
                             onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
+                              setDeleteId(thread.id)
+                              setShowDeleteDialog(true)
                             }}
                             setOpenMobile={setOpenMobile}
                           />
@@ -346,7 +349,7 @@ export function SidebarHistory({ user }: { user: User }) {
                       </>
                     )}
                   </>
-                );
+                )
               })()}
           </SidebarMenu>
         </SidebarGroupContent>
@@ -369,5 +372,5 @@ export function SidebarHistory({ user }: { user: User }) {
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }

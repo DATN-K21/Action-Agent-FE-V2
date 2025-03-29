@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import type { Attachment } from 'ai';
 import { useEffect, useState } from 'react';
@@ -39,15 +39,9 @@ export function Chat(props: ChatProps) {
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
-        <ChatHeader
-          chatId={id}
-        />
+        <ChatHeader chatId={id} />
 
-        <Messages
-          chatId={id}
-          status={status}
-          messages={messages}
-        />
+        <Messages chatId={id} status={status} messages={messages} />
 
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-4xl">
           {extension
@@ -69,5 +63,5 @@ export function Chat(props: ChatProps) {
         </form>
       </div>
     </>
-  );
+  )
 }

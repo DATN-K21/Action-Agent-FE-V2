@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import type { User } from 'next-auth';
-import { useRouter } from 'next/navigation';
+import type { User } from 'next-auth'
+import { useRouter } from 'next/navigation'
 
-import { PlusIcon } from '@/components/icons';
-import { SidebarHistory } from '@/components/sidebar-history';
-import { SidebarUserNav } from '@/components/sidebar-user-nav';
-import { Button } from '@/components/ui/button';
+import { PlusIcon } from '@/components/icons'
+import { SidebarHistory } from '@/components/sidebar-history'
+import { SidebarUserNav } from '@/components/sidebar-user-nav'
+import { Button } from '@/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
@@ -14,19 +14,19 @@ import {
   SidebarHeader,
   SidebarMenu,
   useSidebar,
-} from '@/components/ui/sidebar';
-import Link from 'next/link';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { NavCustom } from '@/components/nav-custom';
+} from '@/components/ui/sidebar'
+import Link from 'next/link'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { NavCustom } from '@/components/nav-custom'
 
-import { HiOutlineViewGrid, HiOutlineChatAlt } from 'react-icons/hi';
-import { RiFindReplaceLine } from 'react-icons/ri';
+import { HiOutlineViewGrid, HiOutlineChatAlt } from 'react-icons/hi'
+import { RiFindReplaceLine } from 'react-icons/ri'
 
 type navCustomItemProps = {
-  title: string;
-  url: string;
-  icon: any;
-};
+  title: string
+  url: string
+  icon: any
+}
 
 const navCustomItems: navCustomItemProps[] = [
   {
@@ -44,11 +44,11 @@ const navCustomItems: navCustomItemProps[] = [
     url: '/tools',
     icon: HiOutlineViewGrid,
   },
-];
+]
 
 export function AppSidebar({ user }: { user: User }) {
-  const router = useRouter();
-  const { setOpenMobile } = useSidebar();
+  const router = useRouter()
+  const { setOpenMobile } = useSidebar()
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -58,7 +58,7 @@ export function AppSidebar({ user }: { user: User }) {
             <Link
               href="/"
               onClick={() => {
-                setOpenMobile(false);
+                setOpenMobile(false)
               }}
               className="flex flex-row gap-3 items-center"
             >
@@ -73,9 +73,9 @@ export function AppSidebar({ user }: { user: User }) {
                   type="button"
                   className="p-2 h-fit"
                   onClick={() => {
-                    setOpenMobile(false);
-                    router.push('/');
-                    router.refresh();
+                    setOpenMobile(false)
+                    router.push('/')
+                    router.refresh()
                   }}
                 >
                   <PlusIcon />
@@ -92,5 +92,5 @@ export function AppSidebar({ user }: { user: User }) {
       </SidebarContent>
       <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
     </Sidebar>
-  );
+  )
 }

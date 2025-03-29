@@ -2,24 +2,24 @@ import { MessageRole } from "@/constants/ai-constant";
 import { ThreadType } from "@/constants/extension-constant";
 
 export interface IChatRequest {
-    input: string,
-    recursionLimit: number,
+  input: string
+  recursionLimit: number
 }
 
 export interface IChatResponse {
-    output: string;
-    thread_id: string;
+  output: string
+  thread_id: string
 }
 
 export interface IMessage {
-    id: string;
-    role: MessageRole;
-    content: string;
+  id: string
+  role: MessageRole
+  content: string
 }
 
 export interface IMessageWithoutId {
-    role: MessageRole;
-    content: string;
+  role: MessageRole
+  content: string
 }
 
 export interface IThread {
@@ -31,10 +31,10 @@ export interface IThread {
 }
 
 export interface IThreadsResponse {
-    cursor?: string;
-    nextCursor?: string;
-    prevCursor?: string;
-    threads: IThread[];
+  cursor?: string
+  nextCursor?: string
+  prevCursor?: string
+  threads: IThread[]
 }
 
 export interface ICreateThreadResponse {
@@ -46,5 +46,5 @@ export interface ICreateThreadResponse {
 }
 
 export interface IThreadHistoryResponse {
-    messages: IMessage[];
+  messages: IMessage[]
 }

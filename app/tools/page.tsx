@@ -7,7 +7,7 @@ import { User } from 'next-auth';
 export const metadata: Metadata = {
   title: 'Tools - Botion',
   description: 'Tools Page',
-};
+}
 
 export default async function Page() {
   const session = await auth();

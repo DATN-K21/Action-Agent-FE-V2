@@ -3,23 +3,23 @@ export const SOCKET_API_ENDPOINT = process.env.NEXT_PUBLIC_SOCKET_API_ENDPOINT;
 export const AI_ENDPOINT = process.env.NEXT_PUBLIC_AI_ENDPOINT;
 
 export enum HttpStatus {
-    OK = 200,
-    CREATED = 201,
-    CONFLICT = 409,
-    NOT_FOUND = 404,
-    INTERNAL_SERVER_ERROR = 500,
+  OK = 200,
+  CREATED = 201,
+  CONFLICT = 409,
+  NOT_FOUND = 404,
+  INTERNAL_SERVER_ERROR = 500,
 }
 
 export enum HttpMethod {
-    GET = 'GET',
-    POST = 'POST',
-    PUT = 'PUT',
-    PATCH = 'PATCH',
-    DELETE = 'DELETE',
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  PATCH = 'PATCH',
+  DELETE = 'DELETE',
 }
 
 export enum ErrorCode {
-    ACCOUNT_NOT_VERIFIED = 1010210,
-    EMAIL_NOT_FOUND = 1010205,
-    INCORRECT_PASSWORD = 1010206,
+  ACCOUNT_NOT_VERIFIED = 1010210,
+  INCORRECT_EMAIL = 1010205,
+  INCORRECT_PASSWORD = 1010206,
 }

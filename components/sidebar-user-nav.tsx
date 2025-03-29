@@ -1,9 +1,9 @@
-'use client';
-import { ChevronUp } from 'lucide-react';
-import Image from 'next/image';
-import type { User } from 'next-auth';
-import { signOut } from 'next-auth/react';
-import { useTheme } from 'next-themes';
+'use client'
+import { ChevronUp } from 'lucide-react'
+import Image from 'next/image'
+import type { User } from 'next-auth'
+import { signOut } from 'next-auth/react'
+import { useTheme } from 'next-themes'
 
 import {
   DropdownMenu,
@@ -11,15 +11,30 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
+} from '@/components/ui/sidebar'
+import { logout } from '@/services/auth-service'
+import { toast } from '@/components/toast'
 
 export function SidebarUserNav({ user }: { user: User }) {
-  const { setTheme, theme } = useTheme();
+  const { setTheme, theme } = useTheme()
+
+  const handleLogOut = async () => {
+    try {
+      await logout(user)
+    } catch (error: any) {
+      toast({
+        type: 'error',
+        description: error?.json?.message || 'An unexpected error occurred',
+      })
+    } finally {
+      await signOut()
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -46,11 +61,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               <button
                 type="button"
                 className="w-full cursor-pointer"
-                onClick={() => {
-                  signOut({
-                    redirectTo: '/',
-                  });
-                }}
+                onClick={() => handleLogOut()}
               >
                 Sign out
               </button>
@@ -59,5 +70,5 @@ export function SidebarUserNav({ user }: { user: User }) {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  );
+  )
 }

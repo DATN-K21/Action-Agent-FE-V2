@@ -1,4 +1,4 @@
-import { NavItem } from '@/types';
+import { NavItem } from '@/types'
 import {
   IconBrandDiscord,
   IconBrandDocker,
@@ -27,13 +27,13 @@ import { ForwardRefExoticComponent, RefAttributes } from 'react';
 import { ThreadType } from './extension-constant';
 
 export type User = {
-  id: number;
-  name: string;
-  company: string;
-  role: string;
-  verified: boolean;
-  status: string;
-};
+  id: number
+  name: string
+  company: string
+  role: string
+  verified: boolean
+  status: string
+}
 export const users: User[] = [
   {
     id: 1,
@@ -115,37 +115,37 @@ export const users: User[] = [
     verified: false,
     status: 'Active',
   },
-];
+]
 
 export type Employee = {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  gender: string;
-  date_of_birth: string; // Consider using a proper date type if possible
-  street: string;
-  city: string;
-  state: string;
-  country: string;
-  zipcode: string;
-  longitude?: number; // Optional field
-  latitude?: number; // Optional field
-  job: string;
-  profile_picture?: string | null; // Profile picture can be a string (URL) or null (if no picture)
-};
+  id: number
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  gender: string
+  date_of_birth: string // Consider using a proper date type if possible
+  street: string
+  city: string
+  state: string
+  country: string
+  zipcode: string
+  longitude?: number // Optional field
+  latitude?: number // Optional field
+  job: string
+  profile_picture?: string | null // Profile picture can be a string (URL) or null (if no picture)
+}
 
 export type Product = {
-  photo_url: string;
-  name: string;
-  description: string;
-  created_at: string;
-  price: number;
-  id: number;
-  category: string;
-  updated_at: string;
-};
+  photo_url: string
+  name: string
+  description: string
+  created_at: string
+  price: number
+  id: number
+  category: string
+  updated_at: string
+}
 
 export const navItems: NavItem[] = [
   {
@@ -210,11 +210,10 @@ export const navItems: NavItem[] = [
     isActive: false,
     items: [], // No child items
   },
-  
-];
+]
 
 export interface ExtensionResponse {
-  extensions: string[];
+  extensions: string[]
 }
 export interface Extension {
   name: string;
@@ -228,7 +227,7 @@ export const appText = new Map<string, string>([
   ['all', 'All Apps'],
   ['connected', 'Connected'],
   ['notConnected', 'Not Connected'],
-]);
+])
 
 export const extensions: Extension[] = [
   {
@@ -460,8 +459,9 @@ export const extensionActionList: IExtensionAction[] = [
   // TODO: Missing some OUTLOOK actions
 ];
 
-export const INVALID_LOGIN_ERROR_MESSAGE = 'Email or password is invalid';
-export const ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE = 'Account has not been verified';
+export const INVALID_LOGIN_ERROR_MESSAGE = 'Email or password is invalid'
+export const ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE =
+  'Account has not been verified'
 
 export enum Providers {
   Credentials = 'credentials',

@@ -13,16 +13,18 @@ import { ThreadType } from "@/constants/extension-constant";
 
 
 interface ChatState {
+    agent: AgentName;
     messages: IMessage[];
     input: string;
     status: ChatStatus;
     threadId: string;
+    setAgent: (agent: AgentName) => void;
     setMessages: (messages: IMessage[]) => void;
     setInput: (text: string) => void;
     setThreadId: (threadId: string) => void;
     createThread: (user: User, threadId: string, title?: string, type?: ThreadType) => Promise<void>;
-    append: (message: IMessage) => void;
     pop: () => void;
+    append: (message: IMessage) => void;
     handleStreamChat: (user: User) => Promise<void>;
     handleStreamExtensionChat: (user: User, extension: Extension) => Promise<void>;
     stop: () => void;
@@ -37,50 +39,17 @@ interface StreamResponseParams {
     set: any,
 }
 
-// const onStreamResponseHandler = async (params: StreamResponseParams, data: IStreamOnData) => { 
-//     const { user, threadId, extension, messages, set } = params;
-    
-//     if (data.interrupted === true) {
-//         ExtensionSocketService.emitStreamInterrupt({
-//             user_id: user.id!,
-//             thread_id: threadId,
-//             extension_name: extension.key!,
-//             execute: true,
-//             tool_calls: (data.output as []).map(x => x),
-//         });
-
-//         ExtensionSocketService.offStreamResponse(() => {
-//             console.log("Stream response event listener removed");
-//         });
-//         return;
-//     }
-
-//     console.log("Received stream response: ", data);
-//     set({ status: ChatStatus.STREAMING });
-
-//     const updatedMessages: IMessage[] = messages.map(x => x);
-//     const lastIndex = updatedMessages.length - 1;
-//     if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
-//         let responseContent = data.output.toString() ?? "";
-//         updatedMessages[lastIndex] = {
-//             ...updatedMessages[lastIndex],
-//             content: responseContent,
-//         };
-//     }
-
-//     set({ messages: updatedMessages });
-
-// }
-
 const useChatStore = create<ChatState>((set, get) => ({
-    messages: [],
-    input: "",
-    status: ChatStatus.READY,
-    threadId: "",
+  agent: AgentName.CHAT,
+  messages: [],
+  input: '',
+  status: ChatStatus.READY,
+  threadId: '',
 
-    setMessages: (messages) => set({ messages }),
-    setInput: (text) => set({ input: text }),
-    setThreadId: (threadId) => set({ threadId }),
+  setAgent: (agent) => set({ agent: agent }),
+  setMessages: (messages) => set({ messages }),
+  setInput: (text) => set({ input: text }),
+  setThreadId: (threadId) => set({ threadId }),
 
     // Create a new chat thread
     createThread: async (user: User, threadId: string, title: string = "New Chat", type: ThreadType = ThreadType.DEFAULT) => {
@@ -109,93 +78,99 @@ const useChatStore = create<ChatState>((set, get) => ({
         }
     ),
 
-    // Handle send message SSE
-    handleStreamChat: async (user: User) => {
-        const { input, threadId, append, setInput } = get();
+  // Handle send message SSE
+  handleStreamChat: async (user: User) => {
+    const { agent, input, threadId, append, setInput } = get()
 
-        if (!input.trim()) return;
+    if (!input.trim()) return
 
-        set({ status: ChatStatus.SUBMITTED });
+    set({ status: ChatStatus.SUBMITTED })
 
-        // Create a user message and add it to the chat
-        const userMessage: IMessage = {
-            id: generateUUID(),
-            role: MessageRole.HUMAN,
-            content: input,
-        };
+    // Create a user message and add it to the chat
+    const userMessage: IMessage = {
+      id: generateUUID(),
+      role: MessageRole.HUMAN,
+      content: input,
+    }
 
-        append(userMessage);
-        setInput("");
+    append(userMessage)
+    setInput('')
 
-        try {
-            const params: ChatParams = {
-                user,
-                threadId,
-                agentName: AgentName.CHAT,
-                payload: { input: input, recursionLimit: 5 },
-            };
+    try {
+      const params: ChatParams = {
+        user,
+        threadId,
+        agentName: agent,
+        payload: { input: input, recursionLimit: 5 },
+      }
 
-            // Call sendMessage service to initiate streaming response
-            const reader = await sendMessage(params);
-            set({ status: ChatStatus.STREAMING });
+      // Call sendMessage service to initiate streaming response
+      const reader = await sendMessage(params)
+      set({ status: ChatStatus.STREAMING })
 
-            const decoder = new TextDecoder();
+      const decoder = new TextDecoder()
 
-            let accumulatedText = "";
-            let aiMessage: IMessage = {
-                id: generateUUID(),
-                role: MessageRole.AI,
-                content: "",
-            };
+      let accumulatedText = ''
+      let aiMessage: IMessage = {
+        id: generateUUID(),
+        role: MessageRole.AI,
+        content: '',
+      }
 
-            append(aiMessage); // Show AI message placeholder immediately
+      append(aiMessage) // Show AI message placeholder immediately
 
-            while (true) {
-                // Read stream data chunk-by-chunk
-                const { done, value } = await reader.read();
-                if (done) break; // Stop when stream ends
+      while (true) {
+        // Read stream data chunk-by-chunk
+        const { done, value } = await reader.read()
+        if (done) break // Stop when stream ends
 
-                // Check if chat status has changed, stop streaming if not "streaming"
-                if (get().status !== ChatStatus.STREAMING) {
-                    reader.cancel();
-                    break;
-                }
+        // Check if chat status has changed, stop streaming if not "streaming"
+        if (get().status !== ChatStatus.STREAMING) {
+          reader.cancel()
+          break
+        }
 
-                const chunk = decoder.decode(value, { stream: true });
-                accumulatedText += chunk;
+        const chunk = decoder.decode(value, { stream: true })
+        accumulatedText += chunk
 
-                // Split data into lines based on SSE format
-                const lines = accumulatedText.split("\n");
-                accumulatedText = lines.pop() || "";
+        // Split data into lines based on SSE format
+        const lines = accumulatedText.split('\n')
+        accumulatedText = lines.pop() || ''
 
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const jsonString = line.substring(6).trim();
-                            const data = JSON.parse(jsonString);
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonString = line.substring(6).trim()
+              const data = JSON.parse(jsonString)
 
-                            if (data?.length > 0) {
-                                const messageData = data[0].content;
-                                set((state) => {
-                                    const updatedMessages = [...state.messages];
-                                    const lastIndex = updatedMessages.length - 1;
+              if (data?.length > 0) {
+                const messageData = data[0].content
 
-                                    if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
-                                        updatedMessages[lastIndex] = {
-                                            ...updatedMessages[lastIndex],
-                                            content: messageData,
-                                        };
-                                    }
+                if (messageData) {
+                  set((state) => {
+                    const updatedMessages = [...state.messages]
+                    const lastIndex = updatedMessages.length - 1
 
-                                    return { messages: updatedMessages };
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Error parsing SSE data:', error);
-                        }
+                    if (
+                      lastIndex >= 0 &&
+                      updatedMessages[lastIndex].role === MessageRole.AI
+                    ) {
+                      updatedMessages[lastIndex] = {
+                        ...updatedMessages[lastIndex],
+                        content: messageData,
+                      }
                     }
+
+                    return { messages: updatedMessages }
+                  })
                 }
+              }
+            } catch (error) {
+              console.error('Error parsing SSE data:', error)
             }
+          }
+        }
+      }
 
             // Set status to "ready" after AI response completes
             set({ status: ChatStatus.READY });
@@ -204,151 +179,149 @@ const useChatStore = create<ChatState>((set, get) => ({
             throw error;
         }
     },
+  // Handle send message SSE for extension
+  handleStreamExtensionChat: async (user: User, extension: Extension) => { 
+    const { input, threadId, append, pop, setInput, messages } = get();    
+    if (!input.trim()) {
+        return;
+    };
 
-    // Handle send message SSE for extension
-    handleStreamExtensionChat: async (user: User, extension: Extension) => { 
-        const { input, threadId, append, pop, setInput, messages } = get();    
-        if (!input.trim()) {
-            return;
+    set({ status: ChatStatus.SUBMITTED });
+    // Create a user message and add it to the chat
+    const userMessage: IMessage = {
+        id: generateUUID(),
+        role: MessageRole.HUMAN,
+        content: input,
+    };
+
+    append(userMessage);
+    setInput("");
+
+    try {
+        const params: IStreamEmitData = {
+            user_id: user.id!,
+            thread_id: threadId,
+            extension_name: extension.key!,
+            input: input,
         };
-    
-        set({ status: ChatStatus.SUBMITTED });
-        // Create a user message and add it to the chat
-        const userMessage: IMessage = {
-            id: generateUUID(),
-            role: MessageRole.HUMAN,
-            content: input,
-        };
-    
-        append(userMessage);
-        setInput("");
 
-        try {
-            const params: IStreamEmitData = {
-                user_id: user.id!,
-                thread_id: threadId,
-                extension_name: extension.key!,
-                input: input,
-            };
+        // Emit stream event to the server
+        ExtensionSocketService.emitStream(params);
+        let outputToolCalls: any[] = [];
+        let streamInterruptOutput = "";
 
-            // Emit stream event to the server
-            ExtensionSocketService.emitStream(params);
-            let outputToolCalls: any[] = [];
-            let streamInterruptOutput = "";
+        let isEmptyAiMessageAdded = false;
+        
 
-            let isEmptyAiMessageAdded = false;
-            
-
-            const streamResponseHandler = (data: IStreamOnData) => {
-                // Check for interrupted response
-                if (data.interrupted === true) {
-                    if (isEmptyAiMessageAdded === false) {
-                        let aiMessage: IMessage = {
-                            id: generateUUID(),
-                            role: MessageRole.AI,
-                            content: "",
-                        };            
-                        append(aiMessage); // Show AI message placeholder immediately
-                        isEmptyAiMessageAdded = true;
-                    }
-
-                    if (data.output && data.output.length > 0) {
-                        outputToolCalls = data.output;
-                    } else if (data.streaming === false) {
-                        // Remove the last message - empty AI message
-                        pop();
-
-                        const payload = {
-                            user_id: user.id!,
-                            thread_id: threadId,
-                            extension_name: extension.key!,
-                            execute: true,
-                            tool_calls: outputToolCalls,
-                        };
-                        set({ status: ChatStatus.SUBMITTED });
-
-                        ExtensionSocketService.emitStreamInterrupt(payload);
-
-                        // Remove this listener
-                        outputToolCalls = [];
-                        ExtensionSocketService.offStreamResponse(streamResponseHandler);
-                        return;
-                    }
-                } else {
-                    // Otherwise, handle the normal response
-                    set({ status: ChatStatus.STREAMING });
-                    if (isEmptyAiMessageAdded === false) {
-                        let aiMessage: IMessage = {
-                            id: generateUUID(),
-                            role: MessageRole.AI,
-                            content: "",
-                        };            
-                        append(aiMessage); // Show AI message placeholder immediately
-                        isEmptyAiMessageAdded = true;
-                    }
-                    
-                    const updatedMessages: IMessage[] = messages.map(x => x);
-                    const lastIndex = updatedMessages.length - 1;
-                    if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
-                        let responseContent = data.output.toString() ?? "";
-                        updatedMessages[lastIndex] = {
-                            ...updatedMessages[lastIndex],
-                            content: responseContent,
-                        };
-                    }
-            
-                    set({ messages: updatedMessages });
+        const streamResponseHandler = (data: IStreamOnData) => {
+            // Check for interrupted response
+            if (data.interrupted === true) {
+                if (isEmptyAiMessageAdded === false) {
+                    let aiMessage: IMessage = {
+                        id: generateUUID(),
+                        role: MessageRole.AI,
+                        content: "",
+                    };            
+                    append(aiMessage); // Show AI message placeholder immediately
+                    isEmptyAiMessageAdded = true;
                 }
-            };
 
-            // Listen for stream responses
-            ExtensionSocketService.onStreamResponse(streamResponseHandler);
-            
-            const streamInterruptHandler = (data: IStreamOnData) => { 
-                set({ status: ChatStatus.STREAMING });
-                if (data.interrupted === true || data.streaming === false) {
+                if (data.output && data.output.length > 0) {
+                    outputToolCalls = data.output;
+                } else if (data.streaming === false) {
+                    // Remove the last message - empty AI message
+                    pop();
+
+                    const payload = {
+                        user_id: user.id!,
+                        thread_id: threadId,
+                        extension_name: extension.key!,
+                        execute: true,
+                        tool_calls: outputToolCalls,
+                    };
+                    set({ status: ChatStatus.SUBMITTED });
+
+                    ExtensionSocketService.emitStreamInterrupt(payload);
+
                     // Remove this listener
-                    streamInterruptOutput = "";
-                    ExtensionSocketService.offStreamInterrupt(streamInterruptHandler);
+                    outputToolCalls = [];
+                    ExtensionSocketService.offStreamResponse(streamResponseHandler);
+                    return;
                 }
-
-                if (data.output) {
-                    streamInterruptOutput = data.output.toString();
-                    const updatedMessages: IMessage[] = messages.map(x => x);
-                    const lastIndex = updatedMessages.length - 1;
-
-                    if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
-                        updatedMessages[lastIndex] = {
-                            ...updatedMessages[lastIndex],
-                            content: streamInterruptOutput,
-                        };
-                    }
-    
-                    set({ messages: updatedMessages });
+            } else {
+                // Otherwise, handle the normal response
+                set({ status: ChatStatus.STREAMING });
+                if (isEmptyAiMessageAdded === false) {
+                    let aiMessage: IMessage = {
+                        id: generateUUID(),
+                        role: MessageRole.AI,
+                        content: "",
+                    };            
+                    append(aiMessage); // Show AI message placeholder immediately
+                    isEmptyAiMessageAdded = true;
                 }
+                
+                const updatedMessages: IMessage[] = messages.map(x => x);
+                const lastIndex = updatedMessages.length - 1;
+                if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
+                    let responseContent = data.output.toString() ?? "";
+                    updatedMessages[lastIndex] = {
+                        ...updatedMessages[lastIndex],
+                        content: responseContent,
+                    };
+                }
+        
+                set({ messages: updatedMessages });
+            }
+        };
+
+        // Listen for stream responses
+        ExtensionSocketService.onStreamResponse(streamResponseHandler);
+        
+        const streamInterruptHandler = (data: IStreamOnData) => { 
+            set({ status: ChatStatus.STREAMING });
+            if (data.interrupted === true || data.streaming === false) {
+                // Remove this listener
+                streamInterruptOutput = "";
+                ExtensionSocketService.offStreamInterrupt(streamInterruptHandler);
             }
 
-            // Incase of stream interrupt
-            ExtensionSocketService.onStreamInterrupt(streamInterruptHandler);
+            if (data.output) {
+                streamInterruptOutput = data.output.toString();
+                const updatedMessages: IMessage[] = messages.map(x => x);
+                const lastIndex = updatedMessages.length - 1;
 
-            // Set status to "ready" after AI response completes
-            set({ status: ChatStatus.READY });
-        } catch (error) {
-            set({ status: ChatStatus.ERROR });
-            throw error;
+                if (lastIndex >= 0 && updatedMessages[lastIndex].role === MessageRole.AI) {
+                    updatedMessages[lastIndex] = {
+                        ...updatedMessages[lastIndex],
+                        content: streamInterruptOutput,
+                    };
+                }
+
+                set({ messages: updatedMessages });
+            }
         }
-    },
 
+        // Incase of stream interrupt
+        ExtensionSocketService.onStreamInterrupt(streamInterruptHandler);
 
-    // Stop chat
-    stop: () => {
+        // Set status to "ready" after AI response completes
         set({ status: ChatStatus.READY });
-    },
+    } catch (error) {
+        set({ status: ChatStatus.ERROR });
+        throw error;
+    }
+},
 
-    // Reload chat
-    reload: () => {
-        set({ messages: [], status: ChatStatus.READY, threadId: "" });
-    },
-}));
+  // Stop chat
+  stop: () => {
+    set({ status: ChatStatus.READY })
+  },
 
-export default useChatStore;
+  // Reload chat
+  reload: () => {
+    set({ messages: [], status: ChatStatus.READY, threadId: '' })
+  },
+}))
+
+export default useChatStore
