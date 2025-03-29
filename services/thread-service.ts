@@ -87,9 +87,6 @@ export const getThreadHistory = async (params: GetThreadHistoryParams): Promise<
     try {
         if (!params.user.id) throw new Error("Missing 'userId'");
         if (!params.payload.threadId) throw new Error("Missing 'threadId'");
-        
-        console.log("User ID: ", params.user.id);
-        console.log("Thread ID: ", params.payload.threadId);
 
         const headers: IHeader = {
             "x-user-id": params.user.id,

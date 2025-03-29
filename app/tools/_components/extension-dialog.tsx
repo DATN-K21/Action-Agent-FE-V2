@@ -45,8 +45,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
 
     setIsConnected(extension.connected || false);
     const fetchExtensionActions = async () => {
-      console.log("current extension: ")
-      console.log(extension)
       setIsLoading(true);
 
       try {

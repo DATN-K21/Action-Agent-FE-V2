@@ -64,7 +64,6 @@ export const sendRequest = async <T>(props: IRequest) => {
   if (useCredentials) options.credentials = "include";
 
   if (Object.keys(queryParams).length !== 0) {
-    console.log("check");
     url = `${url}?${queryString.stringify(queryParams)}`;
   }
 
