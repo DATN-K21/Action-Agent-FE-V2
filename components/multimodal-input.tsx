@@ -24,7 +24,7 @@ import { AgentName, ChatStatus, MessageRole } from '@/constants/ai-constant'
 import { User } from 'next-auth'
 import useChatStore from '@/store/chat-store'
 import { toast } from '@/components/toast'
-import { Brain } from 'lucide-react'
+import { Brain, LoaderIcon } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip'
 import { handleUploadFile } from '@/services/thread-service'
 
@@ -78,8 +78,11 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([])
 
+  const [loading, setLoading] = useState(false) // Loading state for send button while uploading files
+
   const submitForm = useCallback(async () => {
     try {
+      setLoading(true)
       //Upload files before sending message
       if (pendingFiles.length > 0) {
         setUploadQueue(pendingFiles.map((file) => file.name)) // Hiển thị trạng thái đang upload
@@ -128,6 +131,8 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         role: MessageRole.AI,
         content: 'Error sending message, please try again!',
       })
+    } finally {
+      setLoading(false)
     }
   }, [
     attachments,
@@ -342,6 +347,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
             input={input}
             submitForm={submitForm}
             uploadQueue={uploadQueue}
+            loading={loading}
           />
         )}
       </div>
@@ -410,10 +416,12 @@ function PureSendButton({
   submitForm,
   input,
   uploadQueue,
+  loading,
 }: {
   submitForm: () => void
   input: string
   uploadQueue: Array<string>
+  loading: boolean
 }) {
   return (
     <Button
@@ -425,7 +433,13 @@ function PureSendButton({
       }}
       disabled={input.length === 0 && uploadQueue.length === 0}
     >
-      <ArrowUpIcon size={14} />
+       {loading ? (
+        <div className="animate-spin">
+          <LoaderIcon size={14} /> {/* Add a loading spinner */}
+        </div>
+      ) : (
+        <ArrowUpIcon size={14} />
+      )}
     </Button>
   )
 }
@@ -434,5 +448,6 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
     return false
   if (prevProps.input !== nextProps.input) return false
+  if (prevProps.loading !== nextProps.loading) return false
   return true
 })
