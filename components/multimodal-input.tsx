@@ -199,6 +199,13 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     [],
   )
 
+  function handleRemoveFile(filename: string): void {
+    setPendingFiles((prev) => prev.filter((file) => file.name !== filename))
+    setUploadQueue((prev) => prev.filter((file) => file !== filename))
+    setAttachments((prev) =>
+      prev.filter((attachment) => attachment.name !== filename))
+  }
+
   return (
     <div className="relative w-full flex flex-col gap-4">
       {messages.length === 0 &&
@@ -235,6 +242,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
                 contentType: '',
               }}
               isUploading={false}
+             onRemove={() => handleRemoveFile(filename)}
             />
           ))}
         </div>
