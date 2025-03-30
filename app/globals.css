@@ -6,6 +6,7 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --font-sans: 'Inter', sans-serif; 
 }
 
 @media (prefers-color-scheme: dark) {
@@ -104,18 +105,12 @@
   }
 
   @font-face {
-    font-family: 'geist';
+    font-family: 'inter';
     font-style: normal;
     font-weight: 100 900;
-    src: url(/fonts/geist.woff2) format('woff2');
+    src: url(./fonts/inter.woff2) format('woff2');
   }
 
-  @font-face {
-    font-family: 'geist-mono';
-    font-style: normal;
-    font-weight: 100 900;
-    src: url(/fonts/geist-mono.woff2) format('woff2');
-  }
 }
 
 .skeleton {

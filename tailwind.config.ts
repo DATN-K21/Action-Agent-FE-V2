@@ -9,8 +9,7 @@ const config: Config = {
   ],
   theme: {
     fontFamily: {
-      sans: ['geist'],
-      mono: ['geist-mono'],
+      sans: ['Inter', 'sans-serif'],
     },
     extend: {
       screens: {
