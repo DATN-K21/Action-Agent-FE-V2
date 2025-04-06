@@ -1,19 +1,16 @@
-'use client'
+'use client';
 
-import { motion } from 'framer-motion'
-import { Button } from './ui/button'
-import { memo } from 'react'
-import { IMessage } from '@/types/ai'
-import { MessageRole } from '@/constants/ai-constant'
-import { generateUUID } from '@/lib/utils'
-import useChatStore from '@/store/chat-store'
+import { motion } from 'framer-motion';
+import { Button } from './ui/button';
+import { memo } from 'react';
+import useChatStore from '@/store/chat-store';
 
 interface SuggestedActionsProps {
-  onSubmission: () => Promise<void>
+  onSubmission: () => Promise<void>;
 }
 
 function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
-  const { setInput } = useChatStore()
+  const setInput = useChatStore((state) => state.setHumanInput);
 
   const suggestedActions = [
     {
@@ -36,13 +33,10 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
       label: 'in San Francisco?',
       action: 'What is the weather in San Francisco?',
     },
-  ]
+  ];
 
   return (
-    <div
-      data-testid="suggested-actions"
-      className="grid sm:grid-cols-2 gap-2 w-full"
-    >
+    <div data-testid="suggested-actions" className="grid sm:grid-cols-2 gap-2 w-full">
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -55,21 +49,19 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async (event) => {
-              event.preventDefault()
-              setInput(suggestedAction.action)
-              await onSubmission()
+              event.preventDefault();
+              setInput(suggestedAction.action);
+              await onSubmission();
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
             <span className="font-medium">{suggestedAction.title}</span>
-            <span className="text-muted-foreground">
-              {suggestedAction.label}
-            </span>
+            <span className="text-muted-foreground">{suggestedAction.label}</span>
           </Button>
         </motion.div>
       ))}
     </div>
-  )
+  );
 }
 
-export const SuggestedActions = memo(PureSuggestedActions, () => true)
+export const SuggestedActions = memo(PureSuggestedActions, () => true);

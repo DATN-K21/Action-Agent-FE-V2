@@ -1,174 +1,362 @@
-import { create } from 'zustand'
-import { generateUUID } from '@/lib/utils'
-import { AgentName, ChatStatus, MessageRole } from '@/constants/ai-constant'
-import { ICreateThreadResponse, IMessage } from '@/types/ai'
-import { User } from 'next-auth'
-import { ChatParams, sendMessage } from '@/services/chat-service'
-import { createThread } from '@/services/thread-service'
-import { useThreadStore } from '@/store/thread-store'
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+import { devtools } from 'zustand/middleware';
+import { generateUUID } from '@/lib/utils';
+import { AgentType, ChatStatus, MessageRole } from '@/constants/ai-constant';
+import { ICreateThreadResponse, IMessage } from '@/types/ai';
+import { User } from 'next-auth';
+import {
+  InterruptStreamParams,
+  StreamAgentParams,
+  StreamExtensionParams,
+  interruptStream,
+  streamAgent,
+  streamExtension,
+} from '@/services/stream-service';
+import { createThread } from '@/services/thread-service';
+import { useThreadStore } from '@/store/thread-store';
+import { ExtensionType, ThreadType } from '@/constants/extension-constant';
 
-interface ChatState {
-  agent: AgentName
-  messages: IMessage[]
-  input: string
-  status: ChatStatus
-  threadId: string
-  setAgent: (agent: AgentName) => void
-  setMessages: (messages: IMessage[]) => void
-  setInput: (text: string) => void
-  setThreadId: (threadId: string) => void
-  createThread: (user: User, threadId: string) => Promise<void>
-  append: (message: IMessage) => void
-  handleStreamChat: (user: User) => Promise<void>
-  stop: () => void
-  reload: () => void
-}
+type ChatState = {
+  agent: AgentType;
+  extension: ExtensionType;
+  messages: IMessage[];
+  humanInput: string;
+  status: ChatStatus;
+  threadId: string;
+};
 
-const useChatStore = create<ChatState>((set, get) => ({
-  agent: AgentName.CHAT,
-  messages: [],
-  input: '',
-  status: ChatStatus.READY,
-  threadId: '',
+type ChatActions = {
+  setAgent: (agent: AgentType) => void;
+  setExtension: (extension: ExtensionType) => void;
+  setMessages: (messages: IMessage[]) => void;
+  setHumanInput: (text: string) => void;
+  setThreadId: (threadId: string) => void;
+  setStatus: (status: ChatStatus) => void;
+  createThread: (user: User, threadId: string, title?: string, type?: ThreadType) => Promise<void>;
+  appendMessage: (message: IMessage) => void;
+  handleStreamAgent: (user: User) => Promise<void>;
+  handleStreamExtension: (user: User) => Promise<void>;
+  handleStreamInterrupt: (user: User, toolcalls: any[]) => Promise<void>;
+  stopStream: () => void;
+  reloadChat: () => void;
+};
 
-  setAgent: (agent) => set({ agent: agent }),
-  setMessages: (messages) => set({ messages }),
-  setInput: (text) => set({ input: text }),
-  setThreadId: (threadId) => set({ threadId }),
+type ChatStore = ChatState & ChatActions;
 
-  // Create a new chat thread
-  createThread: async (user: User, threadId: string) => {
-    try {
-      const response: ICreateThreadResponse = await createThread({
-        user: user,
-        payload: { id: threadId, title: 'New Chat' },
-      })
-      set({ threadId: response.id })
+// The `immer` middleware is used to simplify immutable state updates by allowing direct mutation of the draft state.
+const useChatStore = create<ChatStore>()(
+  devtools(
+    immer((set, get) => ({
+      agent: AgentType.CHAT,
+      extension: ExtensionType.DEFAULT,
+      messages: [],
+      humanInput: '',
+      status: ChatStatus.READY,
+      threadId: '',
 
-      const addThread = useThreadStore.getState().addThread
-      addThread(response)
-    } catch (error) {
-      throw error
-    }
-  },
+      setAgent: (agent) => set({ agent: agent }),
+      setExtension: (extension) => set({ extension: extension }),
+      setMessages: (messages) => set({ messages }),
+      setHumanInput: (text) => set({ humanInput: text }),
+      setThreadId: (threadId) => set({ threadId }),
+      setStatus: (status) => set({ status }),
 
-  // Add a new message to the chat
-  append: (message) =>
-    set((state) => ({
-      messages: [...state.messages, { ...message }],
-    })),
+      // Create a new chat thread
+      // `title`: The title of the thread, defaults to 'New Chat' if not provided.
+      // `type`: The type of the thread, defaults to `ThreadType.DEFAULT` if not provided.
+      createThread: async (
+        user: User,
+        threadId: string,
+        title: string = 'New Chat',
+        type: ThreadType = ThreadType.DEFAULT,
+      ) => {
+        try {
+          const response: ICreateThreadResponse = await createThread({
+            user: user,
+            payload: { id: threadId, title, threadType: type },
+          });
+          set({ threadId: response.id });
 
-  // Handle send message SSE
-  handleStreamChat: async (user: User) => {
-    const { agent, input, threadId, append, setInput } = get()
-
-    if (!input.trim()) return
-
-    set({ status: ChatStatus.SUBMITTED })
-
-    // Create a user message and add it to the chat
-    const userMessage: IMessage = {
-      id: generateUUID(),
-      role: MessageRole.HUMAN,
-      content: input,
-    }
-
-    append(userMessage)
-    setInput('')
-
-    try {
-      const params: ChatParams = {
-        user,
-        threadId,
-        agentName: agent,
-        payload: { input: input, recursionLimit: 5 },
-      }
-
-      // Call sendMessage service to initiate streaming response
-      const reader = await sendMessage(params)
-      set({ status: ChatStatus.STREAMING })
-
-      const decoder = new TextDecoder()
-
-      let accumulatedText = ''
-      let aiMessage: IMessage = {
-        id: generateUUID(),
-        role: MessageRole.AI,
-        content: '',
-      }
-
-      append(aiMessage) // Show AI message placeholder immediately
-
-      while (true) {
-        // Read stream data chunk-by-chunk
-        const { done, value } = await reader.read()
-        if (done) break // Stop when stream ends
-
-        // Check if chat status has changed, stop streaming if not "streaming"
-        if (get().status !== ChatStatus.STREAMING) {
-          reader.cancel()
-          break
+          const addThread = useThreadStore.getState().addThread;
+          addThread(response);
+        } catch (error) {
+          throw error;
         }
+      },
 
-        const chunk = decoder.decode(value, { stream: true })
-        accumulatedText += chunk
+      // Add a new message to the chat
+      appendMessage: (message) =>
+        set((state) => ({
+          messages: [...state.messages, { ...message }],
+        })),
 
-        // Split data into lines based on SSE format
-        const lines = accumulatedText.split('\n')
-        accumulatedText = lines.pop() || ''
+      // Handle stream agent SSE
+      handleStreamAgent: async (user: User) => {
+        const { agent, humanInput, threadId, appendMessage, setHumanInput } = get();
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const jsonString = line.substring(6).trim()
-              const data = JSON.parse(jsonString)
+        if (!humanInput.trim()) return;
 
-              if (data?.length > 0) {
-                const messageData = data[0].content
+        appendMessage({ id: generateUUID(), role: MessageRole.HUMAN, content: humanInput });
+        appendMessage({ id: generateUUID(), role: MessageRole.AI, content: '' });
 
-                if (messageData) {
-                  set((state) => {
-                    const updatedMessages = [...state.messages]
-                    const lastIndex = updatedMessages.length - 1
+        set({ status: ChatStatus.SUBMITTED });
+        setHumanInput('');
 
-                    if (
-                      lastIndex >= 0 &&
-                      updatedMessages[lastIndex].role === MessageRole.AI
-                    ) {
-                      updatedMessages[lastIndex] = {
-                        ...updatedMessages[lastIndex],
-                        content: messageData,
-                      }
+        try {
+          const params: StreamAgentParams = {
+            user,
+            threadId,
+            agentName: agent,
+            payload: { input: humanInput, recursionLimit: 5 },
+          };
+
+          const reader = await streamAgent(params);
+          const decoder = new TextDecoder();
+          let accumulatedText = '';
+
+          set({ status: ChatStatus.STREAMING });
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            if (get().status !== ChatStatus.STREAMING) {
+              reader.cancel();
+              break;
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            accumulatedText += chunk;
+
+            const lines = accumulatedText.split('\n');
+            accumulatedText = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const jsonString = line.substring(6).trim();
+                  const data = JSON.parse(jsonString);
+
+                  if (data?.length > 0) {
+                    const messageData = data[0].content;
+
+                    if (messageData) {
+                      set((state) => {
+                        const lastIndex = state.messages.length - 1;
+                        if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
+                          state.messages[lastIndex].content = messageData;
+                        }
+                      });
                     }
-
-                    return { messages: updatedMessages }
-                  })
+                  }
+                } catch (error) {
+                  console.error(
+                    'Error parsing SSE data in handleStreamAgent:',
+                    error,
+                    'Raw data:',
+                    line,
+                  );
                 }
               }
-            } catch (error) {
-              console.error('Error parsing SSE data:', error)
             }
           }
+
+          set({ status: ChatStatus.READY });
+        } catch (error) {
+          console.error('Error in handleStreamAgent:', error);
+          set({ status: ChatStatus.ERROR });
         }
-      }
+      },
 
-      // Set status to "ready" after AI response completes
-      set({ status: ChatStatus.READY })
-    } catch (error) {
-      set({ status: ChatStatus.ERROR })
-      throw error
-    }
-  },
+      // Handle stream extension SSE
+      handleStreamExtension: async (user: User) => {
+        const { extension, humanInput, threadId, appendMessage, setHumanInput } = get();
 
-  // Stop chat
-  stop: () => {
-    set({ status: ChatStatus.READY })
-  },
+        if (!humanInput.trim()) return;
 
-  // Reload chat
-  reload: () => {
-    set({ messages: [], status: ChatStatus.READY, threadId: '' })
-  },
-}))
+        appendMessage({ id: generateUUID(), role: MessageRole.HUMAN, content: humanInput });
+        appendMessage({ id: generateUUID(), role: MessageRole.AI, content: '' });
 
-export default useChatStore
+        set({ status: ChatStatus.SUBMITTED });
+        setHumanInput('');
+
+        try {
+          const params: StreamExtensionParams = {
+            user,
+            threadId,
+            extensionName: extension,
+            payload: { input: humanInput, recursionLimit: 5 },
+          };
+
+          const reader = await streamExtension(params);
+
+          const decoder = new TextDecoder();
+          let accumulatedText = '';
+
+          set({ status: ChatStatus.STREAMING });
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            if (get().status !== ChatStatus.STREAMING) {
+              reader.cancel();
+              break;
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            accumulatedText += chunk;
+
+            const lines = accumulatedText.split('\n');
+            accumulatedText = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const jsonString = line.substring(6).trim();
+                  const data = JSON.parse(jsonString);
+
+                  set((state) => {
+                    const lastIndex = state.messages.length - 1;
+                    if (lastIndex < 0 || state.messages[lastIndex].role !== MessageRole.AI) return;
+
+                    if (data.interrupted) {
+                      state.messages[lastIndex] = {
+                        ...state.messages[lastIndex],
+                        content: 'You need to confirm this action.',
+                        interrupted: true,
+                        toolcalls: data.output,
+                      };
+                    } else if (data.output) {
+                      state.messages[lastIndex].content = data.output;
+                    }
+                  });
+                } catch (error) {
+                  console.error(
+                    'Error parsing SSE data in handleStreamExtension:',
+                    error,
+                    'Raw data:',
+                    line,
+                  );
+                }
+              }
+            }
+          }
+
+          set({ status: ChatStatus.READY });
+        } catch (error) {
+          console.error('Error in handleStreamExtension:', error);
+          set({ status: ChatStatus.ERROR });
+          throw error;
+        }
+      },
+
+      handleStreamInterrupt: async (user: User, toolCalls: any[]) => {
+        set({ status: ChatStatus.SUBMITTED });
+        const { extension, threadId, appendMessage } = get();
+        appendMessage({ id: generateUUID(), role: MessageRole.AI, content: '' });
+
+        try {
+          const params: InterruptStreamParams = {
+            user,
+            threadId,
+            extensionName: extension,
+            payload: { toolCalls: toolCalls },
+          };
+
+          const reader = await interruptStream(params);
+          set({ status: ChatStatus.STREAMING });
+
+          const decoder = new TextDecoder();
+
+          let accumulatedText = '';
+
+          while (true) {
+            // Read stream data chunk-by-chunk
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            // Check if chat status has changed, stop streaming if not "streaming"
+            if (get().status !== ChatStatus.STREAMING) {
+              reader.cancel();
+              break;
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            accumulatedText += chunk;
+
+            // Split data into lines based on SSE format
+            const lines = accumulatedText.split('\n');
+            accumulatedText = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const jsonString = line.substring(6).trim();
+                  const data = JSON.parse(jsonString);
+
+                  set((state) => {
+                    const lastIndex = state.messages.length - 1;
+                    if (lastIndex < 0 || state.messages[lastIndex].role !== MessageRole.AI) return;
+
+                    if (data.interrupted) {
+                      state.messages[lastIndex] = {
+                        ...state.messages[lastIndex],
+                        content: 'You need to confirm this action.',
+                        interrupted: true,
+                        toolcalls: data.output,
+                      };
+                    } else if (data.output) {
+                      state.messages[lastIndex].content = data.output;
+                    }
+                  });
+                } catch (error) {
+                  console.error(
+                    'Error parsing SSE data in handleStreamInterrupt:',
+                    error,
+                    'Raw data:',
+                    line,
+                  );
+                }
+              }
+            }
+          }
+
+          set({ status: ChatStatus.READY });
+        } catch (error) {
+          console.error('Error in handleStreamInterrupt:', error);
+          set({ status: ChatStatus.ERROR });
+          throw error;
+        }
+      },
+
+      // Stop chat
+      stopStream: () => {
+        set({ status: ChatStatus.READY });
+        set((state) => {
+          if (
+            state.messages.length > 0 &&
+            state.messages[state.messages.length - 1].role === MessageRole.AI
+          ) {
+            state.messages.pop();
+          }
+        });
+      },
+
+      // Reload chat
+      reloadChat: () => {
+        set({
+          agent: AgentType.CHAT,
+          messages: [],
+          status: ChatStatus.READY,
+          threadId: '',
+          humanInput: '',
+          extension: ExtensionType.DEFAULT,
+        });
+      },
+    })),
+  ),
+);
+
+export default useChatStore;

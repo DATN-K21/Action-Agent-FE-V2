@@ -1,17 +1,11 @@
-'use client'
+'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -19,42 +13,39 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { loginSchema } from '@/validation-schemas/auth-schema'
-import { useRouter } from 'next/navigation'
-import { toast } from '@/components/toast'
-import { useState } from 'react'
-import { Icons } from '@/components/icon'
-import { signIn } from 'next-auth/react'
+} from '@/components/ui/form';
+import { loginSchema } from '@/validation-schemas/auth-schema';
+import { useRouter } from 'next/navigation';
+import { toast } from '@/components/toast';
+import { useState } from 'react';
+import { Icons } from '@/components/icon';
+import { signIn } from 'next-auth/react';
 import {
   ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE,
   INVALID_LOGIN_ERROR_MESSAGE,
   Providers,
-} from '@/constants/auth-constant'
-import GoogleButton from './google-button'
-import SendOTPDialog from './forgot-password/send-otp-dialog'
-import ConfirmOTPDialog from './forgot-password/confirm-otp-dialog'
-import ResetPasswordDialog from './forgot-password/reset-password-dialog'
-import { sendAccountActivationEmail } from '@/services/auth-service'
+} from '@/constants/auth-constant';
+import GoogleButton from './google-button';
+import SendOTPDialog from './forgot-password/send-otp-dialog';
+import ConfirmOTPDialog from './forgot-password/confirm-otp-dialog';
+import ResetPasswordDialog from './forgot-password/reset-password-dialog';
+import { sendAccountActivationEmail } from '@/services/auth-service';
 
 export function LoginForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isForgotPasswordDialogOpen, setForgotPasswordDialogOpen] =
-    useState(false)
-  const [isOTPDialogOpen, setOTPDialogOpen] = useState(false)
-  const [isResetPasswordDialogOpen, setResetPasswordDialogOpen] =
-    useState(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isForgotPasswordDialogOpen, setForgotPasswordDialogOpen] = useState(false);
+  const [isOTPDialogOpen, setOTPDialogOpen] = useState(false);
+  const [isResetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
 
-  const [forgotPasswordUserEmail, setForgotPasswordUserEmail] =
-    useState<string>('')
+  const [forgotPasswordUserEmail, setForgotPasswordUserEmail] = useState<string>('');
   const [forgotPasswordInfo, setForgotPasswordInfo] = useState<{
-    userId: string
-    resetPasswordToken: string
+    userId: string;
+    resetPasswordToken: string;
   }>({
     userId: '',
     resetPasswordToken: '',
-  })
+  });
 
   const form = useForm({
     resolver: zodResolver(loginSchema),
@@ -62,65 +53,69 @@ export function LoginForm() {
       email: '',
       password: '',
     },
-  })
+  });
 
   const handleLogin = async (data: { email: string; password: string }) => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Sign in with credentials using NextAuth
     const result = await signIn(Providers.Credentials, {
       email: data.email,
       password: data.password,
       redirect: false,
-    })
+    });
 
     // Handle login result
     if (result?.code === INVALID_LOGIN_ERROR_MESSAGE) {
       // Credentials are invalid
-      toast({ type: 'error', description: INVALID_LOGIN_ERROR_MESSAGE })
-      form.setValue('password', '')
+      toast({ type: 'error', description: INVALID_LOGIN_ERROR_MESSAGE });
+      form.setValue('password', '');
     } else if (result?.code === ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE) {
       // Account is not verified
       toast({
         type: 'error',
         description: ACCOUNT_NOT_VERIFIED_ERROR_MESSAGE,
-      })
+      });
 
       // Send verification email
-      await sendAccountActivationEmail(data.email)
+      await sendAccountActivationEmail(data.email);
 
-      form.reset()
+      form.reset();
+    } else if (result?.code == 'credentials') {
+      // Other error
+      toast({
+        type: 'error',
+        description: 'An error occurred while logging in.',
+      });
+      form.reset();
     } else if (!result?.error) {
       // Login successful
-      toast({ type: 'success', description: 'Login successful' })
-      router.push('/')
+      toast({ type: 'success', description: 'Login successful' });
+      router.push('/');
     }
 
-    setIsLoading(false)
-  }
+    setIsLoading(false);
+  };
 
   // Handle after sending OTP successfully
   const handleSendOTPSucess = (email: string) => {
-    setForgotPasswordUserEmail(email)
-    setForgotPasswordDialogOpen(false)
-    setOTPDialogOpen(true)
-  }
+    setForgotPasswordUserEmail(email);
+    setForgotPasswordDialogOpen(false);
+    setOTPDialogOpen(true);
+  };
 
   // Handle after verifying OTP successfully
-  const handleVerifyOTPSucess = (
-    userId: string,
-    resetPasswordToken: string,
-  ) => {
-    setForgotPasswordInfo({ userId, resetPasswordToken })
-    setOTPDialogOpen(false)
-    setResetPasswordDialogOpen(true)
-  }
+  const handleVerifyOTPSucess = (userId: string, resetPasswordToken: string) => {
+    setForgotPasswordInfo({ userId, resetPasswordToken });
+    setOTPDialogOpen(false);
+    setResetPasswordDialogOpen(true);
+  };
 
   // Handle after resetting password successfully
   const handleResetPasswordSucess = () => {
-    form.reset()
-    setResetPasswordDialogOpen(false)
-  }
+    form.reset();
+    setResetPasswordDialogOpen(false);
+  };
 
   return (
     <>
@@ -174,7 +169,7 @@ export function LoginForm() {
                           <div className="flex items-center">
                             <FormLabel htmlFor="password">Password</FormLabel>
                             <div
-                              className="ml-auto text-sm underline-offset-4 hover:underline cursor-pointer"
+                              className="ml-auto text-sm underline-offset-4 underline cursor-pointer"
                               onClick={() => setForgotPasswordDialogOpen(true)}
                             >
                               Forgot your password?
@@ -185,7 +180,7 @@ export function LoginForm() {
                               id="password"
                               type="password"
                               required
-                              placeholder='********'
+                              placeholder="********"
                               disabled={isLoading}
                               {...field}
                             />
@@ -202,7 +197,7 @@ export function LoginForm() {
                   </div>
 
                   <div className="text-center text-sm">
-                    Don&apos;t have an account?{" "}
+                    Don&apos;t have an account?{' '}
                     <Link href="/register" className="underline underline-offset-4">
                       Sign up
                     </Link>
@@ -213,7 +208,8 @@ export function LoginForm() {
           </CardContent>
         </Card>
         <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-          By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          By clicking continue, you agree to our <a href="#">Terms of Service</a> and{' '}
+          <a href="#">Privacy Policy</a>.
         </div>
       </div>
 
@@ -236,5 +232,5 @@ export function LoginForm() {
         onClose={handleResetPasswordSucess}
       />
     </>
-  )
+  );
 }

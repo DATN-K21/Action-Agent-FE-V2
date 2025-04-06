@@ -11,7 +11,7 @@ import { useSidebar } from './ui/sidebar'
 import { memo } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
-function PureChatHeader({ chatId }: { chatId: string }) {
+function PureChatHeader() {
   const router = useRouter()
   const { open } = useSidebar()
 

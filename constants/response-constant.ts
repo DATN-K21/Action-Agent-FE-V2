@@ -1,5 +1,6 @@
-export const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT
-export const AI_ENDPOINT = process.env.NEXT_PUBLIC_AI_ENDPOINT
+export const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT;
+export const SOCKET_API_ENDPOINT = process.env.NEXT_PUBLIC_SOCKET_API_ENDPOINT;
+export const AI_ENDPOINT = process.env.NEXT_PUBLIC_AI_ENDPOINT;
 
 export enum HttpStatus {
   OK = 200,

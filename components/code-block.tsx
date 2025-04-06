@@ -1,59 +1,49 @@
-'use client'
-import { useCopyToClipboard } from 'usehooks-ts'
-import { CopyIcon } from '@/components/icons'
-import { Button } from '@/components/ui/button'
-import { toast } from '@/components/toast'
+'use client';
+import { useCopyToClipboard } from 'usehooks-ts';
+import { CopyIcon } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/toast';
 
 const languageMap: Record<string, string> = {
   javascript: 'js',
   typescript: 'ts',
   python: 'py',
-}
+};
 
 interface CodeBlockProps {
-  node: any
-  className: string
-  children: any
+  node: any;
+  className: string;
+  children: any;
 }
 
-export function CodeBlock({
-  node,
-  className,
-  children,
-  ...props
-}: CodeBlockProps) {
-  const match = /language-(\w+)/.exec(className || '')
-  const languageLabel = match ? languageMap[match[1]] || match[1] : ''
+export function CodeBlock({ node, className, children, ...props }: CodeBlockProps) {
+  const match = /language-(\w+)/.exec(className || '');
+  const languageLabel = match ? languageMap[match[1]] || match[1] : '';
 
-  console.log('languageLabel', languageLabel)
-  console.log('match', match ? match[1] : null)
-
-  const [_, copyToClipboard] = useCopyToClipboard()
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const getCodeString = () => {
-    if (typeof children === 'string') return children
+    if (typeof children === 'string') return children;
     if (Array.isArray(children))
       return children
         .map((child) => {
-          if (typeof child === 'string') return child
-          if (typeof child === 'object' && 'props' in child)
-            return child.props.children || ''
-          return ''
+          if (typeof child === 'string') return child;
+          if (typeof child === 'object' && 'props' in child) return child.props.children || '';
+          return '';
         })
-        .join('')
-    if (typeof children === 'object' && 'props' in children)
-      return children.props.children || ''
-    return ''
-  }
+        .join('');
+    if (typeof children === 'object' && 'props' in children) return children.props.children || '';
+    return '';
+  };
 
   const handleCopy = async () => {
-    const codeToCopy = getCodeString()
-    await copyToClipboard(codeToCopy)
+    const codeToCopy = getCodeString();
+    await copyToClipboard(codeToCopy);
     toast({
       type: 'success',
       description: 'Copied to clipboard!',
-    })
-  }
+    });
+  };
 
   if (match) {
     return (
@@ -75,7 +65,7 @@ export function CodeBlock({
           <code className="whitespace-pre-wrap break-all">{children}</code>
         </pre>
       </div>
-    )
+    );
   } else {
     return (
       <code
@@ -84,6 +74,6 @@ export function CodeBlock({
       >
         {children}
       </code>
-    )
+    );
   }
 }

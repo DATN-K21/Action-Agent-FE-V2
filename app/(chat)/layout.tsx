@@ -4,9 +4,9 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 import { auth } from '@/auth'
-import Script from 'next/script'
 import { User } from 'next-auth'
 import { notFound } from 'next/navigation'
+import { ChatHeader } from '@/components/chat-header'
 
 export const experimental_ppr = true
 
@@ -31,15 +31,14 @@ export default async function Layout({
   }
 
   return (
-    <>
-      <Script
-        src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"
-        strategy="beforeInteractive"
-      />
-      <SidebarProvider defaultOpen={!isCollapsed}>
-        <AppSidebar user={user} />
-        <SidebarInset>{children}</SidebarInset>
-      </SidebarProvider>
-    </>
+    <SidebarProvider defaultOpen={!isCollapsed}>
+      <AppSidebar user={user} />
+      <SidebarInset>
+        <div className="flex flex-col min-w-0 h-dvh bg-background">
+          <ChatHeader />
+          {children}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

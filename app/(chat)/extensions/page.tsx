@@ -1,10 +1,13 @@
 import { auth } from '@/auth';
-import { Chat } from '@/components/chat';
-import { Role } from '@/constants/data';
-import { ExtensionType } from '@/constants/extension-constant';
-import { generateUUID } from '@/lib/utils';
-import { User } from 'next-auth';
+import ExtensionList from './_components/extension-list';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { User } from 'next-auth';
+
+export const metadata: Metadata = {
+  title: 'Extensions - Botion',
+  description: 'Extensions Page',
+}
 
 export default async function Page() {
   const session = await auth();
@@ -21,13 +24,5 @@ export default async function Page() {
     expiresAt: session.expiresAt,
   };
 
-  return (
-    <Chat
-      key={generateUUID()}
-      id={generateUUID()}
-      user={user}
-      initialMessages={[]}
-      extensionName={ExtensionType.DEFAULT}
-    />
-  );
+  return <ExtensionList user={user} />;
 }

@@ -1,19 +1,17 @@
-import { API_ENDPOINT, HttpMethod } from '@/constants/response-constant'
-import { sendRequest } from '@/lib/utils'
-import {
-  ICreateThreadResponse,
-  IThreadHistoryResponse,
-  IThreadsResponse,
-} from '@/types/ai'
-import { IHeader } from '@/types/auth'
-import { User } from 'next-auth'
+import { ThreadType } from "@/constants/extension-constant"
+import { API_ENDPOINT, HttpMethod } from "@/constants/response-constant"
+import { sendRequest } from "@/lib/utils"
+import { ICreateThreadResponse, IMessage, IThreadHistoryResponse, IThreadsResponse } from "@/types/ai"
+import { IHeader } from "@/types/auth"
+import { User } from "next-auth"
 
 export interface CreateThreadParams {
-  user: User
-  payload: {
-    id: string
-    title: string
-  }
+    user: User;
+    payload: {
+        id: string;
+        title: string;
+        threadType?: ThreadType;
+    };
 }
 
 export interface GetThreadsParams {
@@ -104,28 +102,26 @@ export const createThread = async (
   }
 }
 
-export const getThreadHistory = async (
-  params: GetThreadHistoryParams,
-): Promise<IThreadHistoryResponse> => {
-  try {
-    if (!params.user.id) throw new Error("Missing 'userId'")
+export const getThreadHistory = async (params: GetThreadHistoryParams): Promise<IThreadHistoryResponse> => {
+    try {
+        if (!params.user.id) throw new Error("Missing 'userId'");
 
-    const headers: IHeader = {
-      'x-user-id': params.user.id,
-      'x-user-role': params.user.role,
-    }
+        const headers: IHeader = {
+            "x-user-id": params.user.id,
+            "x-user-role": params.user.role,
+        };
 
-    const response: IResponse<IThreadHistoryResponse> = await sendRequest({
-      url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.payload.threadId}/get-history`,
-      method: HttpMethod.GET,
-      headers: headers,
-      nextOption: { cache: 'no-store' },
-    })
+      const response: IResponse<IThreadHistoryResponse> = await sendRequest({
+          url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.payload.threadId}/get-history`,
+          method: HttpMethod.GET,
+          headers: headers,
+          nextOption: { cache: "no-store" }
+      });
 
-    return response.data as IThreadHistoryResponse
+      return response.data as IThreadHistoryResponse;
   } catch (error) {
-    console.error('Error get history thread: ', error)
-    throw error
+      console.error("Error get history thread: ", error);
+      throw error;
   }
 }
 

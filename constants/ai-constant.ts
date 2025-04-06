@@ -1,4 +1,4 @@
-export enum AgentName {
+export enum AgentType {
   CHAT = 'chat-agent',
   SEARCH = 'search-agent',
   RAG = 'rag-agent',

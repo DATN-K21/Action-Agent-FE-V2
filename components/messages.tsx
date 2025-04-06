@@ -1,20 +1,22 @@
-import { PreviewMessage, ThinkingMessage } from './message'
-import { useScrollToBottom } from './use-scroll-to-bottom'
-import { Overview } from './overview'
-import { memo } from 'react'
-import equal from 'fast-deep-equal'
-import { ChatStatus, MessageRole } from '@/constants/ai-constant'
-import { IMessage } from '@/types/ai'
+import { PreviewMessage, ThinkingMessage } from './message';
+import { useScrollToBottom } from './use-scroll-to-bottom';
+import { Overview } from './overview';
+import { Fragment, memo } from 'react';
+import equal from 'fast-deep-equal';
+import { ChatStatus, MessageRole } from '@/constants/ai-constant';
+import { IMessage } from '@/types/ai';
+import { ActionConfirmation } from '@/components/action-confirmation';
+import { User } from 'next-auth';
 
 interface MessagesProps {
-  chatId: string
-  status: ChatStatus
-  messages: Array<IMessage>
+  chatId: string;
+  status: ChatStatus;
+  messages: Array<IMessage>;
+  user: User;
 }
 
-function PureMessages({ chatId, status, messages }: MessagesProps) {
-  const [messagesContainerRef, messagesEndRef] =
-    useScrollToBottom<HTMLDivElement>()
+function PureMessages({ chatId, status, messages, user }: MessagesProps) {
+  const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>();
 
   return (
     <div
@@ -23,36 +25,42 @@ function PureMessages({ chatId, status, messages }: MessagesProps) {
     >
       {messages.length === 0 && <Overview />}
 
-      {messages.map((message, index) => (
-        <PreviewMessage
-          key={message.id}
-          chatId={chatId}
-          message={message}
-          isLoading={
-            status === ChatStatus.STREAMING && messages.length - 1 === index
-          }
-        />
-      ))}
+      {messages.map((message, index) => {
+        return (
+          <Fragment key={message.id}>
+            {message.content &&
+              (message.role === MessageRole.AI || message.role === MessageRole.HUMAN) && (
+                <PreviewMessage
+                  chatId={chatId}
+                  message={message}
+                  isLoading={status === ChatStatus.STREAMING && messages.length - 1 === index}
+                />
+              )}
 
-      {status === ChatStatus.SUBMITTED &&
-        messages.length > 0 &&
-        messages[messages.length - 1].role === MessageRole.HUMAN && (
-          <ThinkingMessage />
-        )}
+            {message.interrupted && message.toolcalls && (
+              <ActionConfirmation toolCalls={message.toolcalls} user={user} />
+            )}
+          </Fragment>
+        );
+      })}
 
-      <div
-        ref={messagesEndRef}
-        className="shrink-0 min-w-[24px] min-h-[24px]"
-      />
+      {status === ChatStatus.SUBMITTED ||
+      (messages[messages.length - 1]?.content === '' &&
+        messages[messages.length - 1]?.role === MessageRole.AI &&
+        status === ChatStatus.STREAMING) ? (
+        <ThinkingMessage />
+      ) : null}
+
+      <div ref={messagesEndRef} className="shrink-0 min-w-[24px] min-h-[24px]" />
     </div>
-  )
+  );
 }
 
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-  if (prevProps.status !== nextProps.status) return false
-  if (prevProps.status && nextProps.status) return false
-  if (prevProps.messages.length !== nextProps.messages.length) return false
-  if (!equal(prevProps.messages, nextProps.messages)) return false
+  if (prevProps.status !== nextProps.status) return false;
+  if (prevProps.status && nextProps.status) return false;
+  if (prevProps.messages.length !== nextProps.messages.length) return false;
+  if (!equal(prevProps.messages, nextProps.messages)) return false;
 
-  return true
-})
+  return true;
+});
