@@ -5,8 +5,8 @@ import { toast as sonnerToast } from 'sonner'
 import { CheckCircleFillIcon, WarningIcon } from './icons'
 import { InfoIcon } from 'lucide-react'
 
-const iconsByType: Record<'infor' | 'success' | 'error', ReactNode> = {
-  infor: <InfoIcon />,
+const iconsByType: Record<'info' | 'success' | 'error', ReactNode> = {
+  info: <InfoIcon />,
   success: <CheckCircleFillIcon />,
   error: <WarningIcon />,
 }
@@ -41,7 +41,7 @@ function Toast(props: ToastProps) {
 
 interface ToastProps {
   id: string | number
-  type: 'infor' | 'success' | 'error'
+  type: 'info' | 'success' | 'error'
   description: string
   duration?: number
 }

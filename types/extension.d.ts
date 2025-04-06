@@ -1,26 +1,26 @@
 export interface IGetAllExtensionResponse {
-  extensions: string[]
+  extensions: string[];
 }
 
 export interface IConnectedApp {
-  id: string
-  userId: string
-  appName: string
-  connectedAccountId: string
-  authScheme?: string
-  authValue?: string
-  createdAt?: string
+  id: string;
+  userId: string;
+  appName: string;
+  connectedAccountId: string;
+  authScheme?: string;
+  authValue?: string;
+  createdAt?: string;
 }
 
 export interface IGetConnectedExtensions {
-  connectedApps: IConnectedApp[]
+  connectedApps: IConnectedApp[];
 }
 
-export interface IGetExtensionActions {
+export interface IGetExtensionActionsResponse {
   actions: string[];
 }
 
-export interface IActiveExtension {
+export interface IActiveExtensionResponse {
   isExisted: boolean;
   redirectUrl: string;
 }

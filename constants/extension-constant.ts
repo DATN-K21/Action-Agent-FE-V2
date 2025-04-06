@@ -8,3 +8,5 @@ export enum ThreadType {
   SLACK = 'slack',
   YOUTUBE = 'youtube',
 }
+
+export { ThreadType as ExtensionType };

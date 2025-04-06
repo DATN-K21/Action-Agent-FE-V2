@@ -18,7 +18,6 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { logout } from '@/services/auth-service'
-import { toast } from '@/components/toast'
 
 export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, theme } = useTheme()
@@ -27,10 +26,7 @@ export function SidebarUserNav({ user }: { user: User }) {
     try {
       await logout(user)
     } catch (error: any) {
-      toast({
-        type: 'error',
-        description: error?.json?.message || 'An unexpected error occurred',
-      })
+      console.error(error);
     } finally {
       await signOut()
     }

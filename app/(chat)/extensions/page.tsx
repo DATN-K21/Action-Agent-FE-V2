@@ -5,8 +5,8 @@ import { notFound } from 'next/navigation';
 import { User } from 'next-auth';
 
 export const metadata: Metadata = {
-  title: 'Tools - Botion',
-  description: 'Tools Page',
+  title: 'Extensions - Botion',
+  description: 'Extensions Page',
 }
 
 export default async function Page() {

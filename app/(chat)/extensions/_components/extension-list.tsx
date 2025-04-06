@@ -1,58 +1,52 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Input } from '@/components/ui/input'
+import { useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/components/ui/select';
 import {
   IconAdjustmentsHorizontal,
   IconSortAscendingLetters,
   IconSortDescendingLetters,
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
-import { extensions, Extension, ExtensionResponse, Role } from '@/constants/data';
+import { extensions, Extension } from '@/constants/data';
 import { Separator } from '@/components/ui/separator';
 import ExtensionDialog from './extension-dialog';
-import { ExtensionParams, getAllExtensions, getConnectedExtensions } from '@/services/extension-service';
-import { IConnectedApp } from '@/types/extension';
+import {
+  ExtensionParams,
+  getAllExtensions,
+  getConnectedExtensions,
+} from '@/services/extension-service';
 import { User } from 'next-auth';
 
 export type ExtensionListProps = {
   user: User;
 };
 
-
 export default function ExtensionList(props: ExtensionListProps) {
   const { user } = props;
 
   const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
 
-  const [allExtensions, setAllExtensions] = useState<ExtensionResponse>();
-  const [connectedExtensions, setConnectedExtensions] = useState<IConnectedApp[]>([]);
   const [filteredExtensions, setFilteredExtensions] = useState<Extension[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selectedExtension, setSelectedExtension] = useState<Extension | null>(null);
 
-  const [extensionType, setExtensionType] = useState<
-    'all' | 'connected' | 'notConnected'
-  >('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false)
-
+  const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
 
   useEffect(() => {
     if (!user) {
-      console.log('User not found');
       return;
     }
 
     const fetchExtensionData = async () => {
-      setIsLoading(true)
       try {
         const extensionParams = { user } as ExtensionParams;
 
@@ -61,25 +55,19 @@ export default function ExtensionList(props: ExtensionListProps) {
           getConnectedExtensions(extensionParams),
         ]);
 
-        setAllExtensions(allExtensionsData)
-        setConnectedExtensions(connectedExtensionsData.connectedApps)
-
         const getExtensions = extensions.filter(
           (ext) => ext.key && allExtensionsData?.extensions.includes(ext.key),
-        )
+        );
         const updatedExtensions = getExtensions.map((extension) => ({
           ...extension,
           connected:
-            connectedExtensionsData.connectedApps?.some(
-              (ext) => ext.appName === extension.key,
-            ) || false,
-        }))
+            connectedExtensionsData.connectedApps?.some((ext) => ext.appName === extension.key) ||
+            false,
+        }));
 
         const newFilteredExtensions = updatedExtensions
           .sort((a, b) =>
-            sort === 'ascending'
-              ? a.name.localeCompare(b.name)
-              : b.name.localeCompare(a.name),
+            sort === 'ascending' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
           )
           .filter((extension) =>
             extensionType === 'connected'
@@ -88,17 +76,13 @@ export default function ExtensionList(props: ExtensionListProps) {
                 ? !extension.connected
                 : true,
           )
-          .filter((extension) =>
-            extension.name.toLowerCase().includes(searchTerm.toLowerCase()),
-          )
+          .filter((extension) => extension.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-        setFilteredExtensions(newFilteredExtensions)
+        setFilteredExtensions(newFilteredExtensions);
       } catch (error) {
-        console.error('Error fetching extension data: ', error)
-      } finally {
-        setIsLoading(false)
+        console.error('Error fetching extension data: ', error);
       }
-    }
+    };
 
     fetchExtensionData();
   }, [user, extensionType, searchTerm, sort]);
@@ -108,9 +92,7 @@ export default function ExtensionList(props: ExtensionListProps) {
       <div className="flex flex-col h-screen w-full px-4">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight mt-2">
-            Extension Integrations
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight mt-2">Extension Integrations</h1>
           <p className="text-muted-foreground">
             {`Here's a list of your extensions for the integration!`}
           </p>
@@ -150,9 +132,7 @@ export default function ExtensionList(props: ExtensionListProps) {
 
           <Select
             value={sort}
-            onValueChange={(value) =>
-              setSort(value as 'ascending' | 'descending')
-            }
+            onValueChange={(value) => setSort(value as 'ascending' | 'descending')}
           >
             <SelectTrigger className="w-16">
               <SelectValue>
@@ -183,25 +163,24 @@ export default function ExtensionList(props: ExtensionListProps) {
           {filteredExtensions.map((extension) => (
             <li
               key={extension.name}
-              className="rounded-lg border p-4 hover:shadow-md"
+              className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer"
               onClick={() => {
-                setSelectedExtension(extension)
-                setIsOpenDialog(true)
+                setSelectedExtension(extension);
+                setIsOpenDialog(true);
               }}
             >
               <div className="mb-8 flex items-center justify-between">
-                <div
-                  className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
-                >
+                <div className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}>
                   <extension.logo />
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`${extension.connected
-                    ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
-                    : ''
-                    }`}
+                  className={`${
+                    extension.connected
+                      ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
+                      : ''
+                  }`}
                 >
                   {extension.connected ? 'Connected' : 'Connect'}
                 </Button>
@@ -216,7 +195,12 @@ export default function ExtensionList(props: ExtensionListProps) {
       </div>
 
       {/* Extension Dialog */}
-      <ExtensionDialog user={user} extension={selectedExtension!} isOpen={isOpenDialog} onClose={() => setIsOpenDialog(false)} />
+      <ExtensionDialog
+        user={user}
+        extension={selectedExtension!}
+        isOpen={isOpenDialog}
+        onClose={() => setIsOpenDialog(false)}
+      />
     </>
-  )
+  );
 }
