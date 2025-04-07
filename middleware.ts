@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   const session = await auth()
 
   // Allow all authentication-related APIs
-  if (pathname.startsWith('/api/auth') || pathname.startsWith('/api/account')) {
+  if (pathname.startsWith('/api/auth') || pathname.startsWith('/account-activation')) {
     return NextResponse.next()
   }
 
