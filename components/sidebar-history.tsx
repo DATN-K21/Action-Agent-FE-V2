@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import type { User } from 'next-auth';
 import { memo, useEffect, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 import { MoreHorizontalIcon, TrashIcon } from '@/components/icons';
 import {
@@ -39,6 +40,7 @@ import { ThreadType } from '@/constants/extension-constant';
 
 function SidebarHistory({ user }: { user: User }) {
   const threads = useThreadStore((state) => state.threads);
+  const nextCursor = useThreadStore((state) => state.nextCursor);
   const isLoading = useThreadStore((state) => state.isLoading);
   const fetchThreads = useThreadStore((state) => state.fetchThreads);
   const deleteThreadById = useThreadStore((state) => state.deleteThreadById);
@@ -52,9 +54,20 @@ function SidebarHistory({ user }: { user: User }) {
 
   const { id: threadId } = useParams()!;
 
+  const { ref, inView } = useInView({
+    threshold: 0, 
+  });
+
   useEffect(() => {
     fetchThreads(user);
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    if (inView && nextCursor && !isLoading) {
+      fetchThreads(user, nextCursor);
+    }
+  }, [inView, nextCursor, isLoading, fetchThreads, user]);
+
 
   // Handle delete thread
   const handleDelete = async () => {
@@ -247,6 +260,9 @@ function SidebarHistory({ user }: { user: User }) {
                   </>
                 );
               })()}
+          {nextCursor && (
+              <div ref={ref} className="h-1" />
+            )}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
