@@ -47,7 +47,7 @@ export function CodeBlock({ node, className, children, ...props }: CodeBlockProp
 
   if (match) {
     return (
-      <div className="relative not-prose flex flex-col w-full max-w-[19rem] xs:max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl 2xl:max-w-6xl mx-auto">
+      <div className="relative not-prose flex flex-col">
         <div className="absolute top-1 left-1 text-sm px-2 py-0.5 text-muted-foreground pointer-events-none select-none">
           {languageLabel}
         </div>
@@ -62,7 +62,7 @@ export function CodeBlock({ node, className, children, ...props }: CodeBlockProp
           {...props}
           className={`text-sm w-full overflow-x-auto dark:bg-zinc-900 px-4 pt-10 pb-4 bg-zinc-100 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900`}
         >
-          <code className="whitespace-pre break-all">{children}</code>
+          <code className="whitespace-pre-wrap break-all">{children}</code>
         </pre>
       </div>
     );

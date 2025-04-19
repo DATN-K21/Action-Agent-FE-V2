@@ -24,7 +24,7 @@ const PurePreviewMessage = ({
     <AnimatePresence>
       <motion.div
         data-testid={`message-${message.role}`}
-        className="w-full px-4 group/message"
+        className="w-full mx-auto max-w-4xl px-4 group/message"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role={message.role}
@@ -42,7 +42,7 @@ const PurePreviewMessage = ({
             </div>
           )}
 
-          <div className="flex flex-col gap-4 flex-1">
+          <div className="flex flex-col gap-4 w-full">
             {/* {message.experimental_attachments && (
               <div
                 data-testid={`message-attachments`}
