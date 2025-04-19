@@ -14,9 +14,10 @@ interface GroupedThreads {
 
 interface ThreadState {
   threads: IThread[];
+  nextCursor: string | null;
   isLoading: boolean;
   addThread: (thread: IThread) => void;
-  fetchThreads: (user: User) => Promise<void>;
+  fetchThreads: (user: User, cursor?: string) => Promise<void>;
   deleteThreadById: (user: User, threadId: string) => Promise<void>;
   renameThread: (user: User, threadId: string, title: string) => Promise<void>;
   groupThreadsByDate: () => GroupedThreads;
@@ -24,6 +25,7 @@ interface ThreadState {
 
 export const useThreadStore = create<ThreadState>((set, get) => ({
   threads: [],
+  nextCursor: null,
   isLoading: false,
 
   addThread: (thread) => {
@@ -31,11 +33,16 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
     set({ threads: [thread, ...threads] });
   },
 
-  fetchThreads: async (user) => {
+  fetchThreads: async (user, cursor) => {
     set({ isLoading: true });
     try {
-      const response: IThreadsResponse = await getThreads({ user, payload: {} });
-      set({ threads: response.threads as IThread[] });
+      const response: IThreadsResponse = await getThreads({ user, payload: { cursor } });
+      set((state) => ({
+        threads: cursor
+          ? [...state.threads, ...response.threads] // Nối thêm threads nếu có cursor
+          : response.threads, // Thay thế nếu không có cursor
+        nextCursor: response.nextCursor, // Lưu nextCursor
+      }));
     } catch (error) {
       throw error;
     } finally {
