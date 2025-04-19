@@ -14,6 +14,7 @@ const config: Config = {
     extend: {
       screens: {
         'toast-mobile': '600px',
+        'xs': '480px',
       },
       borderRadius: {
         lg: 'var(--radius)',
