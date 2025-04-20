@@ -78,7 +78,7 @@ export function LoginForm() {
       });
 
       // Send verification email
-      await sendAccountActivationEmail(data.email);
+      sendAccountActivationEmail(data.email);
 
       form.reset();
     } else if (result?.code == 'credentials') {

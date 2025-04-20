@@ -1,21 +1,23 @@
 import { ThreadType } from '@/constants/extension-constant';
-import { API_ENDPOINT, HttpMethod } from '@/constants/response-constant';
-import { sendRequest } from '@/lib/utils';
-import {
-  ICreateThreadResponse,
-  IMessage,
-  IThreadHistoryResponse,
-  IThreadsResponse,
-} from '@/types/ai';
-import { IHeader } from '@/types/auth';
+import { AI_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
+import { ICreateThreadResponse, IThreadHistoryResponse, IThreadsResponse } from '@/types/ai';
 import { User } from 'next-auth';
 
 export interface CreateThreadParams {
   user: User;
   payload: {
+    // id: string;
+    title: string;
+    threadType: ThreadType;
+  };
+}
+
+export interface RenameThreadParams {
+  user: User;
+  payload: {
     id: string;
     title: string;
-    threadType?: ThreadType;
   };
 }
 
@@ -58,19 +60,13 @@ export interface UploadFileResponse {
 
 export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResponse> => {
   try {
-    if (!params.user.id) throw new Error("Missing 'userId'");
-
-    const headers: IHeader = {
-      'x-user-id': params.user.id,
-      'x-user-role': params.user.role,
-    };
-
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
     const query = params.payload?.cursor
       ? `?cursor=${encodeURIComponent(params.payload.cursor)}`
       : '';
 
     const response: IResponse<IThreadsResponse> = await sendRequest({
-      url: `${API_ENDPOINT}/ai/thread/${params.user.id}/get-all${query}`,
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/get-all${query}`,
       method: HttpMethod.GET,
       headers: headers,
     });
@@ -84,17 +80,13 @@ export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResp
 
 export const createThread = async (params: CreateThreadParams): Promise<ICreateThreadResponse> => {
   try {
-    if (!params.user.id) throw new Error("Missing 'userId'");
-    if (!params.payload.id) throw new Error("Missing 'threadId'");
     if (!params.payload.title) throw new Error("Missing 'title'");
+    if (!params.payload.threadType) throw new Error("Missing 'threadType'");
 
-    const headers: IHeader = {
-      'x-user-id': params.user.id,
-      'x-user-role': params.user.role,
-    };
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<ICreateThreadResponse> = await sendRequest({
-      url: `${API_ENDPOINT}/ai/thread/${params.user.id}/create`,
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/create`,
       method: HttpMethod.POST,
       body: params.payload,
       headers: headers,
@@ -111,18 +103,14 @@ export const getThreadHistory = async (
   params: GetThreadHistoryParams,
 ): Promise<IThreadHistoryResponse> => {
   try {
-    if (!params.user.id) throw new Error("Missing 'userId'");
+    if (!params.payload.threadId) throw new Error("Missing 'threadId'");
 
-    const headers: IHeader = {
-      'x-user-id': params.user.id,
-      'x-user-role': params.user.role,
-    };
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IThreadHistoryResponse> = await sendRequest({
-      url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.payload.threadId}/get-history`,
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/${params.payload.threadId}/get-history`,
       method: HttpMethod.GET,
       headers: headers,
-      nextOption: { cache: 'no-store' },
     });
 
     return response.data as IThreadHistoryResponse;
@@ -132,19 +120,15 @@ export const getThreadHistory = async (
   }
 };
 
-export const updateThread = async (params: CreateThreadParams): Promise<ICreateThreadResponse> => {
+export const updateThread = async (params: RenameThreadParams): Promise<ICreateThreadResponse> => {
   try {
-    if (!params.user.id) throw new Error("Missing 'userId'");
     if (!params.payload.id) throw new Error("Missing 'threadId'");
     if (!params.payload.title) throw new Error("Missing 'title'");
 
-    const headers: IHeader = {
-      'x-user-id': params.user.id,
-      'x-user-role': params.user.role,
-    };
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<ICreateThreadResponse> = await sendRequest({
-      url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.payload.id}/update`,
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/${params.payload.id}/update`,
       method: HttpMethod.PATCH,
       body: params.payload,
       headers: headers,
@@ -159,16 +143,12 @@ export const updateThread = async (params: CreateThreadParams): Promise<ICreateT
 
 export const deleteThread = async (params: DeleteThreadParams): Promise<void> => {
   try {
-    if (!params.user.id) throw new Error("Missing 'userId'");
     if (!params.payload.threadId) throw new Error("Missing 'threadId'");
 
-    const headers: IHeader = {
-      'x-user-id': params.user.id,
-      'x-user-role': params.user.role,
-    };
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     await sendRequest({
-      url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.payload.threadId}/delete`,
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/${params.payload.threadId}/delete`,
       method: HttpMethod.DELETE,
       headers: headers,
     });
@@ -180,20 +160,15 @@ export const deleteThread = async (params: DeleteThreadParams): Promise<void> =>
 
 export const handleUploadFile = async (params: UploadFileParams): Promise<UploadFileResponse> => {
   try {
-    if (!params.user.id) throw new Error("Missing 'userId'");
     if (!params.threadId) throw new Error("Missing 'threadId'");
     if (!params.payload.file) throw new Error("Missing 'file'");
 
-    const headers: IHeader = {
-      'x-user-id': params.user.id,
-      'x-user-role': params.user.role,
-    };
-
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
     const formData = new FormData();
     formData.append('file', params.payload.file);
 
     const response: IResponse<UploadFileResponse> = await sendRequest({
-      url: `${API_ENDPOINT}/ai/thread/${params.user.id}/${params.threadId}/upload`,
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/${params.threadId}/upload`,
       method: HttpMethod.POST,
       body: formData,
       headers: headers,
