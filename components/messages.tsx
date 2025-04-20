@@ -9,13 +9,12 @@ import { ActionConfirmation } from '@/components/action-confirmation';
 import { User } from 'next-auth';
 
 interface MessagesProps {
-  chatId: string;
   status: ChatStatus;
   messages: Array<IMessage>;
   user: User;
 }
 
-function PureMessages({ chatId, status, messages, user }: MessagesProps) {
+function PureMessages({ status, messages, user }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>();
 
   return (
@@ -31,7 +30,6 @@ function PureMessages({ chatId, status, messages, user }: MessagesProps) {
             {message.content &&
               (message.role === MessageRole.AI || message.role === MessageRole.HUMAN) && (
                 <PreviewMessage
-                  chatId={chatId}
                   message={message}
                   isLoading={status === ChatStatus.STREAMING && messages.length - 1 === index}
                 />
@@ -45,9 +43,9 @@ function PureMessages({ chatId, status, messages, user }: MessagesProps) {
       })}
 
       {status === ChatStatus.SUBMITTED ||
-      (messages[messages.length - 1]?.content === '' &&
-        messages[messages.length - 1]?.role === MessageRole.AI &&
-        status === ChatStatus.STREAMING) ? (
+        (messages[messages.length - 1]?.content === '' &&
+          messages[messages.length - 1]?.role === MessageRole.AI &&
+          status === ChatStatus.STREAMING) ? (
         <ThinkingMessage />
       ) : null}
 

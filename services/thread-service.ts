@@ -7,7 +7,7 @@ import { User } from 'next-auth';
 export interface CreateThreadParams {
   user: User;
   payload: {
-    // id: string;
+    id: string;
     title: string;
     threadType: ThreadType;
   };
@@ -80,6 +80,7 @@ export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResp
 
 export const createThread = async (params: CreateThreadParams): Promise<ICreateThreadResponse> => {
   try {
+    if (!params.payload.id) throw new Error("Missing 'threadId'");
     if (!params.payload.title) throw new Error("Missing 'title'");
     if (!params.payload.threadType) throw new Error("Missing 'threadType'");
 

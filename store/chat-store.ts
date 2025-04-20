@@ -74,7 +74,7 @@ const useChatStore = create<ChatStore>()(
         try {
           const response: ICreateThreadResponse = await createThread({
             user: user,
-            payload: { title, threadType: type },
+            payload: { id: threadId, title, threadType: type },
           });
           set({ threadId: response.id });
 
