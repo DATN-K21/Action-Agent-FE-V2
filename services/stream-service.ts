@@ -1,9 +1,9 @@
 import { AgentType } from '@/constants/ai-constant';
 import { ExtensionType } from '@/constants/extension-constant';
-import { API_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { AI_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { createUserAuthHeaders } from '@/lib/utils';
 import { IChatRequest } from '@/types/ai';
 import { User } from 'next-auth';
-import { boolean } from 'zod';
 
 export interface StreamAgentParams {
   user: User;
@@ -32,21 +32,16 @@ export interface InterruptStreamParams {
 export const streamAgent = async (
   params: StreamAgentParams,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
-  if (!params.user.id) throw new Error("Missing 'userId'");
   if (!params.threadId) throw new Error("Missing 'threadId'");
   if (!params.agentName) throw new Error("Missing 'agentName'");
+  if (!params.payload.input) throw new Error("Missing 'input'");
 
-  const headers: Record<string, string> = {
-    'x-user-id': params.user.id,
-    'x-user-role': params.user.role,
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  };
+  const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
   try {
     // Send the request
     const response = await fetch(
-      `${API_ENDPOINT}/ai/agent/stream/${params.user.id}/${params.threadId}/${params.agentName}`,
+      `${AI_ENDPOINT}/agent/stream/${params.user.id}/${params.threadId}/${params.agentName}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(params.payload),
@@ -78,21 +73,16 @@ export const streamAgent = async (
 export const streamExtension = async (
   params: StreamExtensionParams,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
-  if (!params.user.id) throw new Error("Missing 'userId'");
   if (!params.threadId) throw new Error("Missing 'threadId'");
   if (!params.extensionName) throw new Error("Missing 'extensionName'");
+  if (!params.payload.input) throw new Error("Missing 'input'");
 
-  const headers: Record<string, string> = {
-    'x-user-id': params.user.id,
-    'x-user-role': params.user.role,
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  };
+  const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
   try {
     // Send the request
     const response = await fetch(
-      `${API_ENDPOINT}/ai/extension/stream/${params.user.id}/${params.threadId}/${params.extensionName}`,
+      `${AI_ENDPOINT}/extension/stream/${params.user.id}/${params.threadId}/${params.extensionName}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(params.payload),
@@ -124,22 +114,16 @@ export const streamExtension = async (
 export const interruptStream = async (
   params: InterruptStreamParams,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
-  if (!params.user.id) throw new Error("Missing 'userId'");
   if (!params.threadId) throw new Error("Missing 'threadId'");
   if (!params.extensionName) throw new Error("Missing 'extensionName'");
 
   const payload = { execute: true, ...params.payload };
-  const headers: Record<string, string> = {
-    'x-user-id': params.user.id,
-    'x-user-role': params.user.role,
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  };
+  const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
   try {
     // Send the request
     const response = await fetch(
-      `${API_ENDPOINT}/ai/extension/stream-interrupt/${params.user.id}/${params.threadId}/${params.extensionName}`,
+      `${AI_ENDPOINT}/extension/stream-interrupt/${params.user.id}/${params.threadId}/${params.extensionName}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(payload),

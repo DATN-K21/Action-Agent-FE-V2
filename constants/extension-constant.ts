@@ -1,5 +1,5 @@
 export enum ThreadType {
-  DEFAULT = 'default',
+  DEFAULT = 'chat-agent',
   GMAIL = 'gmail',
   GOOGLE_CALENDAR = 'googlecalendar',
   GOOGLE_MAP = 'googlemaps',

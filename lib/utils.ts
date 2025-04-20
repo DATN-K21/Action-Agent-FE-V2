@@ -1,30 +1,11 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import queryString from 'query-string';
+import { User } from 'next-auth';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-interface ApplicationError extends Error {
-  info: string;
-  status: number;
-}
-
-export const fetcher = async (url: string) => {
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    const error = new Error('An error occurred while fetching the data.') as ApplicationError;
-
-    error.info = await res.json();
-    error.status = res.status;
-
-    throw error;
-  }
-
-  return res.json();
-};
 
 export const isDateTime = (value: string) => {
   const parsedDate = new Date(value);
@@ -44,6 +25,30 @@ export function generateUUID(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+export function createUserAuthHeaders(user: User): Record<string, string> {
+  const { id, role, email } = user;
+
+  if (!id || id.trim() === '') {
+    throw new Error("Missing or invalid 'user.id'");
+  }
+
+  if (!role || role.trim() === '') {
+    throw new Error("Missing or invalid 'user.role'");
+  }
+
+  if (!email || email.trim() === '') {
+    throw new Error("Missing or invalid 'user.email'");
+  }
+
+  return {
+    'x-user-id': id,
+    'x-user-role': role,
+    'x-user-email': email,
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  };
 }
 
 export const sendRequest = async <T>(props: IRequest) => {

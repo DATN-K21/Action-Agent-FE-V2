@@ -1,92 +1,71 @@
-import { API_ENDPOINT, HttpMethod } from '@/constants/response-constant'
-import { ILoginReponse, IRegisterReponse } from '@/types/auth'
-import { sendRequest } from '@/lib/utils'
-import { User } from 'next-auth'
+import { USER_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { ILoginReponse, IRegisterReponse } from '@/types/auth';
+import { sendRequest } from '@/lib/utils';
+import { User } from 'next-auth';
 
 export interface ILoginParams {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 export interface IRegisterParams {
-  email: string
-  username: string
-  firstName: string
-  lastName: string
-  password: string
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  password: string;
 }
 
 export interface IResetPasswordParams {
-  newPassword: string
-  newConfirmPassword: string
+  newPassword: string;
+  newConfirmPassword: string;
   forgotPasswordInfo: {
-    resetPasswordToken: string
-    userId: string
-  }
+    resetPasswordToken: string;
+    userId: string;
+  };
 }
 
 export interface IRefreshTokenParams {
-  refreshToken: string
-  accessToken: string
-  userId: string
+  refreshToken: string;
+  accessToken: string;
+  userId: string;
 }
 
 export interface IConfirmResetPasswordOTPResponse {
-  userId: string
-  resetPasswordToken: string
+  userId: string;
+  resetPasswordToken: string;
 }
 
-export const refreshToken = async (
-  params: IRefreshTokenParams,
-): Promise<IResponse<null>> => {
+export const login = async (params: ILoginParams): Promise<IResponse<ILoginReponse>> => {
   try {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${params.accessToken}`,
-      'x-client-id': params.userId,
-    }
+    if (!params.email) throw new Error("Missing 'email'");
+    if (!params.password) throw new Error("Missing 'password'");
 
-    const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/invoke-new-tokens`,
-      method: HttpMethod.POST,
-      body: {
-        refreshToken: params.refreshToken,
-      },
-      headers: headers,
-    })
-
-    return response
-  } catch (error) {
-    console.error('Error refresh token: ', error)
-    throw error
-  }
-}
-
-export const login = async (
-  params: ILoginParams,
-): Promise<IResponse<ILoginReponse>> => {
-  try {
     const response: IResponse<ILoginReponse> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/login`,
+      url: `${USER_ENDPOINT}/access/login`,
       method: HttpMethod.POST,
       body: {
         email: params.email,
         password: params.password,
       },
-    })
+    });
 
-    return response
+    return response;
   } catch (error) {
-    console.error('Error login: ', error)
-    throw error as ILoginReponse
+    console.error('Error login: ', error);
+    throw error;
   }
-}
+};
 
-export const register = async (
-  params: IRegisterParams,
-): Promise<IResponse<IRegisterReponse>> => {
+export const register = async (params: IRegisterParams): Promise<IResponse<IRegisterReponse>> => {
   try {
+    if (!params.email) throw new Error("Missing 'email'");
+    if (!params.username) throw new Error("Missing 'username'");
+    if (!params.firstName) throw new Error("Missing 'firstName'");
+    if (!params.lastName) throw new Error("Missing 'lastName'");
+
     const response: IResponse<IRegisterReponse> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/signup`,
+      url: `${USER_ENDPOINT}/access/signup`,
       method: HttpMethod.POST,
       body: {
         email: params.email,
@@ -95,157 +74,196 @@ export const register = async (
         lastName: params.lastName,
         password: params.password,
       },
-    })
+    });
 
-    return response
+    return response;
   } catch (error) {
-    console.error('Error register: ', error)
-    throw error
+    console.error('Error register: ', error);
+    throw error;
   }
-}
+};
 
-export const sendAccountActivationEmail = async (
-  email: string,
-): Promise<IResponse<null>> => {
+export const refreshToken = async (params: IRefreshTokenParams): Promise<IResponse<null>> => {
   try {
+    if (!params.refreshToken) throw new Error("Missing 'refreshToken'");
+    if (!params.accessToken) throw new Error("Missing 'accessToken'");
+    if (!params.userId) throw new Error("Missing 'userId'");
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${params.accessToken}`,
+      'x-client-id': params.userId,
+    };
+
     const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/activate/send-link`,
+      url: `${USER_ENDPOINT}/user/access/invoke-new-tokens`,
+      method: HttpMethod.POST,
+      body: {
+        refreshToken: params.refreshToken,
+      },
+      headers: headers,
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Error refresh token: ', error);
+    throw error;
+  }
+};
+
+export const sendAccountActivationEmail = async (email: string): Promise<IResponse<null>> => {
+  try {
+    if (!email) throw new Error("Missing 'email'");
+
+    const response: IResponse<null> = await sendRequest({
+      url: `${USER_ENDPOINT}/access/activate/send-link`,
       method: HttpMethod.POST,
       body: {
         email,
       },
-    })
+    });
 
-    return response
+    return response;
   } catch (error) {
-    console.error('Error sending account activation email: ', error)
-    throw error
+    console.error('Error sending account activation email: ', error);
+    throw error;
   }
-}
+};
 
-export const ActivateAccount = async (token: string): Promise<any> => {
+export const activateAccount = async (token: string): Promise<any> => {
   try {
+    if (!token) throw new Error("Missing 'token'");
+
     const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/activate/confirm`,
-      method: 'POST',
+      url: `${USER_ENDPOINT}/access/activate/confirm`,
+      method: HttpMethod.POST,
       body: {
         activationToken: token,
       },
-    })
+    });
 
     if (response.status === 200) {
-      return { message: 'Account activated successfully' }
+      return { message: 'Account activated successfully' };
     } else {
-      throw new Error('Account activation failed. Please request a new link.')
+      throw new Error('Account activation failed. Please request a new link.');
     }
   } catch (error) {
-    console.error('Error activating account: ', error)
-    throw error
+    console.error('Error activating account: ', error);
+    throw error;
   }
-}
+};
 
-export const sendResetPasswordOTP = async (
-  email: string,
-): Promise<IResponse<null>> => {
+export const sendResetPasswordOTP = async (email: string): Promise<IResponse<null>> => {
   try {
+    if (!email) throw new Error("Missing 'email'");
+
     const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/reset-password/send-otp`,
+      url: `${USER_ENDPOINT}/access/reset-password/send-otp`,
       method: HttpMethod.POST,
       body: {
         email,
       },
-    })
+    });
 
-    return response
+    return response;
   } catch (error) {
-    console.error('Error send reset password OTP: ', error)
-    throw error
+    console.error('Error send reset password OTP: ', error);
+    throw error;
   }
-}
+};
 
 export const confirmResetPasswordOTP = async (
   email: string,
   otp: string,
 ): Promise<IResponse<IConfirmResetPasswordOTPResponse>> => {
   try {
-    const response: IResponse<IConfirmResetPasswordOTPResponse> =
-      await sendRequest({
-        url: `${API_ENDPOINT}/user/access/reset-password/confirm-otp`,
-        method: HttpMethod.POST,
-        body: {
-          email,
-          otp,
-        },
-      })
+    if (!email) throw new Error("Missing 'email'");
+    if (!otp) throw new Error("Missing 'otp'");
 
-    return response
+    const response: IResponse<IConfirmResetPasswordOTPResponse> = await sendRequest({
+      url: `${USER_ENDPOINT}/access/reset-password/confirm-otp`,
+      method: HttpMethod.POST,
+      body: {
+        email,
+        otp,
+      },
+    });
+
+    return response;
   } catch (error) {
-    console.error('Error confirm OTP: ', error)
-    throw error
+    console.error('Error confirm OTP: ', error);
+    throw error;
   }
-}
+};
 
-export const resetPassword = async (
-  params: IResetPasswordParams,
-): Promise<IResponse<null>> => {
+export const resetPassword = async (params: IResetPasswordParams): Promise<IResponse<null>> => {
   try {
+    if (!params.newPassword) throw new Error("Missing 'newPassword'");
+    if (!params.newConfirmPassword) throw new Error("Missing 'newConfirmPassword'");
+    if (!params.forgotPasswordInfo) throw new Error("Missing 'forgotPasswordInfo'");
+    if (!params.forgotPasswordInfo.resetPasswordToken)
+      throw new Error("Missing 'resetPasswordToken'");
+    if (!params.forgotPasswordInfo.userId) throw new Error("Missing 'userId'");
+
     const headers = {
       Authorization: `Bearer ${params.forgotPasswordInfo.resetPasswordToken}`,
       'x-client-id': params.forgotPasswordInfo.userId,
-    }
+    };
 
     const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/reset-password`,
+      url: `${USER_ENDPOINT}/access/reset-password`,
       method: HttpMethod.POST,
       body: {
         newPassword: params.newPassword,
         confirmNewPassword: params.newConfirmPassword,
       },
       headers: headers,
-    })
+    });
 
-    return response
+    return response;
   } catch (error) {
-    console.error('Error reset password: ', error)
-    throw error
+    console.error('Error reset password: ', error);
+    throw error;
   }
-}
+};
 
-export const loginWithGoogle = async (
-  id_token: string,
-): Promise<IResponse<ILoginReponse>> => {
+export const loginWithGoogle = async (id_token: string): Promise<IResponse<ILoginReponse>> => {
   try {
+    if (!id_token) throw new Error("Missing 'id_token'");
+
     const response: IResponse<ILoginReponse> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/google/auth`,
+      url: `${USER_ENDPOINT}/access/google/auth`,
       method: HttpMethod.POST,
       body: {
         id_token,
       },
-    })
+    });
 
-    return response
+    return response;
   } catch (error) {
-    console.error('Error login with google: ', error)
-    throw error
+    console.error('Error login with google: ', error);
+    throw error;
   }
-}
+};
 
 export const logout = async (user: User): Promise<IResponse<null>> => {
   try {
+    if (!user.accessToken) throw new Error("Missing 'accessToken'");
+    if (!user.id) throw new Error("Missing 'userId'");
+
     const headers: Record<string, string> = {
       Authorization: `Bearer ${user.accessToken}`,
-      'x-client-id': user.id as string,
-    }
+      'x-client-id': user.id,
+    };
 
     const response: IResponse<null> = await sendRequest({
-      url: `${API_ENDPOINT}/user/access/logout`,
+      url: `${USER_ENDPOINT}/access/logout`,
       method: HttpMethod.POST,
       headers: headers,
-    })
+    });
 
-    return response
+    return response;
   } catch (error) {
-    console.error('Error logout: ', error)
-    throw error
+    console.error('Error logout: ', error);
+    throw error;
   }
-}
+};
