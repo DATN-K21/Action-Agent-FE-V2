@@ -17,8 +17,9 @@ import useChatStore from '@/store/chat-store';
 import { toast } from '@/components/toast';
 import { Brain } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { handleUploadFile } from '@/services/thread-service';
+import { generateTitle, handleUploadFile } from '@/services/thread-service';
 import { ExtensionType } from '@/constants/extension-constant';
+import { useThreadStore } from '@/store/thread-store';
 
 interface MultimodalInputProps {
   chatId: string;
@@ -29,6 +30,7 @@ interface MultimodalInputProps {
 
 function PureMultimodalInput(props: MultimodalInputProps) {
   const { chatId, user, status, className } = props;
+
   const agent = useChatStore((state) => state.agent);
   const extension = useChatStore((state) => state.extension);
   const messages = useChatStore((state) => state.messages);
@@ -41,6 +43,8 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const createThread = useChatStore((state) => state.createThread);
   const handleStreamAgent = useChatStore((state) => state.handleStreamAgent);
   const handleStreamExtension = useChatStore((state) => state.handleStreamExtension);
+
+  const renameThread = useThreadStore((state) => state.renameThread);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -72,6 +76,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
   const submitForm = useCallback(async () => {
     setStatus(ChatStatus.SUBMITTED);
+    resetHeight();
 
     try {
       //Upload files before sending message
@@ -109,7 +114,12 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         await handleStreamAgent(user);
       }
 
-      resetHeight();
+      // If total content length > 30, generate a title and update it locally
+      const totalWords = messages.reduce((acc, message) => acc + message.content.length, 0);
+      if (totalWords > 30) {
+        const newThread = await generateTitle({ user, threadId: chatId });
+        await renameThread(user, chatId, newThread.title, { callApi: false });
+      }
 
       if (width && width > 768) {
         textareaRef.current?.focus();
@@ -239,10 +249,9 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         ref={textareaRef}
         placeholder="Send a message..."
         value={input}
-        disabled={status !== ChatStatus.READY}
         onChange={handleInput}
         className={cx(
-          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+          'min-h-[24px] max-h-[calc(75dvh)] overflow-y-auto resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
           className,
         )}
         rows={2}

@@ -19,7 +19,12 @@ interface ThreadState {
   addThread: (thread: IThread) => void;
   fetchThreads: (user: User, cursor?: string) => Promise<void>;
   deleteThreadById: (user: User, threadId: string) => Promise<void>;
-  renameThread: (user: User, threadId: string, title: string) => Promise<void>;
+  renameThread: (
+    user: User,
+    threadId: string,
+    title: string,
+    options?: { callApi?: boolean },
+  ) => Promise<void>;
   groupThreadsByDate: () => GroupedThreads;
 }
 
@@ -33,15 +38,13 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
     set({ threads: [thread, ...threads] });
   },
 
-  fetchThreads: async (user, cursor) => {
+  fetchThreads: async (user: User, cursor?: string) => {
     set({ isLoading: true });
     try {
       const response: IThreadsResponse = await getThreads({ user, payload: { cursor } });
       set((state) => ({
-        threads: cursor
-          ? [...state.threads, ...response.threads] // Nối thêm threads nếu có cursor
-          : response.threads, // Thay thế nếu không có cursor
-        nextCursor: response.nextCursor, // Lưu nextCursor
+        threads: cursor ? [...state.threads, ...response.threads] : response.threads,
+        nextCursor: response.nextCursor,
       }));
     } catch (error) {
       throw error;
@@ -50,7 +53,7 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
     }
   },
 
-  deleteThreadById: async (user, threadId) => {
+  deleteThreadById: async (user: User, threadId: string) => {
     const { threads } = get();
     try {
       await deleteThread({ user, payload: { threadId } });
@@ -60,16 +63,29 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
     }
   },
 
-  renameThread: async (user, threadId, title) => {
+  renameThread: async (
+    user: User,
+    threadId: string,
+    title: string,
+    options?: { callApi?: boolean },
+  ) => {
     const { threads } = get();
+    const shouldCallApi = options?.callApi ?? true;
+
     try {
-      const response: ICreateThreadResponse = await updateThread({
-        user,
-        payload: { id: threadId, title },
-      });
+      let finalTitle = title;
+
+      if (shouldCallApi) {
+        const response: ICreateThreadResponse = await updateThread({
+          user,
+          payload: { id: threadId, title },
+        });
+        finalTitle = response.title;
+      }
+
       set({
         threads: threads.map((thread) =>
-          thread.id === threadId ? { ...thread, title: response.title } : thread,
+          thread.id === threadId ? { ...thread, title: finalTitle } : thread,
         ),
       });
     } catch (error) {
