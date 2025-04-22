@@ -33,7 +33,7 @@ export function Chat(props: ChatProps) {
 
   return (
     <>
-      <Messages chatId={id} status={status} messages={messages} user={user} />
+      <Messages status={status} messages={messages} user={user} />
 
       <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-4xl">
         <MultimodalInput chatId={id} user={user} status={status} />

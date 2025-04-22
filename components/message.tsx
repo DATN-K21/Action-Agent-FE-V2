@@ -5,18 +5,15 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { memo } from 'react'
 import { SparklesIcon } from './icons'
 import { Markdown } from './markdown'
-import { PreviewAttachment } from './preview-attachment'
 import { cn } from '@/lib/utils'
 import { IMessage } from '@/types/ai'
 import { MessageRole } from '@/constants/ai-constant'
 import { MessageActions } from '@/components/ui/message-actions'
 
 const PurePreviewMessage = ({
-  chatId,
   message,
   isLoading,
 }: {
-  chatId: string
   message: IMessage
   isLoading: boolean
 }) => {

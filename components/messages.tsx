@@ -1,7 +1,7 @@
 import { PreviewMessage, ThinkingMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { Overview } from './overview';
-import { Fragment, memo } from 'react';
+import { Fragment, memo, useEffect } from 'react';
 import equal from 'fast-deep-equal';
 import { ChatStatus, MessageRole } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
@@ -9,49 +9,44 @@ import { ActionConfirmation } from '@/components/action-confirmation';
 import { User } from 'next-auth';
 
 interface MessagesProps {
-  chatId: string;
   status: ChatStatus;
   messages: Array<IMessage>;
   user: User;
 }
 
-function PureMessages({ chatId, status, messages, user }: MessagesProps) {
-  const [messagesContainerRef, messagesEndRef] = useScrollToBottom<HTMLDivElement>();
+function PureMessages({ status, messages, user }: MessagesProps) {
+  const { containerRef, endRef, scrollToBottom } = useScrollToBottom<HTMLDivElement>();
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages.length]);
 
   return (
-    <div
-      ref={messagesContainerRef}
-      className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
-    >
+    <div ref={containerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4">
       {messages.length === 0 && <Overview />}
 
-      {messages.map((message, index) => {
-        return (
-          <Fragment key={message.id}>
-            {message.content &&
-              (message.role === MessageRole.AI || message.role === MessageRole.HUMAN) && (
-                <PreviewMessage
-                  chatId={chatId}
-                  message={message}
-                  isLoading={status === ChatStatus.STREAMING && messages.length - 1 === index}
-                />
-              )}
-
-            {message.interrupted && message.toolcalls && (
-              <ActionConfirmation toolCalls={message.toolcalls} user={user} />
+      {messages.map((message, index) => (
+        <Fragment key={message.id}>
+          {message.content &&
+            (message.role === MessageRole.AI || message.role === MessageRole.HUMAN) && (
+              <PreviewMessage
+                message={message}
+                isLoading={status === ChatStatus.STREAMING && index === messages.length - 1}
+              />
             )}
-          </Fragment>
-        );
-      })}
 
-      {status === ChatStatus.SUBMITTED ||
-      (messages[messages.length - 1]?.content === '' &&
-        messages[messages.length - 1]?.role === MessageRole.AI &&
-        status === ChatStatus.STREAMING) ? (
-        <ThinkingMessage />
-      ) : null}
+          {message.interrupted && message.toolcalls && (
+            <ActionConfirmation toolCalls={message.toolcalls} user={user} />
+          )}
+        </Fragment>
+      ))}
 
-      <div ref={messagesEndRef} className="shrink-0 min-w-[24px] min-h-[24px]" />
+      {(status === ChatStatus.SUBMITTED ||
+        (messages[messages.length - 1]?.content === '' &&
+          messages[messages.length - 1]?.role === MessageRole.AI &&
+          status === ChatStatus.STREAMING)) && <ThinkingMessage />}
+
+      <div ref={endRef} className="shrink-0 min-h-[24px]" />
     </div>
   );
 }

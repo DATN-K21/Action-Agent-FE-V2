@@ -36,7 +36,9 @@ export const streamAgent = async (
   if (!params.agentName) throw new Error("Missing 'agentName'");
   if (!params.payload.input) throw new Error("Missing 'input'");
 
-  const headers: Record<string, string> = createUserAuthHeaders(params.user);
+  let headers: Record<string, string> = createUserAuthHeaders(params.user);
+  headers['Content-Type'] = 'application/json';
+  headers['Accept'] = 'application/json';
 
   try {
     // Send the request
@@ -77,7 +79,9 @@ export const streamExtension = async (
   if (!params.extensionName) throw new Error("Missing 'extensionName'");
   if (!params.payload.input) throw new Error("Missing 'input'");
 
-  const headers: Record<string, string> = createUserAuthHeaders(params.user);
+  let headers: Record<string, string> = createUserAuthHeaders(params.user);
+  headers['Content-Type'] = 'application/json';
+  headers['Accept'] = 'application/json';
 
   try {
     // Send the request
@@ -118,7 +122,9 @@ export const interruptStream = async (
   if (!params.extensionName) throw new Error("Missing 'extensionName'");
 
   const payload = { execute: true, ...params.payload };
-  const headers: Record<string, string> = createUserAuthHeaders(params.user);
+  let headers: Record<string, string> = createUserAuthHeaders(params.user);
+  headers['Content-Type'] = 'application/json';
+  headers['Accept'] = 'application/json';
 
   try {
     // Send the request

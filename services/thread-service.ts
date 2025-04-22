@@ -1,13 +1,18 @@
 import { ThreadType } from '@/constants/extension-constant';
 import { AI_ENDPOINT, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
-import { ICreateThreadResponse, IThreadHistoryResponse, IThreadsResponse } from '@/types/ai';
+import {
+  ICreateThreadResponse,
+  IThread,
+  IThreadHistoryResponse,
+  IThreadsResponse,
+} from '@/types/ai';
 import { User } from 'next-auth';
 
 export interface CreateThreadParams {
   user: User;
   payload: {
-    // id: string;
+    id: string;
     title: string;
     threadType: ThreadType;
   };
@@ -58,6 +63,11 @@ export interface UploadFileResponse {
   output: string;
 }
 
+export interface GenerateTitleParams {
+  user: User;
+  threadId: string;
+}
+
 export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResponse> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
@@ -80,6 +90,7 @@ export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResp
 
 export const createThread = async (params: CreateThreadParams): Promise<ICreateThreadResponse> => {
   try {
+    if (!params.payload.id) throw new Error("Missing 'threadId'");
     if (!params.payload.title) throw new Error("Missing 'title'");
     if (!params.payload.threadType) throw new Error("Missing 'threadType'");
 
@@ -177,6 +188,25 @@ export const handleUploadFile = async (params: UploadFileParams): Promise<Upload
     return response.data as UploadFileResponse;
   } catch (error) {
     console.error('Error upload file: ', error);
+    throw error;
+  }
+};
+
+export const generateTitle = async (params: GenerateTitleParams): Promise<IThread> => {
+  try {
+    if (!params.threadId) throw new Error("Missing 'threadId'");
+
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
+
+    const response: IResponse<IThread> = await sendRequest({
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/${params.threadId}/generate-title`,
+      method: HttpMethod.POST,
+      headers: headers,
+    });
+
+    return response.data as IThread;
+  } catch (error) {
+    console.error('Error generate title: ', error);
     throw error;
   }
 };

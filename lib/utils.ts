@@ -46,8 +46,6 @@ export function createUserAuthHeaders(user: User): Record<string, string> {
     'x-user-id': id,
     'x-user-role': role,
     'x-user-email': email,
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
   };
 }
 
