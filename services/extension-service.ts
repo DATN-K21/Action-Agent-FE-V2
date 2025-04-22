@@ -12,7 +12,14 @@ import { User } from 'next-auth';
 
 export interface ExtensionParams {
   user: User;
-  extension: Extension | undefined;
+  extension: Extension | null;
+}
+
+export interface DisconnectExtensionReponse {
+  status: string;
+  count: number;
+  message: string | null;
+  errorCode: string | null;
 }
 
 export const getAllExtensions = async (
@@ -115,6 +122,32 @@ export const activeExtension = async (
     return response.data as IActiveExtensionResponse;
   } catch (error) {
     console.error('Error active extension: ', error);
+    throw error;
+  }
+};
+
+export const disconnectExtension = async (
+  params: ExtensionParams,
+): Promise<DisconnectExtensionReponse> => {
+  try {
+    if (!params.extension) throw new Error('Extension is required');
+    if (!params.extension.connected) throw new Error('Extension is not connected');
+
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
+
+    const response: IResponse<DisconnectExtensionReponse> = await sendRequest({
+      url: `${AI_ENDPOINT}/extension/disconnect`,
+      method: HttpMethod.POST,
+      headers: headers,
+      queryParams: {
+        user_id: params.user.id,
+        extension_name: params.extension.key,
+      },
+    });
+
+    return response.data as DisconnectExtensionReponse;
+  } catch (error) {
+    console.error('Error disconnect extension: ', error);
     throw error;
   }
 };

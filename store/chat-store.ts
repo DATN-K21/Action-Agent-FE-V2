@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { devtools } from 'zustand/middleware';
-import { generateUUID } from '@/lib/utils';
+import { v4 as uuidv4 } from 'uuid';
 import { AgentType, ChatStatus, MessageRole } from '@/constants/ai-constant';
 import { ICreateThreadResponse, IMessage } from '@/types/ai';
 import { User } from 'next-auth';
@@ -97,8 +97,8 @@ const useChatStore = create<ChatStore>()(
 
         if (!humanInput.trim()) return;
 
-        appendMessage({ id: generateUUID(), role: MessageRole.HUMAN, content: humanInput });
-        appendMessage({ id: generateUUID(), role: MessageRole.AI, content: '' });
+        appendMessage({ id: uuidv4(), role: MessageRole.HUMAN, content: humanInput });
+        appendMessage({ id: uuidv4(), role: MessageRole.AI, content: '' });
 
         set({ status: ChatStatus.SUBMITTED });
         setHumanInput('');
@@ -175,8 +175,8 @@ const useChatStore = create<ChatStore>()(
 
         if (!humanInput.trim()) return;
 
-        appendMessage({ id: generateUUID(), role: MessageRole.HUMAN, content: humanInput });
-        appendMessage({ id: generateUUID(), role: MessageRole.AI, content: '' });
+        appendMessage({ id: uuidv4(), role: MessageRole.HUMAN, content: humanInput });
+        appendMessage({ id: uuidv4(), role: MessageRole.AI, content: '' });
 
         set({ status: ChatStatus.SUBMITTED });
         setHumanInput('');
@@ -255,7 +255,7 @@ const useChatStore = create<ChatStore>()(
       handleStreamInterrupt: async (user: User, toolCalls: any[]) => {
         set({ status: ChatStatus.SUBMITTED });
         const { extension, threadId, appendMessage } = get();
-        appendMessage({ id: generateUUID(), role: MessageRole.AI, content: '' });
+        appendMessage({ id: uuidv4(), role: MessageRole.AI, content: '' });
 
         try {
           const params: InterruptStreamParams = {
@@ -334,14 +334,6 @@ const useChatStore = create<ChatStore>()(
       // Stop chat
       stopStream: () => {
         set({ status: ChatStatus.READY });
-        set((state) => {
-          if (
-            state.messages.length > 0 &&
-            state.messages[state.messages.length - 1].role === MessageRole.AI
-          ) {
-            state.messages.pop();
-          }
-        });
       },
 
       // Reload chat

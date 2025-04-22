@@ -17,19 +17,26 @@ import { activeExtension, getExtensionActions } from '@/services/extension-servi
 import { User } from 'next-auth';
 import { IActiveExtensionResponse, IGetExtensionActionsResponse } from '@/types/extension';
 import useChatStore from '@/store/chat-store';
-import { generateUUID } from '@/lib/utils';
 import { ThreadType } from '@/constants/extension-constant';
 import { toast } from '@/components/toast';
 import { useRouter } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ExtensionDialogProps {
   user: User;
   extension?: Extension;
   isOpen: boolean;
   onClose: () => void;
+  onDisconnect: () => Promise<void>;
 }
 
-const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOpen, onClose }) => {
+const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
+  user,
+  extension,
+  isOpen,
+  onClose,
+  onDisconnect,
+}) => {
   const [isConnected, setIsConnected] = useState(false);
   const [extensionActions, setExtensionActions] = useState<IExtensionAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +52,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
 
   const fetchExtensionActions = async () => {
     if (!user || !extension) return;
-    setIsLoading(true);
+
     try {
       const response: IGetExtensionActionsResponse = await getExtensionActions({ user, extension });
       setExtensionActions(
@@ -53,14 +60,13 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
       );
     } catch (error) {
       toast({ type: 'error', description: 'Failed to fetch extension actions' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleClickConnect = useCallback(async () => {
-    if (isConnected) return;
+    if (isConnected || !extension) return;
     setIsLoading(true);
+
     try {
       const response: IActiveExtensionResponse = await activeExtension({ user, extension });
 
@@ -82,11 +88,26 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
     }
   }, [user, extension, isConnected, onClose]);
 
+  const handleClickDisconnect = useCallback(async () => {
+    if (!isConnected) return;
+    setIsLoading(true);
+
+    try {
+      await onDisconnect();
+      toast({ type: 'success', description: 'Extension disconnected successfully' });
+    } catch (error) {
+      toast({ type: 'error', description: 'Failed to disconnect to extension' });
+    } finally {
+      onClose();
+      setIsLoading(false);
+    }
+  }, [user, extension, isConnected, onClose]);
+
   const handleClickStartChat = async () => {
     if (!extension) return;
 
     try {
-      const threadId = generateUUID();
+      const threadId = uuidv4();
       await createThread(user, threadId, `New ${extension.name} Chat`, extension.key as ThreadType);
       toast({ type: 'success', description: `Starting chat with ${extension.name}` });
       router.push(`/chat/${threadId}/${extension.key}`);
@@ -126,9 +147,15 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
           </Card>
         </div>
         <DialogFooter>
-          <Button onClick={handleClickConnect} disabled={isConnected || isLoading}>
-            {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />} Connect
-          </Button>
+          {isConnected ? (
+            <Button onClick={handleClickDisconnect} disabled={isLoading}>
+              {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />} Disconnect
+            </Button>
+          ) : (
+            <Button onClick={handleClickConnect} disabled={isLoading}>
+              {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />} Connect
+            </Button>
+          )}
           <Button
             className="bg-green-600 text-white hover:bg-green-700"
             disabled={!isConnected || isLoading}

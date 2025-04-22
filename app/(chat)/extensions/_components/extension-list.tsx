@@ -19,11 +19,13 @@ import { extensions, Extension } from '@/constants/data';
 import { Separator } from '@/components/ui/separator';
 import ExtensionDialog from './extension-dialog';
 import {
+  disconnectExtension,
   ExtensionParams,
   getAllExtensions,
   getConnectedExtensions,
 } from '@/services/extension-service';
 import { User } from 'next-auth';
+import useChatStore from '@/store/chat-store';
 
 export type ExtensionListProps = {
   user: User;
@@ -40,6 +42,8 @@ export default function ExtensionList(props: ExtensionListProps) {
   const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
+
+  const reloadChat = useChatStore((state) => state.reloadChat);
 
   useEffect(() => {
     if (!user) {
@@ -84,8 +88,20 @@ export default function ExtensionList(props: ExtensionListProps) {
       }
     };
 
+    reloadChat();
     fetchExtensionData();
   }, [user, extensionType, searchTerm, sort]);
+
+  const handleDisconnectExtension = async () => {
+    if (!selectedExtension || !selectedExtension.connected) return;
+    await disconnectExtension({ user, extension: selectedExtension });
+    setFilteredExtensions((prev) =>
+      prev.map((extension) =>
+        extension.key === selectedExtension.key ? { ...extension, connected: false } : extension,
+      ),
+    );
+    setSelectedExtension(null);
+  };
 
   return (
     <>
@@ -200,6 +216,7 @@ export default function ExtensionList(props: ExtensionListProps) {
         extension={selectedExtension!}
         isOpen={isOpenDialog}
         onClose={() => setIsOpenDialog(false)}
+        onDisconnect={handleDisconnectExtension}
       />
     </>
   );
