@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams, usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import type { User } from 'next-auth';
 import { memo, useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -37,6 +37,7 @@ import { EditIcon } from 'lucide-react';
 import { toast } from '@/components/toast';
 import { useThreadStore } from '@/store/thread-store';
 import { ThreadType } from '@/constants/extension-constant';
+import useChatStore from '@/store/chat-store';
 
 function SidebarHistory({ user }: { user: User }) {
   const threads = useThreadStore((state) => state.threads);
@@ -47,27 +48,26 @@ function SidebarHistory({ user }: { user: User }) {
   const renameThread = useThreadStore((state) => state.renameThread);
   const groupThreadsByDate = useThreadStore((state) => state.groupThreadsByDate);
 
+  const threadId = useChatStore((state) => state.threadId);
+
   const [deleteId, setDeleteId] = useState<string>('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
-  const { id: threadId } = useParams()!;
-
   const { ref, inView } = useInView({
-    threshold: 0, 
+    threshold: 0,
   });
 
   useEffect(() => {
     fetchThreads(user);
   }, [user]);
 
-  useEffect(() => {
-    if (inView && nextCursor && !isLoading) {
-      fetchThreads(user, nextCursor);
-    }
-  }, [inView, nextCursor, isLoading, fetchThreads, user]);
-
+  // useEffect(() => {
+  //   if (inView && nextCursor && !isLoading) {
+  //     fetchThreads(user, nextCursor);
+  //   }
+  // }, [inView, nextCursor, isLoading, fetchThreads, user]);
 
   // Handle delete thread
   const handleDelete = async () => {
@@ -260,9 +260,7 @@ function SidebarHistory({ user }: { user: User }) {
                   </>
                 );
               })()}
-          {nextCursor && (
-              <div ref={ref} className="h-1" />
-            )}
+            {nextCursor && <div ref={ref} className="h-1" />}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
