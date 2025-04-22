@@ -1,11 +1,9 @@
 import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
-import { Role } from '@/constants/data';
 import { ExtensionType } from '@/constants/extension-constant';
-import { generateUUID } from '@/lib/utils';
 import { User } from 'next-auth';
 import { notFound } from 'next/navigation';
-
+import { v4 as uuidv4 } from 'uuid';
 export default async function Page() {
   const session = await auth();
 
@@ -22,12 +20,6 @@ export default async function Page() {
   };
 
   return (
-    <Chat
-      key={generateUUID()}
-      id={generateUUID()}
-      user={user}
-      initialMessages={[]}
-      extensionName={ExtensionType.DEFAULT}
-    />
+    <Chat id={uuidv4()} user={user} initialMessages={[]} extensionName={ExtensionType.DEFAULT} />
   );
 }

@@ -1,21 +1,23 @@
-import { notFound } from 'next/navigation'
+import { notFound } from 'next/navigation';
 
-import { auth } from '@/auth'
-import { Chat } from '@/components/chat'
+import { auth } from '@/auth';
+import { Chat } from '@/components/chat';
 
-import { generateUUID } from '@/lib/utils'
-import { User } from 'next-auth'
-import { getThreadHistory } from '@/services/thread-service'
-import { IMessage, IThreadHistoryResponse } from '@/types/ai'
+import { v4 as uuidv4 } from 'uuid';
+import { User } from 'next-auth';
+import { getThreadHistory } from '@/services/thread-service';
+import { IMessage, IThreadHistoryResponse } from '@/types/ai';
 
-export default async function Page(props: { params: Promise<{ id: string; extensionName: string }> }) {
-  const params = await props.params
-  const { id, extensionName } = params
+export default async function Page(props: {
+  params: Promise<{ id: string; extensionName: string }>;
+}) {
+  const params = await props.params;
+  const { id, extensionName } = params;
 
-  const session = await auth()
+  const session = await auth();
 
   if (!session || !session.user) {
-    return notFound()
+    return notFound();
   }
 
   const user: User = {
@@ -24,7 +26,7 @@ export default async function Page(props: { params: Promise<{ id: string; extens
     role: session.user.role,
     refreshToken: session.refreshToken,
     expiresAt: session.expiresAt,
-  }
+  };
 
   try {
     const reponse: IThreadHistoryResponse = await getThreadHistory({
@@ -32,17 +34,19 @@ export default async function Page(props: { params: Promise<{ id: string; extens
       payload: {
         threadId: id,
       },
-    })
+    });
     const initialMessages: IMessage[] = reponse.messages?.map((message) => {
       return {
-        id: generateUUID(),
+        id: uuidv4(),
         content: message.content,
         role: message.role,
-      }
-    })
+      };
+    });
 
-    return <Chat id={id} user={user} initialMessages={initialMessages} extensionName={extensionName} />
+    return (
+      <Chat id={id} user={user} initialMessages={initialMessages} extensionName={extensionName} />
+    );
   } catch (error) {
-    notFound()
+    notFound();
   }
 }

@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
 
 import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
 
-import { generateUUID } from '@/lib/utils';
 import { getThreadHistory } from '@/services/thread-service';
 import { IMessage, IThreadHistoryResponse } from '@/types/ai';
 import { User } from 'next-auth';
@@ -36,7 +36,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     });
     const initialMessages: IMessage[] = reponse.messages?.map((message) => {
       return {
-        id: generateUUID(),
+        id: uuidv4(),
         content: message.content,
         role: message.role,
       };
