@@ -3,10 +3,8 @@
 import type { User } from 'next-auth'
 import { useRouter } from 'next/navigation'
 
-import { PlusIcon } from '@/components/icons'
 import SidebarHistory from '@/components/sidebar-history'
 import { SidebarUserNav } from '@/components/sidebar-user-nav'
-import { Button } from '@/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
@@ -16,10 +14,9 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import Link from 'next/link'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { NavCustom } from '@/components/nav-custom'
 
-import { HiOutlineViewGrid, HiOutlineChatAlt } from 'react-icons/hi'
+import { HiOutlineViewGrid, HiOutlineChatAlt, HiOutlineServer } from 'react-icons/hi'
 
 type navCustomItemProps = {
   title: string
@@ -37,6 +34,11 @@ const navCustomItems: navCustomItemProps[] = [
     title: 'Extensions',
     url: '/extensions',
     icon: HiOutlineViewGrid,
+  },
+  {
+    title: 'MCP Server',
+    url: '/mcp-server',
+    icon: HiOutlineServer,
   },
 ]
 
@@ -60,23 +62,6 @@ export function AppSidebar({ user }: { user: User }) {
                 Botion
               </span>
             </Link>
-            {/* <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className="p-2 h-fit"
-                  onClick={() => {
-                    setOpenMobile(false)
-                    router.push('/')
-                    router.refresh()
-                  }}
-                >
-                  <PlusIcon />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent align="end">New Chat</TooltipContent>
-            </Tooltip> */}
           </div>
         </SidebarMenu>
       </SidebarHeader>
