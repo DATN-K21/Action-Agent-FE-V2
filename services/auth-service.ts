@@ -95,7 +95,7 @@ export const refreshToken = async (params: IRefreshTokenParams): Promise<IRespon
     };
 
     const response: IResponse<null> = await sendRequest({
-      url: `${USER_ENDPOINT}/user/access/invoke-new-tokens`,
+      url: `${USER_ENDPOINT}/access/invoke-new-tokens`,
       method: HttpMethod.POST,
       body: {
         refreshToken: params.refreshToken,
