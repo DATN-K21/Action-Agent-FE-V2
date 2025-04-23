@@ -22,6 +22,18 @@ import { toast } from '@/components/toast';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 
+// Add ActionSkeleton component
+const ActionSkeleton = () => (
+  <div className="mb-1 grid grid-cols-[25px_1fr] items-start pb-1 last:mb-0 last:pb-0">
+    <span className="flex size-2 translate-y-1 rounded-full bg-gray-200 animate-pulse" />
+    <div className="space-y-1">
+      <div className="h-4 w-1/3 rounded bg-gray-200 animate-pulse" />
+      <div className="h-3 w-full rounded bg-gray-200 animate-pulse" />
+      <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
+    </div>
+  </div>
+);
+
 interface ExtensionDialogProps {
   user: User;
   extension?: Extension;
@@ -40,6 +52,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [extensionActions, setExtensionActions] = useState<IExtensionAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false); // Add actionLoading state
   const createThread = useChatStore((state) => state.createThread);
   const router = useRouter();
 
@@ -53,6 +66,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
   const fetchExtensionActions = async () => {
     if (!user || !extension) return;
 
+    setActionLoading(true); // Set action loading to true
     try {
       const response: IGetExtensionActionsResponse = await getExtensionActions({ user, extension });
       setExtensionActions(
@@ -60,6 +74,8 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       );
     } catch (error) {
       toast({ type: 'error', description: 'Failed to fetch extension actions' });
+    } finally {
+      setActionLoading(false); // Set action loading to false when complete
     }
   };
 
@@ -131,18 +147,29 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
         <div className="flex justify-center">
           <Card className="w-full md:w-[600px] overflow-y-auto max-h-[50vh]">
             <CardContent className="grid gap-4 p-4">
-              {extensionActions.map((action) => (
-                <div
-                  key={action.key}
-                  className="mb-1 grid grid-cols-[25px_1fr] items-start pb-1 last:mb-0 last:pb-0"
-                >
-                  <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">{action.name}</p>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
+              {actionLoading ? (
+                // Show skeleton UI while loading actions
+                Array(4)
+                  .fill(0)
+                  .map((_, index) => <ActionSkeleton key={`action-skeleton-${index}`} />)
+              ) : extensionActions.length > 0 ? (
+                extensionActions.map((action) => (
+                  <div
+                    key={action.key}
+                    className="mb-1 grid grid-cols-[25px_1fr] items-start pb-1 last:mb-0 last:pb-0"
+                  >
+                    <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">{action.name}</p>
+                      <p className="text-sm text-muted-foreground">{action.description}</p>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  No actions available for this extension
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
         </div>

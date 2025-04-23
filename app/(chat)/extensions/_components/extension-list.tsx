@@ -31,17 +31,31 @@ export type ExtensionListProps = {
   user: User;
 };
 
+// Add ExtensionCardSkeleton component
+const ExtensionCardSkeleton = () => (
+  <li className="rounded-lg border p-4 animate-pulse">
+    <div className="mb-8 flex items-center justify-between">
+      <div className="size-10 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+      <div className="h-8 w-20 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+    </div>
+    <div>
+      <div className="mb-2 h-5 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
+      <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
+      <div className="mt-1 h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+    </div>
+  </li>
+);
+
 export default function ExtensionList(props: ExtensionListProps) {
   const { user } = props;
 
   const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
-
   const [filteredExtensions, setFilteredExtensions] = useState<Extension[]>([]);
   const [selectedExtension, setSelectedExtension] = useState<Extension | null>(null);
-
   const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const reloadChat = useChatStore((state) => state.reloadChat);
 
@@ -51,6 +65,7 @@ export default function ExtensionList(props: ExtensionListProps) {
     }
 
     const fetchExtensionData = async () => {
+      setLoading(true); // Set loading to true when starting to fetch data
       try {
         const extensionParams = { user } as ExtensionParams;
 
@@ -85,6 +100,8 @@ export default function ExtensionList(props: ExtensionListProps) {
         setFilteredExtensions(newFilteredExtensions);
       } catch (error) {
         console.error('Error fetching extension data: ', error);
+      } finally {
+        setLoading(false); // Set loading to false when data fetching is complete
       }
     };
 
@@ -176,37 +193,50 @@ export default function ExtensionList(props: ExtensionListProps) {
 
         {/* Extension List */}
         <ul className="faded-bottom no-scrollbar grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredExtensions.map((extension) => (
-            <li
-              key={extension.name}
-              className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer"
-              onClick={() => {
-                setSelectedExtension(extension);
-                setIsOpenDialog(true);
-              }}
-            >
-              <div className="mb-8 flex items-center justify-between">
-                <div className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}>
-                  <extension.logo />
+          {loading ? (
+            // Show skeleton cards while loading
+            Array(6)
+              .fill(0)
+              .map((_, index) => <ExtensionCardSkeleton key={`skeleton-${index}`} />)
+          ) : filteredExtensions.length > 0 ? (
+            filteredExtensions.map((extension) => (
+              <li
+                key={extension.name}
+                className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer"
+                onClick={() => {
+                  setSelectedExtension(extension);
+                  setIsOpenDialog(true);
+                }}
+              >
+                <div className="mb-8 flex items-center justify-between">
+                  <div
+                    className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
+                  >
+                    <extension.logo />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`${
+                      extension.connected
+                        ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
+                        : ''
+                    }`}
+                  >
+                    {extension.connected ? 'Connected' : 'Connect'}
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={`${
-                    extension.connected
-                      ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
-                      : ''
-                  }`}
-                >
-                  {extension.connected ? 'Connected' : 'Connect'}
-                </Button>
-              </div>
-              <div>
-                <h2 className="mb-1 font-semibold">{extension.name}</h2>
-                <p className="line-clamp-2 text-gray-500">{extension.desc}</p>
-              </div>
+                <div>
+                  <h2 className="mb-1 font-semibold">{extension.name}</h2>
+                  <p className="line-clamp-2 text-gray-500">{extension.desc}</p>
+                </div>
+              </li>
+            ))
+          ) : (
+            <li className="col-span-full text-center py-10 text-gray-500">
+              No extensions found matching your criteria
             </li>
-          ))}
+          )}
         </ul>
       </div>
 
