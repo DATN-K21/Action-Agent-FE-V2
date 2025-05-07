@@ -43,7 +43,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const createThread = useChatStore((state) => state.createThread);
   const handleStreamAgent = useChatStore((state) => state.handleStreamAgent);
   const handleStreamExtension = useChatStore((state) => state.handleStreamExtension);
-  const handleChatMCP = useChatStore((state) => state.handleChatMCP);
+  const handleStreamMCPAgent = useChatStore((state) => state.handleStreamMCPAgent);
 
   const renameThread = useThreadStore((state) => state.renameThread);
 
@@ -114,7 +114,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
           break;
 
         case ExtensionType.MCP:
-          await handleChatMCP(user);
+          await handleStreamMCPAgent(user);
           break;
 
         default:
