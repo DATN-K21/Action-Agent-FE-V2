@@ -7,6 +7,7 @@ import { ChatStatus, MessageRole } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
 import { ActionConfirmation } from '@/components/action-confirmation';
 import { User } from 'next-auth';
+import { ArrowDown } from 'lucide-react';
 
 interface MessagesProps {
   status: ChatStatus;
@@ -15,7 +16,7 @@ interface MessagesProps {
 }
 
 function PureMessages({ status, messages, user }: MessagesProps) {
-  const { containerRef, endRef, scrollToBottom } = useScrollToBottom<HTMLDivElement>();
+  const { containerRef, endRef, isAtBottom, scrollToBottom } = useScrollToBottom<HTMLDivElement>();
 
   useEffect(() => {
     scrollToBottom();
@@ -47,6 +48,15 @@ function PureMessages({ status, messages, user }: MessagesProps) {
           status === ChatStatus.STREAMING)) && <ThinkingMessage />}
 
       <div ref={endRef} className="shrink-0 min-h-[24px]" />
+
+      {!isAtBottom && (
+        <button
+          onClick={scrollToBottom}
+          className="absolute bottom-[20%] right-1/2 z-10 rounded-full bg-white shadow-md border border-gray-300 p-2 hover:bg-gray-100 transition"
+        >
+          <ArrowDown className="w-5 h-5 text-gray-600" />
+        </button>
+      )}
     </div>
   );
 }
