@@ -5,15 +5,15 @@ export function useScrollToBottom<T extends HTMLElement>() {
   const endRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  const scrollToBottom = () => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    endRef.current?.scrollIntoView({ behavior });
   };
 
   useEffect(() => {
     const end = endRef.current;
     if (!end || !isAtBottom) return;
 
-    scrollToBottom();
+    scrollToBottom('auto');
   }, [isAtBottom]);
 
   useEffect(() => {
