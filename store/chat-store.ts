@@ -74,6 +74,9 @@ const useChatStore = create<ChatStore>()(
         type: ThreadType = ThreadType.DEFAULT,
       ) => {
         try {
+          // create fake delay 5s
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+
           const response: ICreateThreadResponse = await createThread({
             user: user,
             payload: { id: threadId, title, threadType: type },

@@ -31,7 +31,7 @@ interface ThreadState {
 export const useThreadStore = create<ThreadState>((set, get) => ({
   threads: [],
   nextCursor: null,
-  isLoading: false,
+  isLoading: true,
 
   addThread: (thread) => {
     const { threads } = get();

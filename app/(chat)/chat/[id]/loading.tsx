@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSkeleton } from '@/components/message-skeleton';
+import { MessageSkeleton } from '@/components/skeleton/message-skeleton';
 
 export default function ChatLoading() {
   return (
@@ -10,13 +10,14 @@ export default function ChatLoading() {
           <MessageSkeleton isUser={false} />
           <MessageSkeleton isUser={true} />
           <MessageSkeleton isUser={false} />
-          <MessageSkeleton isUser={false} lines={2} />
+          <MessageSkeleton isUser={true} />
+          <MessageSkeleton isUser={false} />
         </div>
       </div>
       <div className="border-t p-4">
         <div className="mx-auto max-w-4xl flex gap-2">
-          <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-md flex-1 animate-pulse" />
-          <div className="h-10 w-10 bg-gray-200 dark:bg-gray-800 rounded-md animate-pulse" />
+          <div className="h-20 bg-gray-200 dark:bg-gray-800 rounded-md flex-1 animate-pulse" />
+          <div className="h-20 w-10 bg-gray-200 dark:bg-gray-800 rounded-md animate-pulse" />
         </div>
       </div>
     </div>
