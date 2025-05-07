@@ -110,6 +110,22 @@ export const createThread = async (params: CreateThreadParams): Promise<ICreateT
   }
 };
 
+export const getThread = async (params: GetThreadHistoryParams): Promise<IThread> => {
+  try {
+    if (!params.payload.threadId) throw new Error("Missing 'threadId'");
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
+    const response: IResponse<IThread> = await sendRequest({
+      url: `${AI_ENDPOINT}/thread/${params.user.id}/${params.payload.threadId}/get-detail`,
+      method: HttpMethod.GET,
+      headers: headers,
+    });
+    return response.data as IThread;
+  } catch (error) {
+    console.error('Error get thread: ', error);
+    throw error;
+  }
+};
+
 export const getThreadHistory = async (
   params: GetThreadHistoryParams,
 ): Promise<IThreadHistoryResponse> => {

@@ -4,6 +4,12 @@ import { ExtensionType } from '@/constants/extension-constant';
 import { User } from 'next-auth';
 import { notFound } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+
+export const metadata = {
+  title: 'New Chat',
+  description: 'Chat with Action Agent',
+};
+
 export default async function Page() {
   const session = await auth();
 
