@@ -25,6 +25,7 @@ type ChatState = {
   humanInput: string;
   status: ChatStatus;
   threadId: string;
+  isCreatingThread: boolean;
 };
 
 type ChatActions = {
@@ -56,6 +57,7 @@ const useChatStore = create<ChatStore>()(
       humanInput: '',
       status: ChatStatus.READY,
       threadId: '',
+      isCreatingThread: false,
 
       setAgent: (agent) => set({ agent: agent }),
       setExtension: (extension) => set({ extension: extension }),
@@ -73,6 +75,8 @@ const useChatStore = create<ChatStore>()(
         title: string = 'New Chat',
         type: ThreadType = ThreadType.DEFAULT,
       ) => {
+        set({ isCreatingThread: true });
+
         try {
           const response: ICreateThreadResponse = await createThread({
             user: user,
@@ -84,6 +88,8 @@ const useChatStore = create<ChatStore>()(
           addThread(response);
         } catch (error) {
           throw error;
+        } finally {
+          set({ isCreatingThread: false });
         }
       },
 

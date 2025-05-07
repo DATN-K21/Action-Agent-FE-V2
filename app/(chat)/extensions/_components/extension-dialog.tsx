@@ -21,18 +21,7 @@ import { ThreadType } from '@/constants/extension-constant';
 import { toast } from '@/components/toast';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
-
-// Add ActionSkeleton component
-const ActionSkeleton = () => (
-  <div className="mb-1 grid grid-cols-[25px_1fr] items-start pb-1 last:mb-0 last:pb-0">
-    <span className="flex size-2 translate-y-1 rounded-full bg-gray-200 animate-pulse" />
-    <div className="space-y-1">
-      <div className="h-4 w-1/3 rounded bg-gray-200 animate-pulse" />
-      <div className="h-3 w-full rounded bg-gray-200 animate-pulse" />
-      <div className="h-3 w-2/3 rounded bg-gray-200 animate-pulse" />
-    </div>
-  </div>
-);
+import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
 
 interface ExtensionDialogProps {
   user: User;
@@ -66,7 +55,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
   const fetchExtensionActions = async () => {
     if (!user || !extension) return;
 
-    setActionLoading(true); // Set action loading to true
+    setActionLoading(true);
     try {
       const response: IGetExtensionActionsResponse = await getExtensionActions({ user, extension });
       setExtensionActions(
@@ -75,7 +64,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
     } catch (error) {
       toast({ type: 'error', description: 'Failed to fetch extension actions' });
     } finally {
-      setActionLoading(false); // Set action loading to false when complete
+      // setActionLoading(false);
     }
   };
 
@@ -148,7 +137,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
           <Card className="w-full md:w-[600px] overflow-y-auto max-h-[50vh]">
             <CardContent className="grid gap-4 p-4">
               {actionLoading ? (
-                // Show skeleton UI while loading actions
                 Array(4)
                   .fill(0)
                   .map((_, index) => <ActionSkeleton key={`action-skeleton-${index}`} />)

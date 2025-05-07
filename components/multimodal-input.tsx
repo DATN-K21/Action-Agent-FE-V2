@@ -108,13 +108,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         window.history.replaceState({}, '', `/chat/${chatId}`);
       }
 
-      // // Check if extension is enabled, use stream extension else use stream agent
-      // if (extension !== undefined && extension !== ExtensionType.DEFAULT) {
-      //   await handleStreamExtension(user);
-      // } else {
-      //   await handleStreamAgent(user);
-      // }
-
       switch (extension) {
         case ExtensionType.DEFAULT:
           await handleStreamAgent(user);

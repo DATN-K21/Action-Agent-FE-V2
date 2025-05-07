@@ -5,9 +5,9 @@ import { notFound } from 'next/navigation';
 import { User } from 'next-auth';
 
 export const metadata: Metadata = {
-  title: 'Extensions - Botion',
-  description: 'Extensions Page',
-}
+  title: 'Extensions',
+  description: 'Manage your extensions',
+};
 
 export default async function Page() {
   const session = await auth();
