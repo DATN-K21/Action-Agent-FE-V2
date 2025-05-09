@@ -2,7 +2,6 @@
 
 import { Collapsible } from '@/components/ui/collapsible';
 import {
-  SidebarGroup,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -24,30 +23,28 @@ export function NavCustom({
   const { setOpenMobile } = useSidebar();
 
   return (
-    <SidebarGroup>
-      <SidebarMenu>
-        {items.map((item) => {
-          const isActive = pathname === item.url;
+    <SidebarMenu>
+      {items.map((item) => {
+        const isActive = pathname === item.url;
 
-          return (
-            <Collapsible key={item.title} asChild>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={item.title}
-                  isActive={isActive}
-                  onClick={() => setOpenMobile(false)}
-                >
-                  <Link href={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </Collapsible>
-          );
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
+        return (
+          <Collapsible key={item.title} asChild>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                isActive={isActive}
+                onClick={() => setOpenMobile(false)}
+              >
+                <Link href={item.url}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </Collapsible>
+        );
+      })}
+    </SidebarMenu>
   );
 }

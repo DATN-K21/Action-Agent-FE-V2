@@ -1,10 +1,9 @@
-'use client'
+'use client';
 
-import type { User } from 'next-auth'
-import { useRouter } from 'next/navigation'
+import type { User } from 'next-auth';
 
-import SidebarHistory from '@/components/sidebar-history'
-import { SidebarUserNav } from '@/components/sidebar-user-nav'
+import SidebarHistory from '@/components/sidebar-history';
+import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import {
   Sidebar,
   SidebarContent,
@@ -12,17 +11,17 @@ import {
   SidebarHeader,
   SidebarMenu,
   useSidebar,
-} from '@/components/ui/sidebar'
-import Link from 'next/link'
-import { NavCustom } from '@/components/nav-custom'
+} from '@/components/ui/sidebar';
+import Link from 'next/link';
+import { NavCustom } from '@/components/nav-custom';
 
-import { HiOutlineViewGrid, HiOutlineChatAlt, HiOutlineServer } from 'react-icons/hi'
+import { HiOutlineViewGrid, HiOutlineChatAlt, HiOutlineServer } from 'react-icons/hi';
 
 type navCustomItemProps = {
-  title: string
-  url: string
-  icon: any
-}
+  title: string;
+  url: string;
+  icon: any;
+};
 
 const navCustomItems: navCustomItemProps[] = [
   {
@@ -40,11 +39,10 @@ const navCustomItems: navCustomItemProps[] = [
     url: '/mcp-server',
     icon: HiOutlineServer,
   },
-]
+];
 
 export function AppSidebar({ user }: { user: User }) {
-  const router = useRouter()
-  const { setOpenMobile } = useSidebar()
+  const { setOpenMobile } = useSidebar();
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">
@@ -54,7 +52,7 @@ export function AppSidebar({ user }: { user: User }) {
             <Link
               href="/"
               onClick={() => {
-                setOpenMobile(false)
+                setOpenMobile(false);
               }}
               className="flex flex-row gap-3 items-center"
             >
@@ -64,12 +62,12 @@ export function AppSidebar({ user }: { user: User }) {
             </Link>
           </div>
         </SidebarMenu>
+        <NavCustom items={navCustomItems} />
       </SidebarHeader>
       <SidebarContent>
-        <NavCustom items={navCustomItems} />
         <SidebarHistory user={user} />
       </SidebarContent>
       <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
     </Sidebar>
-  )
+  );
 }
