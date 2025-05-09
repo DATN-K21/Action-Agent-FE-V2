@@ -29,6 +29,12 @@ export interface InterruptStreamParams {
   };
 }
 
+export interface StreamMCPAgentParams {
+  user: User;
+  threadId: string;
+  payload: IChatRequest;
+}
+
 export const streamAgent = async (
   params: StreamAgentParams,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
@@ -158,15 +164,11 @@ export const interruptStream = async (
   }
 };
 
-export interface ChatMCPParams {
-  user: User;
-  threadId: string;
-  payload: IChatRequest;
-}
-
-export const chatMCP = async (params: ChatMCPParams): Promise<any> => {
+export const streamMCPAgent = async (
+  params: StreamMCPAgentParams,
+): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
   if (!params.threadId) throw new Error("Missing 'threadId'");
-  if (!params.payload) throw new Error("Missing 'payload'");
+  if (!params.payload.input) throw new Error("Missing 'input'");
 
   let headers: Record<string, string> = createUserAuthHeaders(params.user);
   headers['Content-Type'] = 'application/json';
@@ -175,7 +177,7 @@ export const chatMCP = async (params: ChatMCPParams): Promise<any> => {
   try {
     // Send the request
     const response = await fetch(
-      `${AI_ENDPOINT_V2}/mcp-agent/chat/${params.user.id}/${params.threadId}`,
+      `${AI_ENDPOINT_V2}/mcp-agent/stream/${params.user.id}/${params.threadId}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(params.payload),
@@ -187,15 +189,19 @@ export const chatMCP = async (params: ChatMCPParams): Promise<any> => {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Failed to chat with MCP: ${response.status} ${response.statusText} - ${errorText}`,
+        `Failed to stream MCP agent: ${response.status} ${response.statusText} - ${errorText}`,
       );
     }
 
-    // Parse and return the JSON response
-    const responseData = await response.json();
-    return responseData;
+    // Ensure response body exists
+    if (!response.body) {
+      throw new Error('Response body is null or undefined');
+    }
+
+    // Return the readable stream reader
+    return response.body.getReader();
   } catch (error) {
-    console.error('Error in MCP chat:', error);
-    throw new Error('Error communicating with MCP agent, please try again!');
+    console.error('Error in stream MCP agent:', error);
+    throw new Error('Error streaming MCP agent, please try again!');
   }
 };

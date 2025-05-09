@@ -64,7 +64,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
     } catch (error) {
       toast({ type: 'error', description: 'Failed to fetch extension actions' });
     } finally {
-      // setActionLoading(false);
+      setActionLoading(false);
     }
   };
 
