@@ -6,8 +6,12 @@ import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Botion',
-  description: 'Action Agent',
+  title: {
+    default: 'Action Agent',
+    template: '%s | Action Agent',
+  },
+  description:
+    'Action Agent is a powerful tool that helps you automate tasks and improve your productivity.',
 };
 
 export const viewport = {

@@ -43,7 +43,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const createThread = useChatStore((state) => state.createThread);
   const handleStreamAgent = useChatStore((state) => state.handleStreamAgent);
   const handleStreamExtension = useChatStore((state) => state.handleStreamExtension);
-  const handleChatMCP = useChatStore((state) => state.handleChatMCP);
+  const handleStreamMCPAgent = useChatStore((state) => state.handleStreamMCPAgent);
 
   const renameThread = useThreadStore((state) => state.renameThread);
 
@@ -108,30 +108,22 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         window.history.replaceState({}, '', `/chat/${chatId}`);
       }
 
-      // // Check if extension is enabled, use stream extension else use stream agent
-      // if (extension !== undefined && extension !== ExtensionType.DEFAULT) {
-      //   await handleStreamExtension(user);
-      // } else {
-      //   await handleStreamAgent(user);
-      // }
-
       switch (extension) {
         case ExtensionType.DEFAULT:
           await handleStreamAgent(user);
+          break;
 
         case ExtensionType.MCP:
-          await handleChatMCP(user);
+          await handleStreamMCPAgent(user);
+          break;
 
         default:
           await handleStreamExtension(user);
+          break;
       }
 
-      // If total content length > 30, generate a title and update it locally
-      const totalWords = messages.reduce((acc, message) => acc + message.content.length, 0);
-      if (totalWords > 30) {
-        const newThread = await generateTitle({ user, threadId: chatId });
-        await renameThread(user, chatId, newThread.title, { callApi: false });
-      }
+      const newThread = await generateTitle({ user, threadId: chatId });
+      await renameThread(user, chatId, newThread.title, { callApi: false });
 
       if (width && width > 768) {
         textareaRef.current?.focus();

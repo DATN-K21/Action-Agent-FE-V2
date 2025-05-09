@@ -5,9 +5,9 @@ import { notFound } from 'next/navigation';
 import { User } from 'next-auth';
 
 export const metadata: Metadata = {
-  title: 'MCP Server - Botion',
-  description: 'MCP Server Page',
-}
+  title: 'MCP Server',
+  description: 'Manage your MCP server',
+};
 
 export default async function Page() {
   const session = await auth();

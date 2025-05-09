@@ -41,23 +41,7 @@ import { ThreadType } from '@/constants/extension-constant';
 import { toast } from '@/components/toast';
 import useChatStore from '@/store/chat-store';
 import { IMCPServer } from '@/types/mcp';
-
-// Add TableSkeleton component at the top level
-const TableSkeleton = ({ columns = 4, rows = 5 }: { columns?: number; rows?: number }) => {
-  return Array(rows)
-    .fill(0)
-    .map((_, rowIndex) => (
-      <TableRow key={`skeleton-row-${rowIndex}`}>
-        {Array(columns)
-          .fill(0)
-          .map((_, colIndex) => (
-            <TableCell key={`skeleton-cell-${rowIndex}-${colIndex}`}>
-              <div className="h-5 w-full rounded-md bg-gray-200 animate-pulse" />
-            </TableCell>
-          ))}
-      </TableRow>
-    ));
-};
+import { TableSkeleton } from '@/components/skeleton/table-skeleton';
 
 export default function MCPServerTable(props: { user: User }) {
   const { user } = props;

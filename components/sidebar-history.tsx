@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from 'next-auth';
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import { MoreHorizontalIcon, TrashIcon } from '@/components/icons';
@@ -38,6 +38,8 @@ import { toast } from '@/components/toast';
 import { useThreadStore } from '@/store/thread-store';
 import { ThreadType } from '@/constants/extension-constant';
 import useChatStore from '@/store/chat-store';
+import { ThreadListSkeleton } from '@/components/skeleton/thread-list-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function SidebarHistory({ user }: { user: User }) {
   const threads = useThreadStore((state) => state.threads);
@@ -52,22 +54,46 @@ function SidebarHistory({ user }: { user: User }) {
 
   const [deleteId, setDeleteId] = useState<string>('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
-  const { ref, inView } = useInView({
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Intersection observer for bottom loading
+  const { ref: bottomLoaderRef, inView: isBottomVisible } = useInView({
     threshold: 0,
+    rootMargin: '0px 0px 200px 0px',
   });
 
   useEffect(() => {
     fetchThreads(user);
-  }, [user]);
+  }, [user, fetchThreads]);
 
-  // useEffect(() => {
-  //   if (inView && nextCursor && !isLoading) {
-  //     fetchThreads(user, nextCursor);
-  //   }
-  // }, [inView, nextCursor, isLoading, fetchThreads, user]);
+  // Handle loading more threads when scrolling to bottom
+  useEffect(() => {
+    const handleLoadMoreThreads = async () => {
+      if (isBottomVisible && nextCursor && !isLoading && !isLoadingMore) {
+        try {
+          setIsLoadingMore(true);
+          // Fetch older threads
+          await fetchThreads(user, nextCursor);
+
+          // fake delay for loading
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        } catch (error) {
+          toast({
+            type: 'error',
+            description: 'Failed to load more threads',
+          });
+        } finally {
+          setIsLoadingMore(false);
+        }
+      }
+    };
+
+    handleLoadMoreThreads();
+  }, [isBottomVisible, nextCursor, isLoading, isLoadingMore, fetchThreads, user]);
 
   // Handle delete thread
   const handleDelete = async () => {
@@ -106,32 +132,10 @@ function SidebarHistory({ user }: { user: User }) {
     }
   };
 
-  // Loading skeleton
-  if (isLoading) {
-    return (
-      <SidebarGroup>
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">Today</div>
-        <SidebarGroupContent>
-          <div className="flex flex-col">
-            {[44, 32, 28, 64, 52].map((item) => (
-              <div key={item} className="rounded-md h-8 flex gap-2 px-2 items-center">
-                <div
-                  className="h-4 rounded-md flex-1 max-w-[--skeleton-width] bg-sidebar-accent-foreground/10"
-                  style={
-                    {
-                      '--skeleton-width': `${item}%`,
-                    } as React.CSSProperties
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
+  if (isLoading && !isLoadingMore) {
+    return <ThreadListSkeleton />;
   }
 
-  // Empty threads
   if (threads?.length === 0) {
     return (
       <SidebarGroup>
@@ -149,118 +153,133 @@ function SidebarHistory({ user }: { user: User }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {threads &&
-              (() => {
-                const groupedThreads = groupThreadsByDate();
+            <div ref={scrollContainerRef} className="overflow-y-auto pr-1">
+              {threads &&
+                (() => {
+                  const groupedThreads = groupThreadsByDate();
 
-                return (
-                  <>
-                    {groupedThreads.today.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">Today</div>
-                        {groupedThreads.today.map((thread) => (
-                          <ThreadItem
-                            key={thread.id}
-                            thread={thread}
-                            isActive={thread.id === threadId}
-                            onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
-                            }}
-                            onRename={handleRename}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
+                  return (
+                    <>
+                      {groupedThreads.today.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50">Today</div>
+                          {groupedThreads.today.map((thread) => (
+                            <ThreadItem
+                              key={thread.id}
+                              thread={thread}
+                              isActive={thread.id === threadId}
+                              onDelete={() => {
+                                setDeleteId(thread.id);
+                                setShowDeleteDialog(true);
+                              }}
+                              onRename={handleRename}
+                              setOpenMobile={setOpenMobile}
+                            />
+                          ))}
+                        </>
+                      )}
 
-                    {groupedThreads.yesterday.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Yesterday
+                      {groupedThreads.yesterday.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                            Yesterday
+                          </div>
+                          {groupedThreads.yesterday.map((thread) => (
+                            <ThreadItem
+                              key={thread.id}
+                              thread={thread}
+                              isActive={thread.id === threadId}
+                              onRename={handleRename}
+                              onDelete={() => {
+                                setDeleteId(thread.id);
+                                setShowDeleteDialog(true);
+                              }}
+                              setOpenMobile={setOpenMobile}
+                            />
+                          ))}
+                        </>
+                      )}
+
+                      {groupedThreads.lastWeek.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                            Last 7 days
+                          </div>
+                          {groupedThreads.lastWeek.map((thread) => (
+                            <ThreadItem
+                              key={thread.id}
+                              thread={thread}
+                              isActive={thread.id === threadId}
+                              onRename={handleRename}
+                              onDelete={() => {
+                                setDeleteId(thread.id);
+                                setShowDeleteDialog(true);
+                              }}
+                              setOpenMobile={setOpenMobile}
+                            />
+                          ))}
+                        </>
+                      )}
+
+                      {groupedThreads.lastMonth.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                            Last 30 days
+                          </div>
+                          {groupedThreads.lastMonth.map((thread) => (
+                            <ThreadItem
+                              key={thread.id}
+                              thread={thread}
+                              isActive={thread.id === threadId}
+                              onRename={handleRename}
+                              onDelete={() => {
+                                setDeleteId(thread.id);
+                                setShowDeleteDialog(true);
+                              }}
+                              setOpenMobile={setOpenMobile}
+                            />
+                          ))}
+                        </>
+                      )}
+
+                      {groupedThreads.older.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                            Older
+                          </div>
+                          {groupedThreads.older.map((thread) => (
+                            <ThreadItem
+                              key={thread.id}
+                              thread={thread}
+                              isActive={thread.id === threadId}
+                              onRename={handleRename}
+                              onDelete={() => {
+                                setDeleteId(thread.id);
+                                setShowDeleteDialog(true);
+                              }}
+                              setOpenMobile={setOpenMobile}
+                            />
+                          ))}
+                        </>
+                      )}
+
+                      {/* Loading indicator at bottom */}
+                      {nextCursor && (
+                        <div ref={bottomLoaderRef} className="flex justify-center p-2">
+                          {isLoadingMore && (
+                            <div className="flex flex-col items-center space-y-2 py-2">
+                              <Skeleton className="h-4 w-48" />
+                              <Skeleton className="h-4 w-48" />
+                              <Skeleton className="h-4 w-48" />
+                              <Skeleton className="h-4 w-48" />
+                            </div>
+                          )}
                         </div>
-                        {groupedThreads.yesterday.map((thread) => (
-                          <ThreadItem
-                            key={thread.id}
-                            thread={thread}
-                            isActive={thread.id === threadId}
-                            onRename={handleRename}
-                            onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedThreads.lastWeek.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 7 days
-                        </div>
-                        {groupedThreads.lastWeek.map((thread) => (
-                          <ThreadItem
-                            key={thread.id}
-                            thread={thread}
-                            isActive={thread.id === threadId}
-                            onRename={handleRename}
-                            onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedThreads.lastMonth.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Last 30 days
-                        </div>
-                        {groupedThreads.lastMonth.map((thread) => (
-                          <ThreadItem
-                            key={thread.id}
-                            thread={thread}
-                            isActive={thread.id === threadId}
-                            onRename={handleRename}
-                            onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {groupedThreads.older.length > 0 && (
-                      <>
-                        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
-                          Older
-                        </div>
-                        {groupedThreads.older.map((thread) => (
-                          <ThreadItem
-                            key={thread.id}
-                            thread={thread}
-                            isActive={thread.id === threadId}
-                            onRename={handleRename}
-                            onDelete={() => {
-                              setDeleteId(thread.id);
-                              setShowDeleteDialog(true);
-                            }}
-                            setOpenMobile={setOpenMobile}
-                          />
-                        ))}
-                      </>
-                    )}
-                  </>
-                );
-              })()}
-            {nextCursor && <div ref={ref} className="h-1" />}
+                      )}
+                    </>
+                  );
+                })()}
+            </div>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

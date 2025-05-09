@@ -5,31 +5,31 @@ export function useScrollToBottom<T extends HTMLElement>() {
   const endRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  const scrollToBottom = () => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    endRef.current?.scrollIntoView({ behavior });
   };
-
-  // useEffect(() => {
-  //   const container = containerRef.current;
-  //   if (!container) return;
-
-  //   const handleScroll = () => {
-  //     const distanceToBottom =
-  //       container.scrollHeight - container.scrollTop - container.clientHeight;
-
-  //     setIsAtBottom(distanceToBottom < 50);
-  //   };
-
-  //   container.addEventListener('scroll', handleScroll);
-  //   return () => container.removeEventListener('scroll', handleScroll);
-  // }, []);
 
   useEffect(() => {
     const end = endRef.current;
     if (!end || !isAtBottom) return;
 
-    end.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom('auto');
   }, [isAtBottom]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      setIsAtBottom(scrollHeight - scrollTop - clientHeight < 5);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    handleScroll();
+
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return {
     containerRef,

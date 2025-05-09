@@ -26,25 +26,11 @@ import {
 } from '@/services/extension-service';
 import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
+import { ExtensionCardSkeleton } from '@/components/skeleton/extension-card-skeleton';
 
 export type ExtensionListProps = {
   user: User;
 };
-
-// Add ExtensionCardSkeleton component
-const ExtensionCardSkeleton = () => (
-  <li className="rounded-lg border p-4 animate-pulse">
-    <div className="mb-8 flex items-center justify-between">
-      <div className="size-10 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
-      <div className="h-8 w-20 rounded-md bg-gray-200 dark:bg-gray-700"></div>
-    </div>
-    <div>
-      <div className="mb-2 h-5 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
-      <div className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700"></div>
-      <div className="mt-1 h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
-    </div>
-  </li>
-);
 
 export default function ExtensionList(props: ExtensionListProps) {
   const { user } = props;
@@ -194,7 +180,6 @@ export default function ExtensionList(props: ExtensionListProps) {
         {/* Extension List */}
         <ul className="faded-bottom no-scrollbar grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
-            // Show skeleton cards while loading
             Array(6)
               .fill(0)
               .map((_, index) => <ExtensionCardSkeleton key={`skeleton-${index}`} />)

@@ -9,10 +9,11 @@ import {
   InterruptStreamParams,
   StreamAgentParams,
   StreamExtensionParams,
+  StreamMCPAgentParams,
   interruptStream,
   streamAgent,
   streamExtension,
-  chatMCP,
+  streamMCPAgent,
 } from '@/services/stream-service';
 import { createThread } from '@/services/thread-service';
 import { useThreadStore } from '@/store/thread-store';
@@ -25,6 +26,7 @@ type ChatState = {
   humanInput: string;
   status: ChatStatus;
   threadId: string;
+  isCreatingThread: boolean;
 };
 
 type ChatActions = {
@@ -39,7 +41,7 @@ type ChatActions = {
   handleStreamAgent: (user: User) => Promise<void>;
   handleStreamExtension: (user: User) => Promise<void>;
   handleStreamInterrupt: (user: User, toolcalls: any[]) => Promise<void>;
-  handleChatMCP: (user: User) => Promise<void>;
+  handleStreamMCPAgent: (user: User) => Promise<void>;
   stopStream: () => void;
   reloadChat: () => void;
 };
@@ -56,6 +58,7 @@ const useChatStore = create<ChatStore>()(
       humanInput: '',
       status: ChatStatus.READY,
       threadId: '',
+      isCreatingThread: false,
 
       setAgent: (agent) => set({ agent: agent }),
       setExtension: (extension) => set({ extension: extension }),
@@ -73,6 +76,8 @@ const useChatStore = create<ChatStore>()(
         title: string = 'New Chat',
         type: ThreadType = ThreadType.DEFAULT,
       ) => {
+        set({ isCreatingThread: true });
+
         try {
           const response: ICreateThreadResponse = await createThread({
             user: user,
@@ -84,6 +89,8 @@ const useChatStore = create<ChatStore>()(
           addThread(response);
         } catch (error) {
           throw error;
+        } finally {
+          set({ isCreatingThread: false });
         }
       },
 
@@ -333,8 +340,8 @@ const useChatStore = create<ChatStore>()(
         }
       },
 
-      // Handle chat MCP
-      handleChatMCP: async (user: User) => {
+      // Handle stream MCP agent
+      handleStreamMCPAgent: async (user: User) => {
         const { humanInput, threadId, appendMessage, setHumanInput } = get();
 
         if (!humanInput.trim()) return;
@@ -346,41 +353,67 @@ const useChatStore = create<ChatStore>()(
         setHumanInput('');
 
         try {
-          set({ status: ChatStatus.SUBMITTED });
-
-          const response = await chatMCP({
+          const params: StreamMCPAgentParams = {
             user,
             threadId,
-            payload: {
-              input: humanInput,
-              maxRecursion: 20,
-            },
-          });
+            payload: { input: humanInput, maxRecursion: 20 },
+          };
 
-          // Update the AI message with the response content
-          if (response && response.data) {
-            set((state) => {
-              const lastIndex = state.messages.length - 1;
-              if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
-                state.messages[lastIndex].content =
-                  response.data.output || response.data.content || '';
+          const reader = await streamMCPAgent(params);
+          const decoder = new TextDecoder();
+          let accumulatedText = '';
+
+          set({ status: ChatStatus.STREAMING });
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            if (get().status !== ChatStatus.STREAMING) {
+              reader.cancel();
+              break;
+            }
+
+            const chunk = decoder.decode(value, { stream: true });
+            accumulatedText += chunk;
+
+            const lines = accumulatedText.split('\n');
+            accumulatedText = lines.pop() || '';
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const jsonString = line.substring(6).trim();
+                  const data = JSON.parse(jsonString);
+
+                  if (data?.length > 0) {
+                    const messageData = data[0].content;
+
+                    if (messageData) {
+                      set((state) => {
+                        const lastIndex = state.messages.length - 1;
+                        if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
+                          state.messages[lastIndex].content = messageData;
+                        }
+                      });
+                    }
+                  }
+                } catch (error) {
+                  console.error(
+                    'Error parsing SSE data in handleStreamMCPAgent:',
+                    error,
+                    'Raw data:',
+                    line,
+                  );
+                }
               }
-            });
+            }
           }
 
           set({ status: ChatStatus.READY });
         } catch (error) {
-          console.error('Error in handleMcpChat:', error);
+          console.error('Error in handleStreamMCPAgent:', error);
           set({ status: ChatStatus.ERROR });
-
-          // Update the AI message to show the error
-          set((state) => {
-            const lastIndex = state.messages.length - 1;
-            if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
-              state.messages[lastIndex].content =
-                'Sorry, there was an error processing your request.';
-            }
-          });
         }
       },
 
