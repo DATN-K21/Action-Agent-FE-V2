@@ -34,12 +34,12 @@ export function MCPServerDialog({
 }: MCPServerDialogProps) {
   const [formValues, setFormValues] = useState({
     id: defaultValues?.id || '',
-    name: defaultValues?.mcpName || '',
+    mcpName: defaultValues?.mcpName || '',
     url: defaultValues?.url || '',
   });
 
   const [errors, setErrors] = useState({
-    name: '',
+    mcpName: '',
     url: '',
   });
 
@@ -48,18 +48,18 @@ export function MCPServerDialog({
     if (defaultValues) {
       setFormValues({
         id: defaultValues.id,
-        name: defaultValues.mcpName,
+        mcpName: defaultValues.mcpName,
         url: defaultValues.url,
       });
     } else {
       setFormValues({
         id: '',
-        name: '',
+        mcpName: '',
         url: '',
       });
     }
     // Reset errors when dialog opens/closes
-    setErrors({ name: '', url: '' });
+    setErrors({ mcpName: '', url: '' });
   }, [defaultValues, isOpen]);
 
   // Handle form input changes
@@ -80,10 +80,10 @@ export function MCPServerDialog({
   // Form validation
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { name: '', url: '' };
+    const newErrors = { mcpName: '', url: '' };
 
-    if (!formValues.name.trim()) {
-      newErrors.name = 'Name is required';
+    if (!formValues.mcpName.trim()) {
+      newErrors.mcpName = 'Server name is required';
       isValid = false;
     }
 
@@ -123,20 +123,20 @@ export function MCPServerDialog({
 
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
-              <Label htmlFor="name" className="md:text-right">
+              <Label htmlFor="mcpName" className="md:text-right">
                 Name
               </Label>
               <div className="col-span-1 md:col-span-3 w-full">
                 <Input
-                  id="name"
-                  name="name"
-                  value={formValues.name}
+                  id="mcpName"
+                  name="mcpName"
+                  value={formValues.mcpName}
                   onChange={handleChange}
                   placeholder="Enter server name"
-                  className={errors.name ? 'border-red-500' : ''}
+                  className={errors.mcpName ? 'border-red-500' : ''}
                   disabled={isSubmitting}
                 />
-                {errors.name && <span className="text-sm text-red-500">{errors.name}</span>}
+                {errors.mcpName && <span className="text-sm text-red-500">{errors.mcpName}</span>}
               </div>
             </div>
 
