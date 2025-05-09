@@ -14,8 +14,12 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { NavCustom } from '@/components/nav-custom';
-
-import { HiOutlineViewGrid, HiOutlineChatAlt, HiOutlineServer } from 'react-icons/hi';
+import {
+  HiOutlineViewGrid,
+  HiOutlineChatAlt,
+  HiOutlineServer,
+  HiOutlinePuzzle,
+} from 'react-icons/hi';
 
 type navCustomItemProps = {
   title: string;
@@ -38,6 +42,11 @@ const navCustomItems: navCustomItemProps[] = [
     title: 'MCP Server',
     url: '/mcp-server',
     icon: HiOutlineServer,
+  },
+  {
+    title: 'Assistants',
+    url: '/assistant',
+    icon: HiOutlinePuzzle,
   },
 ];
 
