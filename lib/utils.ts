@@ -2,6 +2,18 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import queryString from 'query-string';
 import { User } from 'next-auth';
+import { ThreadType } from '@/constants/extension-constant';
+import {
+  IconBrandNotion,
+  IconBrandSlack,
+  IconBrandGmail,
+  IconBrandYoutube,
+  IconBrandGoogleMaps,
+  IconCalendarEvent,
+  IconVideoPlus,
+  IconProps,
+  IconMessages,
+} from '@tabler/icons-react';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -19,13 +31,26 @@ export function getLocalStorage(key: string) {
   return [];
 }
 
-export function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
+export const getThreadIcon = (threadType: string): React.FC<IconProps> => {
+  switch (threadType) {
+    case ThreadType.GMAIL:
+      return IconBrandGmail;
+    case ThreadType.GOOGLE_CALENDAR:
+      return IconCalendarEvent;
+    case ThreadType.GOOGLE_MAP:
+      return IconBrandGoogleMaps;
+    case ThreadType.GOOGLE_MEET:
+      return IconVideoPlus;
+    case ThreadType.NOTION:
+      return IconBrandNotion;
+    case ThreadType.SLACK:
+      return IconBrandSlack;
+    case ThreadType.YOUTUBE:
+      return IconBrandYoutube;
+    default:
+      return IconMessages;
+  }
+};
 
 export function createUserAuthHeaders(user: User): Record<string, string> {
   const { id, role, email } = user;

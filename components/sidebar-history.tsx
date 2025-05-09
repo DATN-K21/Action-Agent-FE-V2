@@ -40,6 +40,7 @@ import { ThreadType } from '@/constants/extension-constant';
 import useChatStore from '@/store/chat-store';
 import { ThreadListSkeleton } from '@/components/skeleton/thread-list-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getThreadIcon } from '@/lib/utils';
 
 function SidebarHistory({ user }: { user: User }) {
   const threads = useThreadStore((state) => state.threads);
@@ -319,6 +320,8 @@ const PureThreadItem = (props: IThreadItemProps) => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [newtitle, setNewTitle] = useState(thread.title);
 
+  const ThreadIcon = getThreadIcon(thread.threadType);
+
   const onEventRename = async () => {
     const trimmedTitle = newtitle.trim();
 
@@ -351,8 +354,10 @@ const PureThreadItem = (props: IThreadItemProps) => {
           <Link
             href={`/chat/${thread.threadType === ThreadType.DEFAULT ? thread.id : `${thread.id}/${thread.threadType}`}`}
             onClick={() => setOpenMobile(false)}
+            className="flex items-center gap-2"
           >
-            <span>{thread.title}</span>
+            <ThreadIcon size={18} className="flex-shrink-0" />
+            <span className="truncate">{thread.title}</span>
           </Link>
         )}
       </SidebarMenuButton>
@@ -399,6 +404,7 @@ export const ThreadItem = memo(PureThreadItem, (prev, next) => {
   return (
     prev.isActive === next.isActive &&
     prev.thread.id === next.thread.id &&
-    prev.thread.title === next.thread.title
+    prev.thread.title === next.thread.title &&
+    prev.thread.threadType === next.thread.threadType
   );
 });
