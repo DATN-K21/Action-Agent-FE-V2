@@ -12,6 +12,19 @@ import useChatStore from '@/store/chat-store';
 import { User } from 'next-auth';
 import { toast } from '@/components/toast';
 import { Icons } from '@/components/icon';
+import { extensionActionList } from '@/constants/data';
+
+const formatArgumentKey = (key: string): string => {
+  return key
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const getActionName = (actionKey: string): string => {
+  const action = extensionActionList.find((action) => action.key === actionKey);
+  return action ? action.name : actionKey;
+};
 
 const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: User }) => {
   const status = useChatStore((state) => state.status);
@@ -21,7 +34,8 @@ const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: U
   const pureArgs = firstToolCall.args || {};
 
   const [args, setArgs] = useState(pureArgs);
-  const actionName = firstToolCall.name || 'Unknown Action';
+  const actionKey = firstToolCall.name || 'Unknown Action';
+  const actionName = getActionName(actionKey);
 
   useEffect(() => {
     setArgs(firstToolCall.args || {});
@@ -76,7 +90,7 @@ const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: U
 
                 {Object.keys(pureArgs).map((key) => (
                   <div key={key}>
-                    <label className="font-semibold">{key}</label>
+                    <label className="font-semibold">{formatArgumentKey(key)}</label>
                     {pureArgs[key] && pureArgs[key].length > 50 ? (
                       <Textarea
                         value={args[key]}
@@ -126,4 +140,4 @@ const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: U
   );
 };
 
-export const ActionConfirmation = PureActionConfirmation;
+export const ActionConfirmation = memo(PureActionConfirmation);

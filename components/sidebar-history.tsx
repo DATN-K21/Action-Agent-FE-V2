@@ -79,9 +79,6 @@ function SidebarHistory({ user }: { user: User }) {
           setIsLoadingMore(true);
           // Fetch older threads
           await fetchThreads(user, nextCursor);
-
-          // fake delay for loading
-          await new Promise((resolve) => setTimeout(resolve, 2000));
         } catch (error) {
           toast({
             type: 'error',

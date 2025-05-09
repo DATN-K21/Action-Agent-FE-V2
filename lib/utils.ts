@@ -13,6 +13,7 @@ import {
   IconVideoPlus,
   IconProps,
   IconMessages,
+  IconServer,
 } from '@tabler/icons-react';
 
 export function cn(...inputs: ClassValue[]) {
@@ -47,6 +48,8 @@ export const getThreadIcon = (threadType: string): React.FC<IconProps> => {
       return IconBrandSlack;
     case ThreadType.YOUTUBE:
       return IconBrandYoutube;
+    case ThreadType.MCP:
+      return IconServer;
     default:
       return IconMessages;
   }
