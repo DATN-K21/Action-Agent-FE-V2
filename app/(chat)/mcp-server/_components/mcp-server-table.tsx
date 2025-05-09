@@ -91,13 +91,13 @@ export default function MCPServerTable(props: { user: User }) {
   }, [user, pageNumber, maxPerPage]);
 
   // Handlers for CRUD operations
-  const handleAddServer = async (server: { name: string; url: string }) => {
+  const handleAddServer = async (server: { mcpName: string; url: string }) => {
     try {
       setLoading(true);
       const createdMCP = await createMCP({
         user,
         payload: {
-          mcpName: server.name,
+          mcpName: server.mcpName,
           url: server.url,
           connectionType: 'sse',
         },
@@ -205,10 +205,9 @@ export default function MCPServerTable(props: { user: User }) {
   // Define columns with updated action handlers
   const columns: ColumnDef<IMCPServer>[] = [
     {
-      id: 'id',
-      accessorKey: 'id',
-      header: 'ID',
-      cell: ({ row }) => <div className="capitalize">{row.getValue('id')}</div>,
+      id: 'orderNumber',
+      header: 'No.',
+      cell: ({ row }) => <div className="capitalize">{row.index + 1}</div>,
     },
     {
       accessorKey: 'mcpName',

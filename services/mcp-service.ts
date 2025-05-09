@@ -26,7 +26,7 @@ export interface UpdateMCPParams {
   payload: {
     mcpName: string;
     url: string;
-    connectionType: string;
+    connectionType: 'sse';
   };
 }
 
@@ -48,7 +48,6 @@ export interface GetMCPDetailParams {
   connectedMcpId: string;
 }
 
-// GET all MCPs
 export const getMCPs = async (params: GetMCPsParams): Promise<IMCPServer[]> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
@@ -76,7 +75,6 @@ export const getMCPs = async (params: GetMCPsParams): Promise<IMCPServer[]> => {
   }
 };
 
-// CREATE MCP
 export const createMCP = async (params: CreateMCPParams): Promise<IMCPServer> => {
   try {
     if (!params.payload.mcpName) throw new Error('MCP name is required');
@@ -99,7 +97,6 @@ export const createMCP = async (params: CreateMCPParams): Promise<IMCPServer> =>
   }
 };
 
-// GET MCP detail
 export const getMCPDetail = async (params: GetMCPDetailParams): Promise<IMCPServer> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
@@ -117,7 +114,6 @@ export const getMCPDetail = async (params: GetMCPDetailParams): Promise<IMCPServ
   }
 };
 
-// UPDATE MCP
 export const updateMCP = async (params: UpdateMCPParams): Promise<IMCPServer> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);

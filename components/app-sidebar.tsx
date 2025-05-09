@@ -1,7 +1,6 @@
 'use client';
 
 import type { User } from 'next-auth';
-import { useRouter } from 'next/navigation';
 
 import SidebarHistory from '@/components/sidebar-history';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
@@ -15,7 +14,6 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { NavCustom } from '@/components/nav-custom';
-
 import {
   HiOutlineViewGrid,
   HiOutlineChatAlt,
@@ -53,7 +51,6 @@ const navCustomItems: navCustomItemProps[] = [
 ];
 
 export function AppSidebar({ user }: { user: User }) {
-  const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
   return (
@@ -74,9 +71,9 @@ export function AppSidebar({ user }: { user: User }) {
             </Link>
           </div>
         </SidebarMenu>
+        <NavCustom items={navCustomItems} />
       </SidebarHeader>
       <SidebarContent>
-        <NavCustom items={navCustomItems} />
         <SidebarHistory user={user} />
       </SidebarContent>
       <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
