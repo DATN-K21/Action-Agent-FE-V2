@@ -117,7 +117,7 @@ const useChatStore = create<ChatStore>()(
             user,
             threadId,
             agentName: agent,
-            payload: { input: humanInput, maxRecursion: 20 },
+            payload: { input: humanInput, recursionLimit: 20 },
           };
 
           const reader = await streamAgent(params);
@@ -195,7 +195,7 @@ const useChatStore = create<ChatStore>()(
             user,
             threadId,
             extensionName: extension,
-            payload: { input: humanInput, maxRecursion: 20 },
+            payload: { input: humanInput, recursionLimit: 20 },
           };
 
           const reader = await streamExtension(params);
@@ -356,7 +356,7 @@ const useChatStore = create<ChatStore>()(
           const params: StreamMCPAgentParams = {
             user,
             threadId,
-            payload: { input: humanInput, maxRecursion: 20 },
+            payload: { input: humanInput, recursionLimit: 20 },
           };
 
           const reader = await streamMCPAgent(params);

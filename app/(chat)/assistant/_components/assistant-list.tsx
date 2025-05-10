@@ -11,7 +11,7 @@ import { getConnectedExtensions } from '@/services/extension-service';
 import { getMCPs } from '@/services/mcp-service';
 import type { IMCPServer } from '@/types/mcp';
 
-import { IConnectedApp } from '@/types/extension';
+import { IConnectedExtension } from '@/types/extension';
 import { MoreHorizontal, Pencil, Plus, Trash } from 'lucide-react';
 import {
   DropdownMenu,
@@ -28,7 +28,7 @@ export default function AssistantsList(props: AssistantListProps) {
   const { user } = props;
 
   const [isOpenDialog, setIsOpenDialog] = useState(false);
-  const [selectedExtension, setSelectedExtension] = useState<IConnectedApp[]>([]);
+  const [selectedExtension, setSelectedExtension] = useState<IConnectedExtension[]>([]);
   const [selectedMCPServer, setSelectedMCPServer] = useState<IMCPServer[]>([]);
   const [type, setType] = useState<'extension' | 'mcp-server'>('extension');
 
@@ -37,7 +37,8 @@ export default function AssistantsList(props: AssistantListProps) {
     const fetchConnectedExtensions = async () => {
       try {
         const response = await getConnectedExtensions({ user, extension: null });
-        setSelectedExtension(response.connectedApps);
+        console.log('response :>> ', response);
+        setSelectedExtension(response.connectedExtensions);
       } catch (error) {
         console.error('Error fetching connected extensions:', error);
       }
@@ -61,17 +62,16 @@ export default function AssistantsList(props: AssistantListProps) {
     }
   }, [user, type]);
 
-  console.log('Selected Extension:', selectedExtension);
   const extension = {
     name: 'Assistant 1',
-    desc: 'Assistant for Botion',
+    desc: 'Assistant for Action Agent',
     logo: IconBrandFigma,
     connected: true,
   };
 
   const mcpServer = {
     name: 'Assistant 2',
-    desc: 'Assistant for Botion',
+    desc: 'Assistant for Action Agent',
     logo: IconBrandFigma,
     connected: true,
   };
@@ -238,8 +238,11 @@ export default function AssistantsList(props: AssistantListProps) {
       <AddAssistantDialog
         open={isOpenDialog}
         onOpenChange={setIsOpenDialog}
-        extensionOptions={selectedExtension.map((ext) => ({ appName: ext.appName, value: ext.id }))}
-        mcpOptions={selectedMCPServer.map((mcp) => ({ mcpName: mcp.mcpName, value: mcp.id }))}
+        extensionOptions={selectedExtension?.map((ext) => ({
+          appName: ext.extensionName,
+          value: ext.id,
+        }))}
+        mcpOptions={selectedMCPServer?.map((mcp) => ({ mcpName: mcp.mcpName, value: mcp.id }))}
         type={type}
       />
     </>

@@ -66,8 +66,9 @@ export default function ExtensionList(props: ExtensionListProps) {
         const updatedExtensions = getExtensions.map((extension) => ({
           ...extension,
           connected:
-            connectedExtensionsData.connectedApps?.some((ext) => ext.appName === extension.key) ||
-            false,
+            connectedExtensionsData.connectedExtensions?.some(
+              (ext) => ext.extensionName === extension.key,
+            ) || false,
         }));
 
         const newFilteredExtensions = updatedExtensions
@@ -108,7 +109,7 @@ export default function ExtensionList(props: ExtensionListProps) {
 
   return (
     <>
-      <div className="flex flex-col h-screen w-full px-4">
+      <div className="flex flex-col h-full w-full px-2 md:px-4">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight mt-2">Extension Integrations</h1>

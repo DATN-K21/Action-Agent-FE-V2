@@ -2,10 +2,10 @@ export interface IGetAllExtensionResponse {
   extensions: string[];
 }
 
-export interface IConnectedApp {
+export interface IConnectedExtension {
   id: string;
   userId: string;
-  appName: string;
+  extensionName: string;
   connectedAccountId: string;
   authScheme?: string;
   authValue?: string;
@@ -13,7 +13,7 @@ export interface IConnectedApp {
 }
 
 export interface IGetConnectedExtensions {
-  connectedApps: IConnectedApp[];
+  connectedExtensions: IConnectedExtension[];
 }
 
 export interface IGetExtensionActionsResponse {
