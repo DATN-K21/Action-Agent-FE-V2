@@ -5,8 +5,8 @@ import { User } from 'next-auth';
 import AssistantsList from './_components/assistant-list';
 
 export const metadata: Metadata = {
-  title: 'Assistant - Botion',
-  description: 'Assistant Page',
+  title: 'Assistant',
+  description: 'Manage your assistants',
 };
 
 export default async function Page() {
@@ -30,7 +30,7 @@ export default async function Page() {
       <div>
         <h1 className="text-xl md:text-2xl font-bold tracking-tight mt-2">Assistants</h1>
         <p className="text-sm md:text-base text-muted-foreground">
-          {`Add your Assistant to your account to use it with Botion.`}
+          {`Add your Assistant to your account to use it with Action Agent.`}
         </p>
       </div>
       <AssistantsList user={user} />

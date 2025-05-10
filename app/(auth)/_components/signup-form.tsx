@@ -1,17 +1,11 @@
-'use client'
+'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -19,18 +13,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { registerSchema } from '@/validation-schemas/auth-schema'
-import { useState } from 'react'
-import GoogleButton from './google-button'
-import { Icons } from '@/components/icon'
-import { useRouter } from 'next/navigation'
-import { register, sendAccountActivationEmail } from '@/services/auth-service'
-import { toast } from '@/components/toast'
+} from '@/components/ui/form';
+import { registerSchema } from '@/validation-schemas/auth-schema';
+import { useState } from 'react';
+import GoogleButton from './google-button';
+import { Icons } from '@/components/icon';
+import { useRouter } from 'next/navigation';
+import { register, sendAccountActivationEmail } from '@/services/auth-service';
+import { toast } from '@/components/toast';
 
 export function SignUpForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const form = useForm({
     resolver: zodResolver(registerSchema),
@@ -42,46 +36,46 @@ export function SignUpForm() {
       password: '',
       confirmPassword: '',
     },
-  })
+  });
 
   const handleRegister = async (data: {
-    email: string
-    username: string
-    firstName: string
-    lastName: string
-    password: string
-    confirmPassword: string
+    email: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    password: string;
+    confirmPassword: string;
   }) => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const { confirmPassword, ...dataToSend } = data
-      await register(dataToSend)
-      await sendAccountActivationEmail(data.email)
+      const { confirmPassword, ...dataToSend } = data;
+      await register(dataToSend);
+      await sendAccountActivationEmail(data.email);
 
       toast({
         type: 'success',
         description: 'Please check your email for verification.',
-      })
+      });
 
-      form.reset()
-      router.push('/login')
+      form.reset();
+      router.push('/login');
     } catch (error: any) {
-      const errorReponse: IResponse<null> = error
+      const errorReponse: IResponse<null> = error;
       toast({
         type: 'error',
         description: errorReponse.message,
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-4">
       <Card className="max-w-md mx-auto">
         <CardHeader className="text-center py-4">
-          <CardTitle className="text-xl">Hey there! Welcome to Botion</CardTitle>
+          <CardTitle className="text-xl">Hey there! Welcome to Action Agent</CardTitle>
           <CardDescription>Let’s set up your account in just a few steps</CardDescription>
         </CardHeader>
         <CardContent className="pb-4">
@@ -105,7 +99,9 @@ export function SignUpForm() {
                     name="email"
                     render={({ field }) => (
                       <FormItem className="space-y-0.5">
-                        <FormLabel htmlFor="email" className="text-sm">Email</FormLabel>
+                        <FormLabel htmlFor="email" className="text-sm">
+                          Email
+                        </FormLabel>
                         <FormControl>
                           <Input
                             id="email"
@@ -127,7 +123,9 @@ export function SignUpForm() {
                     name="username"
                     render={({ field }) => (
                       <FormItem className="space-y-0.5">
-                        <FormLabel htmlFor="username" className="text-sm">Username</FormLabel>
+                        <FormLabel htmlFor="username" className="text-sm">
+                          Username
+                        </FormLabel>
                         <FormControl>
                           <Input
                             id="username"
@@ -150,7 +148,9 @@ export function SignUpForm() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem className="space-y-0.5">
-                          <FormLabel htmlFor="firstName" className="text-sm">First Name</FormLabel>
+                          <FormLabel htmlFor="firstName" className="text-sm">
+                            First Name
+                          </FormLabel>
                           <FormControl>
                             <Input
                               id="firstName"
@@ -171,7 +171,9 @@ export function SignUpForm() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem className="space-y-0.5">
-                          <FormLabel htmlFor="lastName" className="text-sm">Last Name</FormLabel>
+                          <FormLabel htmlFor="lastName" className="text-sm">
+                            Last Name
+                          </FormLabel>
                           <FormControl>
                             <Input
                               id="lastName"
@@ -194,7 +196,9 @@ export function SignUpForm() {
                     name="password"
                     render={({ field }) => (
                       <FormItem className="space-y-0.5">
-                        <FormLabel htmlFor="password" className="text-sm">Password</FormLabel>
+                        <FormLabel htmlFor="password" className="text-sm">
+                          Password
+                        </FormLabel>
                         <FormControl>
                           <Input
                             id="password"
@@ -216,7 +220,9 @@ export function SignUpForm() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem className="space-y-0.5">
-                        <FormLabel htmlFor="confirmPassword" className="text-sm">Confirm Password</FormLabel>
+                        <FormLabel htmlFor="confirmPassword" className="text-sm">
+                          Confirm Password
+                        </FormLabel>
                         <FormControl>
                           <Input
                             id="confirmPassword"
@@ -239,7 +245,7 @@ export function SignUpForm() {
                   </Button>
 
                   <div className="text-center text-xs mt-1">
-                    Already have an account?{" "}
+                    Already have an account?{' '}
                     <Link href="/login" className="underline underline-offset-4 hover:text-primary">
                       Login
                     </Link>
@@ -251,7 +257,8 @@ export function SignUpForm() {
         </CardContent>
       </Card>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our <a href="#">Terms of Service</a> and{' '}
+        <a href="#">Privacy Policy</a>.
       </div>
     </div>
   );
