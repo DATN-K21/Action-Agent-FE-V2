@@ -35,6 +35,19 @@ export interface StreamMCPAgentParams {
   payload: IChatRequest;
 }
 
+export interface ChatMCPAgentParams {
+  user: User;
+  threadId: string;
+  payload: IChatRequest;
+}
+
+export interface ChatAssistantParams {
+  user: User;
+  assistantId: string;
+  threadId: string;
+  payload: IChatRequest;
+}
+
 export const streamAgent = async (
   params: StreamAgentParams,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
@@ -203,5 +216,78 @@ export const streamMCPAgent = async (
   } catch (error) {
     console.error('Error in stream MCP agent:', error);
     throw new Error('Error streaming MCP agent, please try again!');
+  }
+};
+
+export const chatMCPAgent = async (params: ChatMCPAgentParams): Promise<any> => {
+  if (!params.threadId) throw new Error("Missing 'threadId'");
+  if (!params.payload) throw new Error("Missing 'payload'");
+
+  let headers: Record<string, string> = createUserAuthHeaders(params.user);
+  headers['Content-Type'] = 'application/json';
+  headers['Accept'] = 'application/json';
+
+  try {
+    // Send the request
+    const response = await fetch(
+      `${AI_ENDPOINT_V2}/mcp-agent/chat/${params.user.id}/${params.threadId}`,
+      {
+        method: HttpMethod.POST,
+        body: JSON.stringify(params.payload),
+        headers: headers,
+      },
+    );
+
+    // Handle non-OK responses
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Failed to chat with MCP: ${response.status} ${response.statusText} - ${errorText}`,
+      );
+    }
+
+    // Parse and return the JSON response
+    const responseData = await response.json();
+    return responseData;
+  } catch (error) {
+    console.error('Error in MCP chat:', error);
+    throw new Error('Error communicating with MCP agent, please try again!');
+  }
+};
+
+export const chatAssistant = async (params: ChatAssistantParams): Promise<any> => {
+  if (!params.threadId) throw new Error("Missing 'threadId'");
+  if (!params.assistantId) throw new Error("Missing 'assistantId'");
+  if (!params.payload) throw new Error("Missing 'payload'");
+
+  let headers: Record<string, string> = createUserAuthHeaders(params.user);
+  headers['Content-Type'] = 'application/json';
+  headers['Accept'] = 'application/json';
+
+  try {
+    // Send the request
+    const response = await fetch(
+      `${AI_ENDPOINT_V2}/multi-agent/chat/${params.user.id}/${params.assistantId}/${params.threadId}`,
+      {
+        method: HttpMethod.POST,
+        body: JSON.stringify(params.payload),
+        headers: headers,
+      },
+    );
+
+    // Handle non-OK responses
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Failed to chat with assistant: ${response.status} ${response.statusText} - ${errorText}`,
+      );
+    }
+
+    // Parse and return the JSON response
+    const responseData = await response.json();
+    return responseData;
+  } catch (error) {
+    console.error('Error in assistant chat:', error);
+    throw new Error('Error communicating with assistant, please try again!');
   }
 };

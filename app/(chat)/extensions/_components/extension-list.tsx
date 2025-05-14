@@ -51,7 +51,7 @@ export default function ExtensionList(props: ExtensionListProps) {
     }
 
     const fetchExtensionData = async () => {
-      setLoading(true); // Set loading to true when starting to fetch data
+      setLoading(true);
       try {
         const extensionParams = { user } as ExtensionParams;
 
@@ -88,7 +88,7 @@ export default function ExtensionList(props: ExtensionListProps) {
       } catch (error) {
         console.error('Error fetching extension data: ', error);
       } finally {
-        setLoading(false); // Set loading to false when data fetching is complete
+        setLoading(false);
       }
     };
 

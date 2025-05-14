@@ -1,9 +1,8 @@
 'use client';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { User } from 'next-auth';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, EditIcon, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { v4 as uuid } from 'uuid';
 
@@ -33,14 +32,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MCPServerDialog } from './mcp-server-dialog';
 import { ConfirmDialog } from './confirm-dialog';
-import { createMCP, deleteMCP, getMCPs, updateMCP } from '@/services/mcp-service';
+import { createMCP, deleteMCP, getConnectedMCPs, updateMCP } from '@/services/mcp-service';
 import { ThreadType } from '@/constants/extension-constant';
 import { toast } from '@/components/toast';
 import useChatStore from '@/store/chat-store';
-import { IMCPServer } from '@/types/mcp';
+import { IMCP } from '@/types/mcp';
 import { TableSkeleton } from '@/components/skeleton/table-skeleton';
 
 export default function MCPServerTable(props: { user: User }) {
@@ -50,7 +49,7 @@ export default function MCPServerTable(props: { user: User }) {
   const reloadChat = useChatStore((state) => state.reloadChat);
 
   // State for MCP servers
-  const [servers, setServers] = useState<IMCPServer[]>([]);
+  const [servers, setServers] = useState<IMCP[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageNumber, setPageNumber] = useState(1);
   const [maxPerPage, setMaxPerPage] = useState(10);
@@ -59,7 +58,7 @@ export default function MCPServerTable(props: { user: User }) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedServer, setSelectedServer] = useState<IMCPServer | null>(null);
+  const [selectedServer, setSelectedServer] = useState<IMCP | null>(null);
 
   // Table state
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -74,7 +73,7 @@ export default function MCPServerTable(props: { user: User }) {
   const fetchMCPs = async () => {
     try {
       setLoading(true);
-      const mcps = await getMCPs({
+      const mcps = await getConnectedMCPs({
         user,
         payload: { pageNumber, maxPerPage },
       });
@@ -120,7 +119,7 @@ export default function MCPServerTable(props: { user: User }) {
     }
   };
 
-  const handleEditServer = async (server: IMCPServer) => {
+  const handleEditServer = async (server: IMCP) => {
     try {
       setLoading(true);
       const updatedMCP = await updateMCP({
@@ -203,7 +202,7 @@ export default function MCPServerTable(props: { user: User }) {
   };
 
   // Define columns with updated action handlers
-  const columns: ColumnDef<IMCPServer>[] = [
+  const columns: ColumnDef<IMCP>[] = [
     {
       id: 'orderNumber',
       header: 'No.',
@@ -246,21 +245,23 @@ export default function MCPServerTable(props: { user: User }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
+                className="hover:cursor-pointer"
                 onClick={() => {
                   setSelectedServer(server);
                   setIsEditDialogOpen(true);
                 }}
-                className="text-sm md:text-base"
               >
+                <EditIcon className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
+                className="text-red-600 focus:text-red-700 hover:cursor-pointer"
                 onClick={() => {
                   setSelectedServer(server);
                   setIsDeleteDialogOpen(true);
                 }}
-                className="text-sm md:text-base"
               >
+                <Trash className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -1,4 +1,4 @@
-export interface IMCPServer {
+export interface IMCP {
   id: string;
   mcpName: string;
   url: string;

@@ -18,7 +18,7 @@ import { toast } from '@/components/toast';
 import { Brain } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { generateTitle, handleUploadFile } from '@/services/thread-service';
-import { ExtensionType } from '@/constants/extension-constant';
+import { ExtensionType, ThreadType } from '@/constants/extension-constant';
 import { useThreadStore } from '@/store/thread-store';
 
 interface MultimodalInputProps {
@@ -44,6 +44,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const handleStreamAgent = useChatStore((state) => state.handleStreamAgent);
   const handleStreamExtension = useChatStore((state) => state.handleStreamExtension);
   const handleStreamMCPAgent = useChatStore((state) => state.handleStreamMCPAgent);
+  const handleStreamAssistant = useChatStore((state) => state.handleStreamAssistant);
 
   const renameThread = useThreadStore((state) => state.renameThread);
 
@@ -109,12 +110,17 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       }
 
       switch (extension) {
-        case ExtensionType.DEFAULT:
+        case ThreadType.DEFAULT:
           await handleStreamAgent(user);
           break;
 
-        case ExtensionType.MCP:
+        case ThreadType.MCP:
           await handleStreamMCPAgent(user);
+          break;
+
+        case ThreadType.ASSISTANT:
+          const assistantId = '04f6271f-5fe2-4c2b-9eba-02c104767091';
+          await handleStreamAssistant(user, assistantId);
           break;
 
         default:

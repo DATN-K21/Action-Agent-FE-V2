@@ -14,6 +14,7 @@ import {
   IconProps,
   IconMessages,
   IconServer,
+  IconRobotFace,
 } from '@tabler/icons-react';
 
 export function cn(...inputs: ClassValue[]) {
@@ -32,27 +33,20 @@ export function getLocalStorage(key: string) {
   return [];
 }
 
+const threadIconMap: Record<string, React.FC<IconProps>> = {
+  [ThreadType.GMAIL]: IconBrandGmail,
+  [ThreadType.GOOGLE_CALENDAR]: IconCalendarEvent,
+  [ThreadType.GOOGLE_MAP]: IconBrandGoogleMaps,
+  [ThreadType.GOOGLE_MEET]: IconVideoPlus,
+  [ThreadType.NOTION]: IconBrandNotion,
+  [ThreadType.SLACK]: IconBrandSlack,
+  [ThreadType.YOUTUBE]: IconBrandYoutube,
+  [ThreadType.MCP]: IconServer,
+  [ThreadType.ASSISTANT]: IconRobotFace,
+};
+
 export const getThreadIcon = (threadType: string): React.FC<IconProps> => {
-  switch (threadType) {
-    case ThreadType.GMAIL:
-      return IconBrandGmail;
-    case ThreadType.GOOGLE_CALENDAR:
-      return IconCalendarEvent;
-    case ThreadType.GOOGLE_MAP:
-      return IconBrandGoogleMaps;
-    case ThreadType.GOOGLE_MEET:
-      return IconVideoPlus;
-    case ThreadType.NOTION:
-      return IconBrandNotion;
-    case ThreadType.SLACK:
-      return IconBrandSlack;
-    case ThreadType.YOUTUBE:
-      return IconBrandYoutube;
-    case ThreadType.MCP:
-      return IconServer;
-    default:
-      return IconMessages;
-  }
+  return threadIconMap[threadType] || IconMessages;
 };
 
 export function createUserAuthHeaders(user: User): Record<string, string> {

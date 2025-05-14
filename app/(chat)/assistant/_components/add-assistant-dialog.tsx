@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,64 +13,123 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { MultiSelect } from './multiple-select';
 import { extensions } from '@/constants/data';
-type Option = {
-  appName: string;
-  value: string;
-};
-
-type mcpOption = {
-  mcpName: string;
-  value: string;
-};
+import { createAssistant } from '@/services/assistant-service';
+import { User } from 'next-auth';
+import { toast } from '@/components/toast';
+import { IMCP } from '@/types/mcp';
+import { IConnectedExtension } from '@/types/extension';
+import { AssistantType } from '@/constants/assistant-constant';
 
 type AddAssistantDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  extensionOptions?: Option[];
-  mcpOptions?: mcpOption[];
-  type?: 'extension' | 'mcp-server';
+  extensionOptions?: IConnectedExtension[];
+  mcpOptions?: IMCP[];
+  type: AssistantType;
+  user: User;
+  onAssistantCreated?: () => void;
 };
 
 export function AddAssistantDialog({
   open,
   onOpenChange,
   extensionOptions,
-  type = 'extension',
+  type = AssistantType.EXTENSION,
   mcpOptions,
+  user,
+  onAssistantCreated,
 }: AddAssistantDialogProps) {
-  const [name, setName] = React.useState('');
-  const [description, setDescription] = React.useState('');
-  const [selectedExtensions, setSelectedExtensions] = React.useState<string[]>([]);
-  const [comboboxOpen, setComboboxOpen] = React.useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [workerIds, setWorkerIds] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const extensionsChoice = React.useMemo(() => {
-    return extensions.filter((extension) =>
-      extensionOptions?.some((option) => option.appName === extension.key),
+  const extensionsChoice = useMemo(() => {
+    return extensions
+      .filter((extension) =>
+        extensionOptions?.some((option) => option.extensionName === extension.key),
+      )
+      .map((ext) => ({
+        name: ext.name,
+        key: extensionOptions?.find((option) => option.extensionName === ext.key)?.id || '',
+      }));
+  }, [extensionOptions]);
+
+  const mcpChoice = useMemo(() => {
+    return (
+      mcpOptions?.map((mcp) => ({
+        name: mcp.mcpName,
+        key: mcp.id,
+      })) || []
     );
-  }, [extensions, extensionOptions]);
+  }, [mcpOptions]);
 
-  console.log('extensionsChoice:', extensionsChoice);
+  const handleSave = async () => {
+    if (!name) {
+      toast({
+        description: 'Please provide a name for your assistant.',
+        type: 'error',
+      });
+      return;
+    }
 
-  const toggleExtension = (value: string) => {
-    setSelectedExtensions((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
-    );
-  };
+    if (!description) {
+      toast({
+        description: 'Please provide a description for your assistant.',
+        type: 'error',
+      });
+      return;
+    }
 
-  const handleSave = () => {
-    const data = {
-      name,
-      description,
-      extensions: selectedExtensions,
-    };
+    if (!workerIds.length) {
+      toast({
+        description: `Please select at least one ${type === 'extension' ? 'extension' : 'MCP server'}.`,
+        type: 'error',
+      });
+      return;
+    }
 
-    console.log('Assistant created:', data);
-    onOpenChange(false);
+    setIsLoading(true);
+
+    try {
+      const payload = { name, description, type, workerIds };
+
+      await createAssistant({ user, payload });
+
+      toast({
+        description: 'Assistant created successfully',
+        type: 'success',
+      });
+
+      // Reset form
+      setName('');
+      setDescription('');
+      setWorkerIds([]);
+
+      // Close dialog
+      onOpenChange(false);
+
+      // Refresh assistants list
+      if (onAssistantCreated) {
+        onAssistantCreated();
+      }
+    } catch (error) {
+      console.error('Error creating assistant:', error);
+      toast({
+        description: 'Failed to create assistant. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent
+        className="sm:max-w-[425px] w-[95%] max-w-full mx-auto"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Add Assistant</DialogTitle>
           <DialogDescription>Provide assistant details and choose extensions.</DialogDescription>
@@ -103,25 +162,24 @@ export function AddAssistantDialog({
             />
           </div>
 
-          {/* Extensions */}
+          {/* Extensions or MCP Servers */}
           <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Label className="pt-1.5">{type === 'extension' ? 'Extensions' : 'MCP Servers'}</Label>
-            {type === 'extension' ? (
+            <Label className="pt-1.5">
+              {type === AssistantType.EXTENSION ? 'Extensions' : 'MCP Servers'}
+            </Label>
+            {type === AssistantType.EXTENSION ? (
               <MultiSelect
                 options={extensionsChoice}
-                values={selectedExtensions}
-                onChange={setSelectedExtensions}
+                values={workerIds}
+                onChange={setWorkerIds}
                 className="w-full max-w-sm"
               />
             ) : (
               mcpOptions && (
                 <MultiSelect
-                  options={mcpOptions?.map((mcp) => ({
-                    name: mcp.mcpName,
-                    key: mcp.value,
-                  }))}
-                  values={selectedExtensions}
-                  onChange={setSelectedExtensions}
+                  options={mcpChoice}
+                  values={workerIds}
+                  onChange={setWorkerIds}
                   className="w-full max-w-sm"
                 />
               )
@@ -130,7 +188,9 @@ export function AddAssistantDialog({
         </div>
 
         <DialogFooter>
-          <Button onClick={handleSave}>Save Assistant</Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? 'Saving...' : 'Save Assistant'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

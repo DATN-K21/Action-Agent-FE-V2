@@ -172,7 +172,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
             </Button>
           )}
           <Button
-            className="bg-green-600 text-white hover:bg-green-700"
+            className="bg-green-600 text-white hover:bg-green-700 mb-2"
             disabled={!isConnected || isLoading}
             onClick={handleClickStartChat}
           >
