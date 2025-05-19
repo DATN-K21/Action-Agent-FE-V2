@@ -39,7 +39,7 @@ const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: U
 
   useEffect(() => {
     setArgs(firstToolCall.args || {});
-  }, [toolCalls]);
+  }, [toolCalls, firstToolCall.args]);
 
   const handleConfirmAction = async () => {
     try {

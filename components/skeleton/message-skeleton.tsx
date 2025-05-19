@@ -8,11 +8,11 @@ interface MessageSkeletonProps {
 export function MessageSkeleton({ isUser, lines = 1 }: MessageSkeletonProps) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex gap-3 w-[60%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex gap-3 w-3/5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
         {' '}
         {/* Increased max-width */}
-        <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0 animate-pulse" />
-        <div className={`${isUser ? 'bg-primary/10' : 'bg-muted'} p-3 rounded-lg w-[100%]`}>
+        <div className="size-8 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 animate-pulse" />
+        <div className={`${isUser ? 'bg-primary/10' : 'bg-muted'} p-3 rounded-lg w-full`}>
           {Array(lines)
             .fill(0)
             .map((_, i) => (

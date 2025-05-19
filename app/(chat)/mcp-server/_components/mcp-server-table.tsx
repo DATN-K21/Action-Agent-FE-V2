@@ -2,10 +2,9 @@
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { User } from 'next-auth';
-import { Plus, Loader2, EditIcon, Trash } from 'lucide-react';
+import { Plus, Loader2, EditIcon, Trash, MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { v4 as uuid } from 'uuid';
-
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -16,7 +15,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -32,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import React, { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { MCPServerDialog } from './mcp-server-dialog';
 import { ConfirmDialog } from './confirm-dialog';
 import { createMCP, deleteMCP, getConnectedMCPs, updateMCP } from '@/services/mcp-service';
@@ -64,13 +62,8 @@ export default function MCPServerTable(props: { user: User }) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
 
-  useEffect(() => {
-    reloadChat();
-    fetchMCPs();
-  }, [user, pageNumber, maxPerPage]);
-
   // Fetch MCP servers
-  const fetchMCPs = async () => {
+  const fetchMCPs = useCallback(async () => {
     try {
       setLoading(true);
       const mcps = await getConnectedMCPs({
@@ -87,7 +80,12 @@ export default function MCPServerTable(props: { user: User }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, pageNumber, maxPerPage]);
+
+  useEffect(() => {
+    reloadChat();
+    fetchMCPs();
+  }, [user, pageNumber, maxPerPage, reloadChat, fetchMCPs]);
 
   // Handlers for CRUD operations
   const handleAddServer = async (server: { mcpName: string; url: string }) => {
@@ -238,9 +236,9 @@ export default function MCPServerTable(props: { user: User }) {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="size-8 p-0">
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -251,7 +249,7 @@ export default function MCPServerTable(props: { user: User }) {
                   setIsEditDialogOpen(true);
                 }}
               >
-                <EditIcon className="mr-2 h-4 w-4" />
+                <EditIcon className="mr-2 size-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -261,7 +259,7 @@ export default function MCPServerTable(props: { user: User }) {
                   setIsDeleteDialogOpen(true);
                 }}
               >
-                <Trash className="mr-2 h-4 w-4" />
+                <Trash className="mr-2 size-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -294,7 +292,7 @@ export default function MCPServerTable(props: { user: User }) {
 
   return (
     <>
-      <div className="flex flex-col h-full w-full px-2 md:px-4">
+      <div className="flex flex-col size-full px-2 md:px-4">
         {/* Header */}
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-bold tracking-tight mt-2">MCP Server</h1>
@@ -315,7 +313,7 @@ export default function MCPServerTable(props: { user: User }) {
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                   Loading
                 </>
               ) : (
@@ -329,12 +327,12 @@ export default function MCPServerTable(props: { user: User }) {
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                   Loading
                 </>
               ) : (
                 <>
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-2 size-4" />
                   Add MCP Server
                 </>
               )}
@@ -346,14 +344,14 @@ export default function MCPServerTable(props: { user: User }) {
 
         {/* Server List */}
         <div className="rounded-md border mt-4 overflow-hidden">
-          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] w-full">
+          <div className="overflow-auto max-h-[calc(100vh-300px)] w-full">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
                       return (
-                        <TableHead key={header.id} className="px-2 py-2 md:px-4 md:py-3">
+                        <TableHead key={header.id} className="p-2 md:px-4 md:py-3">
                           {header.isPlaceholder
                             ? null
                             : flexRender(header.column.columnDef.header, header.getContext())}
@@ -370,7 +368,7 @@ export default function MCPServerTable(props: { user: User }) {
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="px-2 py-2 md:px-4 md:py-3">
+                        <TableCell key={cell.id} className="p-2 md:px-4 md:py-3">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}

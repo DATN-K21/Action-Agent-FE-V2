@@ -86,7 +86,7 @@ export default function AssistantsList(props: AssistantListProps) {
     fetchAvailableMCPServers();
     fetchAvailableExtensions();
     fetchAssistants();
-  }, [user]);
+  }, [user, fetchAssistants]);
 
   const openUpdateAssistantDialog = (assistant: IAssistant) => {
     setAssistantToUpdate(assistant);
@@ -138,7 +138,7 @@ export default function AssistantsList(props: AssistantListProps) {
                     onClick={() => setIsCreateDialogOpen(true)}
                     disabled={isLoadingAssistants || availableExtensions.length === 0}
                   >
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-2 size-4" />
                     Add Assistant
                   </Button>
                 </div>
@@ -179,7 +179,7 @@ export default function AssistantsList(props: AssistantListProps) {
                     onClick={() => setIsCreateDialogOpen(true)}
                     disabled={isLoadingAssistants || availableMCPServers.length === 0}
                   >
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-2 size-4" />
                     Add Assistant
                   </Button>
                 </div>
@@ -200,7 +200,8 @@ export default function AssistantsList(props: AssistantListProps) {
                     ))
                   ) : !isLoadingAssistants ? (
                     <li className="col-span-full text-center py-8">
-                      No MCP server assistants found. Create one using the "Add Assistant" button.
+                      No MCP server assistants found. Create one using the &quot;Add Assistant&quot;
+                      button.
                     </li>
                   ) : null}
                 </ul>

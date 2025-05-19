@@ -57,21 +57,21 @@ export function AssistantCard({ user, assistant, onEdit, onDelete }: AssistantCa
         <div className={`flex size-10 items-center justify-center rounded-lg p-2`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="size-8 p-0">
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="bottom" align="start" sideOffset={4}>
               <DropdownMenuItem onClick={() => onEdit(assistant)}>
-                <Pencil className="mr-2 h-4 w-4" />
+                <Pencil className="mr-2 size-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-700"
                 onClick={() => onDelete(assistant.id)}
               >
-                <Trash className="mr-2 h-4 w-4" />
+                <Trash className="mr-2 size-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

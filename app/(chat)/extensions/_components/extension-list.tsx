@@ -94,7 +94,7 @@ export default function ExtensionList(props: ExtensionListProps) {
 
     reloadChat();
     fetchExtensionData();
-  }, [user, extensionType, searchTerm, sort]);
+  }, [user, extensionType, searchTerm, sort, reloadChat]);
 
   const handleDisconnectExtension = async () => {
     if (!selectedExtension || !selectedExtension.connected) return;
@@ -109,7 +109,7 @@ export default function ExtensionList(props: ExtensionListProps) {
 
   return (
     <>
-      <div className="flex flex-col h-full w-full px-2 md:px-4">
+      <div className="flex flex-col w-full px-2 md:px-4">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight mt-2">Extension Integrations</h1>

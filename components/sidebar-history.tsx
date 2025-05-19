@@ -353,7 +353,7 @@ const PureThreadItem = (props: IThreadItemProps) => {
             onClick={() => setOpenMobile(false)}
             className="flex items-center gap-2"
           >
-            <ThreadIcon size={18} className="flex-shrink-0" />
+            <ThreadIcon size={18} className="shrink-0" />
             <span className="truncate">{thread.title}</span>
           </Link>
         )}

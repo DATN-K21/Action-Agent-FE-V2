@@ -52,7 +52,7 @@ export function CodeBlock({ node, className, children, ...props }: CodeBlockProp
           {languageLabel}
         </div>
         <Button
-          className="absolute top-2 right-2 w-fit py-1 px-2 h-fit text-muted-foreground"
+          className="absolute top-2 right-2 py-1 px-2 size-fit text-muted-foreground"
           variant="outline"
           onClick={handleCopy}
         >

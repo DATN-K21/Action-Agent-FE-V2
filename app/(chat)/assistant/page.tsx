@@ -25,7 +25,7 @@ export default async function Page() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full px-2 md:px-4">
+    <div className="flex flex-col size-full px-2 md:px-4">
       {/* Header */}
       <div>
         <h1 className="text-xl md:text-2xl font-bold tracking-tight mt-2">Assistants</h1>

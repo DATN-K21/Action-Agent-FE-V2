@@ -45,13 +45,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
   const createThread = useChatStore((state) => state.createThread);
   const router = useRouter();
 
-  useEffect(() => {
-    if (extension) {
-      setIsConnected(extension.connected || false);
-      fetchExtensionActions();
-    }
-  }, [extension]);
-
   const fetchExtensionActions = async () => {
     if (!user || !extension) return;
 
@@ -67,6 +60,13 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       setActionLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (extension) {
+      setIsConnected(extension.connected || false);
+      fetchExtensionActions();
+    }
+  }, [extension]);
 
   const handleClickConnect = useCallback(async () => {
     if (isConnected || !extension) return;
@@ -106,7 +106,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       onClose();
       setIsLoading(false);
     }
-  }, [user, extension, isConnected, onClose]);
+  }, [user, extension, isConnected, onClose, onDisconnect]);
 
   const handleClickStartChat = async () => {
     if (!extension) return;

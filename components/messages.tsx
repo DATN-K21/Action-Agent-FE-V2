@@ -54,7 +54,7 @@ function PureMessages({ status, messages, user }: MessagesProps) {
           onClick={() => scrollToBottom('smooth')}
           className="absolute bottom-[20%] right-1/2 z-10 rounded-full bg-white shadow-md border border-gray-300 p-2 hover:bg-gray-100 transition"
         >
-          <ArrowDown className="w-5 h-5 text-gray-600" />
+          <ArrowDown className="size-5 text-gray-600" />
         </button>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,6 @@ import { MultiSelect } from './multiple-select';
 import { extensions } from '@/constants/data';
 import { IConnectedExtension } from '@/types/extension';
 import { IMCP } from '@/types/mcp';
-import { useMemo } from 'react';
 import { AssistantType } from '@/constants/assistant-constant';
 
 type EditAssistantDialogProps = {
@@ -73,8 +72,6 @@ export function EditAssistantDialog({
       }));
   }, [extensionOptions]);
 
-  console.log('extensionsChoice :>> ', extensionsChoice);
-
   const mcpChoice = useMemo(() => {
     if (!mcpOptions || mcpOptions.length === 0) {
       return [];
@@ -85,8 +82,6 @@ export function EditAssistantDialog({
       key: mcp.id,
     }));
   }, [mcpOptions]);
-
-  console.log('mcpChoice :>> ', mcpChoice);
 
   const handleSave = async () => {
     if (!assistant) return;

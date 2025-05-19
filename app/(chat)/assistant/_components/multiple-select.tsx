@@ -65,7 +65,7 @@ export function MultiSelect({
           )}
         </div>
         <div className="flex items-center justify-center h-full">
-          <ChevronsUpDown className="h-4 w-4 opacity-50 mt-1" />
+          <ChevronsUpDown className="size-4 opacity-50 mt-1" />
         </div>
       </Button>
 
@@ -83,7 +83,7 @@ export function MultiSelect({
                 )}
               >
                 <span>{opt.name}</span>
-                {isSelected && <Check className="h-4 w-4 text-primary" />}
+                {isSelected && <Check className="size-4 text-primary" />}
               </div>
             );
           })}
