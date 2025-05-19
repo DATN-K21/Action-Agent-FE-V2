@@ -123,7 +123,7 @@ export function LoginForm() {
       <div className="flex flex-col gap-6">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">Welcome back to Botion</CardTitle>
+            <CardTitle className="text-xl">Welcome back to Action Agent</CardTitle>
             <CardDescription>Login with your Google account</CardDescription>
           </CardHeader>
           <CardContent>

@@ -1,8 +1,8 @@
 import { Extension } from '@/constants/data';
-import { AI_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { AI_ENDPOINT, AI_ENDPOINT_V2, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import {
-  IConnectedApp,
+  IConnectedExtension,
   IGetAllExtensionResponse,
   IGetConnectedExtensions,
   IGetExtensionActionsResponse,
@@ -48,7 +48,7 @@ export const getConnectedExtensions = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IGetConnectedExtensions> = await sendRequest({
-      url: `${AI_ENDPOINT}/connected-app/${params.user.id!}/get-all`,
+      url: `${AI_ENDPOINT_V2}/connected-extension/${params.user.id!}/get-all`,
       method: HttpMethod.GET,
       headers: headers,
     });
@@ -60,19 +60,19 @@ export const getConnectedExtensions = async (
   }
 };
 
-export const getDetailExtension = async (params: ExtensionParams): Promise<IConnectedApp> => {
+export const getDetailExtension = async (params: ExtensionParams): Promise<IConnectedExtension> => {
   try {
     if (!params.extension) throw new Error('Extension is required');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
-    const response: IResponse<IConnectedApp> = await sendRequest({
-      url: `${AI_ENDPOINT}/connected-app/${params.user.id!}/${params.extension.key}/get-detail`,
+    const response: IResponse<IConnectedExtension> = await sendRequest({
+      url: `${AI_ENDPOINT_V2}/connected-app/${params.user.id!}/${params.extension.key}/get-detail`,
       method: HttpMethod.GET,
       headers: headers,
     });
 
-    return response.data as IConnectedApp;
+    return response.data as IConnectedExtension;
   } catch (error) {
     console.error('Error getting extension detail: ', error);
     throw error;

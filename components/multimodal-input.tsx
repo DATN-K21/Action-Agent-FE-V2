@@ -18,7 +18,7 @@ import { toast } from '@/components/toast';
 import { Brain } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { generateTitle, handleUploadFile } from '@/services/thread-service';
-import { ExtensionType } from '@/constants/extension-constant';
+import { ExtensionType, ThreadType } from '@/constants/extension-constant';
 import { useThreadStore } from '@/store/thread-store';
 
 interface MultimodalInputProps {
@@ -44,6 +44,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const handleStreamAgent = useChatStore((state) => state.handleStreamAgent);
   const handleStreamExtension = useChatStore((state) => state.handleStreamExtension);
   const handleStreamMCPAgent = useChatStore((state) => state.handleStreamMCPAgent);
+  const handleStreamAssistant = useChatStore((state) => state.handleStreamAssistant);
 
   const renameThread = useThreadStore((state) => state.renameThread);
 
@@ -74,75 +75,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
-
-  const submitForm = useCallback(async () => {
-    setStatus(ChatStatus.SUBMITTED);
-    resetHeight();
-
-    try {
-      //Upload files before sending message
-      if (pendingFiles.length > 0) {
-        setUploadQueue(pendingFiles.map((file) => file.name));
-
-        const uploadPromises = pendingFiles.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined,
-        );
-
-        // Set attachments after uploading
-        setAttachments((currentAttachments) => [
-          ...currentAttachments,
-          ...successfullyUploadedAttachments,
-        ]);
-
-        //Delete Queue
-        setPendingFiles([]);
-        setUploadQueue([]);
-      }
-
-      // Check if is a home page, create a new thread
-      if (window.location.pathname === '/') {
-        await createThread(user, chatId);
-        window.history.replaceState({}, '', `/chat/${chatId}`);
-      }
-
-      switch (extension) {
-        case ExtensionType.DEFAULT:
-          await handleStreamAgent(user);
-          break;
-
-        case ExtensionType.MCP:
-          await handleStreamMCPAgent(user);
-          break;
-
-        default:
-          await handleStreamExtension(user);
-          break;
-      }
-
-      const newThread = await generateTitle({ user, threadId: chatId });
-      await renameThread(user, chatId, newThread.title, { callApi: false });
-
-      if (width && width > 768) {
-        textareaRef.current?.focus();
-      }
-    } catch (error) {
-      console.error('Error in stream:', error);
-      setInput('');
-      toast({
-        type: 'error',
-        description: 'Error sending message, please try again!',
-      });
-      // Apend error message to chat
-      append({
-        id: 'error',
-        role: MessageRole.AI,
-        content: 'Error sending message, please try again!',
-      });
-    }
-  }, [attachments, handleStreamAgent, setAttachments, width, chatId, pendingFiles, extension]);
 
   const uploadFile = async (file: File) => {
     try {
@@ -190,6 +122,98 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       });
     }
   };
+
+  const submitForm = useCallback(async () => {
+    setStatus(ChatStatus.SUBMITTED);
+    resetHeight();
+
+    try {
+      //Upload files before sending message
+      if (pendingFiles.length > 0) {
+        setUploadQueue(pendingFiles.map((file) => file.name));
+
+        const uploadPromises = pendingFiles.map((file) => uploadFile(file));
+        const uploadedAttachments = await Promise.all(uploadPromises);
+
+        const successfullyUploadedAttachments = uploadedAttachments.filter(
+          (attachment) => attachment !== undefined,
+        );
+
+        // Set attachments after uploading
+        setAttachments((currentAttachments) => [
+          ...currentAttachments,
+          ...successfullyUploadedAttachments,
+        ]);
+
+        //Delete Queue
+        setPendingFiles([]);
+        setUploadQueue([]);
+      }
+
+      // Check if is a home page, create a new thread
+      if (window.location.pathname === '/') {
+        await createThread(user, chatId);
+        window.history.replaceState({}, '', `/chat/${chatId}`);
+      }
+
+      switch (extension) {
+        case ThreadType.DEFAULT:
+          await handleStreamAgent(user);
+          break;
+
+        case ThreadType.MCP:
+          await handleStreamMCPAgent(user);
+          break;
+
+        case ThreadType.ASSISTANT:
+          const assistantId = 'abbe1e33-c50a-4a5f-bce2-6edec516b38e';
+          await handleStreamAssistant(user, assistantId);
+          break;
+
+        default:
+          await handleStreamExtension(user);
+          break;
+      }
+
+      const newThread = await generateTitle({ user, threadId: chatId });
+      await renameThread(user, chatId, newThread.title, { callApi: false });
+
+      if (width && width > 768) {
+        textareaRef.current?.focus();
+      }
+    } catch (error) {
+      console.error('Error in stream:', error);
+      setInput('');
+      toast({
+        type: 'error',
+        description: 'Error sending message, please try again!',
+      });
+      // Apend error message to chat
+      append({
+        id: 'error',
+        role: MessageRole.AI,
+        content: 'Error sending message, please try again!',
+      });
+    }
+  }, [
+    attachments,
+    handleStreamAgent,
+    setAttachments,
+    width,
+    chatId,
+    pendingFiles,
+    extension,
+    append,
+    createThread,
+    handleStreamAssistant,
+    handleStreamExtension,
+    handleStreamMCPAgent,
+    renameThread,
+    setInput,
+    setStatus,
+    uploadFile,
+    user,
+  ]);
 
   const handleFileChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

@@ -30,7 +30,7 @@ export function Chat(props: ChatProps) {
     setMessages(initialMessages);
     setThreadId(id);
     setExtension(extensionName as ExtensionType);
-  }, []);
+  }, [reloadChat, initialMessages, id, extensionName, setMessages, setThreadId, setExtension]);
 
   return (
     <>

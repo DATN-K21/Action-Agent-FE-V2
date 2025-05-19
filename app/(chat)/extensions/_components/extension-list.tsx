@@ -51,7 +51,7 @@ export default function ExtensionList(props: ExtensionListProps) {
     }
 
     const fetchExtensionData = async () => {
-      setLoading(true); // Set loading to true when starting to fetch data
+      setLoading(true);
       try {
         const extensionParams = { user } as ExtensionParams;
 
@@ -66,8 +66,9 @@ export default function ExtensionList(props: ExtensionListProps) {
         const updatedExtensions = getExtensions.map((extension) => ({
           ...extension,
           connected:
-            connectedExtensionsData.connectedApps?.some((ext) => ext.appName === extension.key) ||
-            false,
+            connectedExtensionsData.connectedExtensions?.some(
+              (ext) => ext.extensionName === extension.key,
+            ) || false,
         }));
 
         const newFilteredExtensions = updatedExtensions
@@ -87,13 +88,13 @@ export default function ExtensionList(props: ExtensionListProps) {
       } catch (error) {
         console.error('Error fetching extension data: ', error);
       } finally {
-        setLoading(false); // Set loading to false when data fetching is complete
+        setLoading(false);
       }
     };
 
     reloadChat();
     fetchExtensionData();
-  }, [user, extensionType, searchTerm, sort]);
+  }, [user, extensionType, searchTerm, sort, reloadChat]);
 
   const handleDisconnectExtension = async () => {
     if (!selectedExtension || !selectedExtension.connected) return;
@@ -108,7 +109,7 @@ export default function ExtensionList(props: ExtensionListProps) {
 
   return (
     <>
-      <div className="flex flex-col h-screen w-full px-4">
+      <div className="flex flex-col w-full px-2 md:px-4">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight mt-2">Extension Integrations</h1>

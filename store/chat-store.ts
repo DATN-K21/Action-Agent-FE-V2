@@ -9,11 +9,11 @@ import {
   InterruptStreamParams,
   StreamAgentParams,
   StreamExtensionParams,
-  StreamMCPAgentParams,
   interruptStream,
   streamAgent,
   streamExtension,
-  streamMCPAgent,
+  chatMCPAgent,
+  chatAssistant,
 } from '@/services/stream-service';
 import { createThread } from '@/services/thread-service';
 import { useThreadStore } from '@/store/thread-store';
@@ -42,6 +42,7 @@ type ChatActions = {
   handleStreamExtension: (user: User) => Promise<void>;
   handleStreamInterrupt: (user: User, toolcalls: any[]) => Promise<void>;
   handleStreamMCPAgent: (user: User) => Promise<void>;
+  handleStreamAssistant: (user: User, assistantId: string) => Promise<void>;
   stopStream: () => void;
   reloadChat: () => void;
 };
@@ -117,7 +118,7 @@ const useChatStore = create<ChatStore>()(
             user,
             threadId,
             agentName: agent,
-            payload: { input: humanInput, maxRecursion: 20 },
+            payload: { input: humanInput, recursionLimit: 20 },
           };
 
           const reader = await streamAgent(params);
@@ -195,7 +196,7 @@ const useChatStore = create<ChatStore>()(
             user,
             threadId,
             extensionName: extension,
-            payload: { input: humanInput, maxRecursion: 20 },
+            payload: { input: humanInput, recursionLimit: 20 },
           };
 
           const reader = await streamExtension(params);
@@ -340,6 +341,82 @@ const useChatStore = create<ChatStore>()(
         }
       },
 
+      // // Handle stream MCP agent
+      // handleStreamMCPAgent: async (user: User) => {
+      //   const { humanInput, threadId, appendMessage, setHumanInput } = get();
+
+      //   if (!humanInput.trim()) return;
+
+      //   appendMessage({ id: uuidv4(), role: MessageRole.HUMAN, content: humanInput });
+      //   appendMessage({ id: uuidv4(), role: MessageRole.AI, content: '' });
+
+      //   set({ status: ChatStatus.SUBMITTED });
+      //   setHumanInput('');
+
+      //   try {
+      //     const params: StreamMCPAgentParams = {
+      //       user,
+      //       threadId,
+      //       payload: { input: humanInput, recursionLimit: 20 },
+      //     };
+
+      //     const reader = await streamMCPAgent(params);
+      //     const decoder = new TextDecoder();
+      //     let accumulatedText = '';
+
+      //     set({ status: ChatStatus.STREAMING });
+
+      //     while (true) {
+      //       const { value, done } = await reader.read();
+      //       if (done) break;
+
+      //       if (get().status !== ChatStatus.STREAMING) {
+      //         reader.cancel();
+      //         break;
+      //       }
+
+      //       const chunk = decoder.decode(value, { stream: true });
+      //       accumulatedText += chunk;
+
+      //       const lines = accumulatedText.split('\n');
+      //       accumulatedText = lines.pop() || '';
+
+      //       for (const line of lines) {
+      //         if (line.startsWith('data: ')) {
+      //           try {
+      //             const jsonString = line.substring(6).trim();
+      //             const data = JSON.parse(jsonString);
+
+      //             if (data?.length > 0) {
+      //               const messageData = data[0].content;
+
+      //               if (messageData) {
+      //                 set((state) => {
+      //                   const lastIndex = state.messages.length - 1;
+      //                   if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
+      //                     state.messages[lastIndex].content = messageData;
+      //                   }
+      //                 });
+      //               }
+      //             }
+      //           } catch (error) {
+      //             console.error(
+      //               'Error parsing SSE data in handleStreamMCPAgent:',
+      //               error,
+      //               'Raw data:',
+      //               line,
+      //             );
+      //           }
+      //         }
+      //       }
+      //     }
+
+      //     set({ status: ChatStatus.READY });
+      //   } catch (error) {
+      //     console.error('Error in handleStreamMCPAgent:', error);
+      //     set({ status: ChatStatus.ERROR });
+      //   }
+      // },
       // Handle stream MCP agent
       handleStreamMCPAgent: async (user: User) => {
         const { humanInput, threadId, appendMessage, setHumanInput } = get();
@@ -353,66 +430,74 @@ const useChatStore = create<ChatStore>()(
         setHumanInput('');
 
         try {
-          const params: StreamMCPAgentParams = {
+          set({ status: ChatStatus.SUBMITTED });
+
+          const response = await chatMCPAgent({
             user,
             threadId,
-            payload: { input: humanInput, maxRecursion: 20 },
-          };
+            payload: {
+              input: humanInput,
+              recursionLimit: 20,
+            },
+          });
 
-          const reader = await streamMCPAgent(params);
-          const decoder = new TextDecoder();
-          let accumulatedText = '';
-
-          set({ status: ChatStatus.STREAMING });
-
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-
-            if (get().status !== ChatStatus.STREAMING) {
-              reader.cancel();
-              break;
-            }
-
-            const chunk = decoder.decode(value, { stream: true });
-            accumulatedText += chunk;
-
-            const lines = accumulatedText.split('\n');
-            accumulatedText = lines.pop() || '';
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                try {
-                  const jsonString = line.substring(6).trim();
-                  const data = JSON.parse(jsonString);
-
-                  if (data?.length > 0) {
-                    const messageData = data[0].content;
-
-                    if (messageData) {
-                      set((state) => {
-                        const lastIndex = state.messages.length - 1;
-                        if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
-                          state.messages[lastIndex].content = messageData;
-                        }
-                      });
-                    }
-                  }
-                } catch (error) {
-                  console.error(
-                    'Error parsing SSE data in handleStreamMCPAgent:',
-                    error,
-                    'Raw data:',
-                    line,
-                  );
-                }
+          // Update the AI message with the response content
+          if (response && response.data) {
+            set((state) => {
+              const lastIndex = state.messages.length - 1;
+              if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
+                state.messages[lastIndex].content =
+                  response.data.output || response.data.content || '';
               }
-            }
+            });
           }
 
           set({ status: ChatStatus.READY });
         } catch (error) {
-          console.error('Error in handleStreamMCPAgent:', error);
+          console.error('Error in handleMcpChat:', error);
+          set({ status: ChatStatus.ERROR });
+        }
+      },
+
+      // Handle stream Assistant agent
+      handleStreamAssistant: async (user: User, assistantId: string) => {
+        const { humanInput, threadId, appendMessage, setHumanInput } = get();
+
+        if (!humanInput.trim()) return;
+
+        appendMessage({ id: uuidv4(), role: MessageRole.HUMAN, content: humanInput });
+        appendMessage({ id: uuidv4(), role: MessageRole.AI, content: '' });
+
+        set({ status: ChatStatus.SUBMITTED });
+        setHumanInput('');
+
+        try {
+          set({ status: ChatStatus.SUBMITTED });
+
+          const response = await chatAssistant({
+            user,
+            assistantId,
+            threadId,
+            payload: {
+              input: humanInput,
+              recursionLimit: 20,
+            },
+          });
+
+          // Update the AI message with the response content
+          if (response && response.data) {
+            set((state) => {
+              const lastIndex = state.messages.length - 1;
+              if (lastIndex >= 0 && state.messages[lastIndex].role === MessageRole.AI) {
+                state.messages[lastIndex].content =
+                  response.data.output || response.data.content || '';
+              }
+            });
+          }
+
+          set({ status: ChatStatus.READY });
+        } catch (error) {
+          console.error('Error in handleAssistantChat:', error);
           set({ status: ChatStatus.ERROR });
         }
       },

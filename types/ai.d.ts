@@ -3,7 +3,7 @@ import { ThreadType } from '@/constants/extension-constant';
 
 export interface IChatRequest {
   input: string;
-  maxRecursion: number;
+  recursionLimit: number;
 }
 
 export interface IChatResponse {

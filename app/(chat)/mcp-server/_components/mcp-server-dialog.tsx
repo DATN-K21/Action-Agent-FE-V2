@@ -13,14 +13,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { IMCPServer } from '@/types/mcp';
+import { IMCP } from '@/types/mcp';
 
 interface MCPServerDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (server: any) => void;
   title: string;
-  defaultValues?: IMCPServer;
+  defaultValues?: IMCP;
   isSubmitting?: boolean;
 }
 
@@ -114,7 +114,7 @@ export function MCPServerDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] w-[95%] max-w-full mx-auto rounded-lg">
+      <DialogContent className="sm:max-w-[425px] w-[95%] max-w-full mx-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-xl">{title}</DialogTitle>
@@ -172,7 +172,7 @@ export function MCPServerDialog({
             <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                   Saving...
                 </>
               ) : (
