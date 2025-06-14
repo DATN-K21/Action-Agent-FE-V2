@@ -1,5 +1,5 @@
 import { ThreadType } from '@/constants/extension-constant';
-import { AI_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { AI_ENDPOINT, VOICE_ENDPOINT, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import {
   ICreateThreadResponse,
@@ -66,6 +66,10 @@ export interface UploadFileResponse {
 export interface GenerateTitleParams {
   user: User;
   threadId: string;
+}
+
+export interface RecognizeVoiceParams {
+  formData: FormData;
 }
 
 export const getThreads = async (params: GetThreadsParams): Promise<IThreadsResponse> => {
@@ -223,6 +227,26 @@ export const generateTitle = async (params: GenerateTitleParams): Promise<IThrea
     return response.data as IThread;
   } catch (error) {
     console.error('Error generate title: ', error);
+    throw error;
+  }
+};
+
+export const recognizeVoice = async (params: RecognizeVoiceParams): Promise<object> => {
+  try {
+    const headers: Record<string, string> = {
+      accept: 'application/json',
+    };
+
+    const response: IResponse<object> = await sendRequest({
+      url: `${VOICE_ENDPOINT}/recognize`,
+      method: HttpMethod.POST,
+      headers: headers,
+      body: params.formData,
+    });
+
+    return response as object;
+  } catch (error) {
+    console.error('Error recognizing voice:', error);
     throw error;
   }
 };
