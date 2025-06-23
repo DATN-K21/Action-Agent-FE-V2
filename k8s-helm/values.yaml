@@ -1,0 +1,92 @@
+# Default values for frontend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: myaagent.azurecr.io/frontend
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "BuildId"
+
+# Environment variables
+env:
+  # Public endpoints
+  - name: NEXT_PUBLIC_USER_API__V1_ENDPOINT
+    value: "https://api.action-agent.software/user/api/v1"
+  - name: NEXT_PUBLIC_AI_API__V1_ENDPOINT
+    value: "https://api.action-agent.software/ai/api/v1"
+  
+  # Auth
+  - name: NEXTAUTH_URL
+    value: "http://localhost:3000"
+  - name: NEXTAUTH_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: fe-env-secret
+        key: nextauthsecret
+  - name: AUTH_GOOGLE_ID
+    valueFrom:
+      secretKeyRef:
+        name: fe-env-secret
+        key: authgoogleid
+  - name: AUTH_GOOGLE_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: fe-env-secret
+        key: authgooglesecret
+  
+  # Server binding
+  - name: PORT
+    value: "80"
+  - name: AUTH_TRUST_HOST
+    value: "true"
+
+imagePullSecrets: 
+  - name: regcred
+nameOverride: "frontend"
+fullnameOverride: "frontend"
+
+podAnnotations: 
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: 
+    spec.ingressClassName: "nginx"
+  hosts:
+    - host: dev.action-agent.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: 
+   - secretName: frontend-tls
+     hosts:
+       - dev.action-agent.com
+
+resources: 
+  requests:
+    cpu: "10m"
+    memory: "100Mi"
+  limits:
+    cpu: "300m"
+    memory: "500Mi"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

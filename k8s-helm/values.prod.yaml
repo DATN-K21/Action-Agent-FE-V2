@@ -1,0 +1,105 @@
+# Default values for frontendprod.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: myaagent.azurecr.io/frontendprod
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "BuildId"
+
+# Environment variables
+env:
+  # Public endpoints
+  - name: NEXT_PUBLIC_USER_API__V1_ENDPOINT
+    value: "https://api.action-agent.software/user/api/v1"
+  - name: NEXT_PUBLIC_AI_API__V1_ENDPOINT
+    value: "https://api.action-agent.software/ai/api/v1"
+  
+  # Auth
+  - name: NEXTAUTH_URL
+    value: "https://action-agent.software"
+  - name: NEXTAUTH_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: fe-env-secret
+        key: nextauthsecret
+  - name: AUTH_GOOGLE_ID
+    valueFrom:
+      secretKeyRef:
+        name: fe-env-secret
+        key: authgoogleid
+  - name: AUTH_GOOGLE_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: fe-env-secret
+        key: authgooglesecret
+  
+  # Server binding
+  - name: PORT
+    value: "80"
+  - name: AUTH_TRUST_HOST
+    value: "true"
+
+imagePullSecrets: 
+  - name: regcred
+nameOverride: "frontendprod"
+fullnameOverride: "frontendprod"
+
+podAnnotations: 
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    spec.ingressClassName: "nginx"
+    nginx.org/websocket-services: "frontendprod"
+    nginx.ingress.kubernetes.io/client-max-body-size: "30m"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: action-agent.software
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: frontendprod
+              port:
+                number: 80
+  tls:
+    - secretName: frontend-prod-tls
+      hosts:
+        - action-agent.software
+
+resources: 
+  requests:
+    cpu: "10m"
+    memory: "100Mi"
+  limits:
+    cpu: "300m"
+    memory: "500Mi"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
