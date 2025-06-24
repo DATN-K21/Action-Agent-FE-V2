@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: myaagent.azurecr.io/frontend
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "BuildId"
 
@@ -47,8 +47,6 @@ imagePullSecrets:
   - name: regcred
 nameOverride: "frontend"
 fullnameOverride: "frontend"
-
-podAnnotations: 
 
 service:
   type: ClusterIP
