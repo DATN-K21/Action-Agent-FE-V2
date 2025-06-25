@@ -15,10 +15,10 @@ import { AgentType, ChatStatus, MessageRole } from '@/constants/ai-constant';
 import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
 import { toast } from '@/components/toast';
-import { Brain } from 'lucide-react';
+import { Brain, Mic, Check, X } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { generateTitle, handleUploadFile } from '@/services/thread-service';
-import { ExtensionType, ThreadType } from '@/constants/extension-constant';
+import { generateTitle, handleUploadFile, recognizeVoice } from '@/services/thread-service';
+import { ThreadType } from '@/constants/extension-constant';
 import { useThreadStore } from '@/store/thread-store';
 
 interface MultimodalInputProps {
@@ -232,6 +232,106 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     setAttachments((prev) => prev.filter((attachment) => attachment.name !== filename));
   }
 
+  const [micPermission, setMicPermission] = useState<boolean>(false);
+
+  const [streaming, setStreaming] = useState<MediaStream | null>(null);
+
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+
+  const getMicrophonePermission = async (): Promise<MediaStream | null> => {
+    if ('MediaRecorder' in window) {
+      try {
+        const streamData = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setMicPermission(true);
+        setStreaming(streamData);
+        return streamData;
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+        setMicPermission(false);
+        return null;
+      }
+    } else {
+      alert('Your browser does not support the MediaRecorder API');
+      return null;
+    }
+  };
+
+  const handleStartRecord = async () => {
+    console.log('handleStartRecord called');
+    let currentStream = streaming;
+
+    if (!micPermission || !currentStream) {
+      console.log('Requesting microphone permission');
+      const permissionStream = await getMicrophonePermission();
+      if (!permissionStream) {
+        return;
+      }
+      currentStream = permissionStream;
+      setStreaming(currentStream);
+      setMicPermission(true);
+    }
+
+    const mediaRecorder = new MediaRecorder(currentStream!, { mimeType: 'audio/webm' });
+
+    const chunks: Blob[] = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = async () => {
+      console.log('Recording stopped, preparing to send...');
+
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const formData = new FormData();
+      formData.append('audioFile', blob, 'voice.webm');
+
+      try {
+        const response = await recognizeVoice({ formData });
+
+        if ((response as any)?.status === 200) {
+          setInput((response as any).data as string);
+          adjustHeight();
+        } else {
+          toast({
+            type: 'error',
+            description: 'Recognition failed, please try again!',
+          });
+        }
+      } catch (error) {
+        console.error('Voice recognition error:', error);
+        toast({
+          type: 'error',
+          description: 'Error recognizing voice, please try again!',
+        });
+      }
+    };
+
+    setMediaRecorder(mediaRecorder);
+    setIsRecording(true);
+
+    mediaRecorder.start();
+  };
+
+  const stopAndSend = async () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop(); // Triggers onstop and sends
+      setIsRecording(false);
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    setInput('');
+    setIsRecording(false);
+    console.log('Recording canceled');
+  };
+
   return (
     <div className="relative w-full flex flex-col gap-4">
       {messages.length === 0 && attachments.length === 0 && uploadQueue.length === 0 && (
@@ -349,11 +449,59 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-        {status === ChatStatus.STREAMING || status == ChatStatus.SUBMITTED ? (
-          <StopButton stop={stop} />
-        ) : (
-          <SendButton input={input} submitForm={submitForm} uploadQueue={uploadQueue} />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              data-testid="mic-button"
+              className="rounded-md p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+              onClick={async (e) => {
+                e.preventDefault();
+                await handleStartRecord();
+              }}
+              variant="ghost"
+              disabled={isRecording}
+            >
+              <Mic size={18} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Dictate</TooltipContent>
+        </Tooltip>
+
+        {isRecording && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="rounded-md p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+                  onClick={() => stopAndSend()}
+                  variant="ghost"
+                >
+                  <Check size={18} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Done</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="rounded-md p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+                  onClick={() => cancelRecording()}
+                  variant="ghost"
+                >
+                  <X size={18} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Cancel</TooltipContent>
+            </Tooltip>
+          </>
         )}
+        {!isRecording &&
+          (status === ChatStatus.STREAMING || status == ChatStatus.SUBMITTED ? (
+            <StopButton stop={stop} />
+          ) : (
+            <SendButton input={input} submitForm={submitForm} uploadQueue={uploadQueue} />
+          ))}
       </div>
     </div>
   );
