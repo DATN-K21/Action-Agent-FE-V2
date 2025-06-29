@@ -10,7 +10,7 @@ import { AssistantCard } from './assistant-card';
 import { User } from 'next-auth';
 import { getConnectedExtensions } from '@/services/extension-service';
 import { getConnectedMCPs } from '@/services/mcp-service';
-import { deleteAssistant, getAssistants } from '@/services/assistant-service';
+import { deleteAssistant, getAdvancedAssistants } from '@/services/assistant-service';
 import type { IMCP } from '@/types/mcp';
 import { AssistantCardSkeletonList } from '@/components/skeleton/assistant-card-skeleton';
 import { type IAssistant } from '@/types/assistant.d';
@@ -31,30 +31,17 @@ export default function AssistantsList(props: AssistantListProps) {
   const [availableExtensions, setAvailableExtensions] = useState<IConnectedExtension[]>([]);
   const [availableMCPServers, setAvailableMCPServers] = useState<IMCP[]>([]);
   const [assistantType, setAssistantType] = useState<AssistantType>(AssistantType.EXTENSION);
-  const [extensionAssistants, setExtensionAssistants] = useState<IAssistant[]>([]);
-  const [mcpAssistants, setMcpAssistants] = useState<IAssistant[]>([]);
+  const [assistants, setAssistants] = useState<IAssistant[]>([]);
+  // const [mcpAssistants, setMcpAssistants] = useState<IAssistant[]>([]);
   const [isLoadingAssistants, setIsLoadingAssistants] = useState<boolean>(false);
   const [assistantToUpdate, setAssistantToUpdate] = useState<IAssistant | null>(null);
 
   const fetchAssistants = useCallback(async () => {
     if (!user) return;
     setIsLoadingAssistants(true);
-
     try {
-      const response = await getAssistants({ user });
-      const extensionAssistantsList: IAssistant[] = [];
-      const mcpAssistantsList: IAssistant[] = [];
-
-      response.forEach((assistant) => {
-        if (assistant.type === AssistantType.EXTENSION) {
-          extensionAssistantsList.push(assistant);
-        } else if (assistant.type === AssistantType.MCP_SERVER) {
-          mcpAssistantsList.push(assistant);
-        }
-      });
-
-      setExtensionAssistants(extensionAssistantsList);
-      setMcpAssistants(mcpAssistantsList);
+      const response = await getAdvancedAssistants({ user });
+      setAssistants(response);
     } catch (error) {
       console.error('Error fetching assistants:', error);
     } finally {
@@ -115,100 +102,44 @@ export default function AssistantsList(props: AssistantListProps) {
   return (
     <>
       <div className="flex flex-col items-center justify-center mt-4 mb-2">
-        <Tabs
-          defaultValue={AssistantType.EXTENSION}
-          className="w-full"
-          onValueChange={(value) => setAssistantType(value as AssistantType)}
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger className="hover:cursor-pointer" value={AssistantType.EXTENSION}>
-              Extensions
-            </TabsTrigger>
-            <TabsTrigger value={AssistantType.MCP_SERVER}>MCP Servers</TabsTrigger>
-          </TabsList>
-          <TabsContent value={AssistantType.EXTENSION}>
-            <Card>
-              <CardHeader>
-                <div className="flex flex-row items-center justify-between">
-                  <p className="text-sm md:text-base">
-                    {`Here's a list of your assistants using Extensions`}
-                  </p>
-                  <Button
-                    className="w-full md:w-auto"
-                    onClick={() => setIsCreateDialogOpen(true)}
-                    disabled={isLoadingAssistants || availableExtensions.length === 0}
-                  >
-                    <Plus className="mr-2 size-4" />
-                    Add Assistant
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-0">
-                <ul className="faded-bottom no-scrollbar grid gap-4 overflow-auto pb-16 md:grid-cols-2 lg:grid-cols-3">
-                  {isLoadingAssistants ? (
-                    <AssistantCardSkeletonList />
-                  ) : extensionAssistants.length > 0 ? (
-                    extensionAssistants.map((assistant) => (
-                      <AssistantCard
-                        key={assistant.id}
-                        user={user}
-                        assistant={assistant}
-                        onEdit={openUpdateAssistantDialog}
-                        onDelete={handleDeleteAssistant}
-                      />
-                    ))
-                  ) : !isLoadingAssistants ? (
-                    <li className="col-span-full text-center py-8">
-                      No extension assistants found. Create one using the &quot;Add Assistant&quot;
-                      button.
-                    </li>
-                  ) : null}
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value={AssistantType.MCP_SERVER}>
-            <Card>
-              <CardHeader>
-                <div className="flex flex-row items-center justify-between">
-                  <p className="text-sm md:text-base">
-                    {`Here's a list of your assistants using MCP Servers`}
-                  </p>
-                  <Button
-                    className="w-full md:w-auto"
-                    onClick={() => setIsCreateDialogOpen(true)}
-                    disabled={isLoadingAssistants || availableMCPServers.length === 0}
-                  >
-                    <Plus className="mr-2 size-4" />
-                    Add Assistant
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-0">
-                <ul className="faded-bottom no-scrollbar grid gap-4 overflow-auto pb-16 md:grid-cols-2 lg:grid-cols-3">
-                  {isLoadingAssistants ? (
-                    <AssistantCardSkeletonList />
-                  ) : mcpAssistants.length > 0 ? (
-                    mcpAssistants.map((assistant) => (
-                      <AssistantCard
-                        key={assistant.id}
-                        user={user}
-                        assistant={assistant}
-                        onEdit={openUpdateAssistantDialog}
-                        onDelete={handleDeleteAssistant}
-                      />
-                    ))
-                  ) : !isLoadingAssistants ? (
-                    <li className="col-span-full text-center py-8">
-                      No MCP server assistants found. Create one using the &quot;Add Assistant&quot;
-                      button.
-                    </li>
-                  ) : null}
-                </ul>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <Card className="w-full">
+          <CardHeader>
+            <div className="flex flex-row items-center justify-between">
+              <p className="text-sm md:text-base">
+                {`Here's a list of your assistants using Extensions`}
+              </p>
+              <Button
+                className="w-full md:w-auto"
+                onClick={() => setIsCreateDialogOpen(true)}
+                // disabled={isLoadingAssistants || availableExtensions.length === 0}
+              >
+                <Plus className="mr-2 size-4" />
+                Add Assistant
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-0">
+            <ul className="faded-bottom no-scrollbar grid gap-4 overflow-auto pb-16 md:grid-cols-2 lg:grid-cols-3">
+              {isLoadingAssistants ? (
+                <AssistantCardSkeletonList />
+              ) : assistants.length > 0 ? (
+                assistants.map((assistant) => (
+                  <AssistantCard
+                    key={assistant.id}
+                    user={user}
+                    assistant={assistant}
+                    onEdit={openUpdateAssistantDialog}
+                    onDelete={handleDeleteAssistant}
+                  />
+                ))
+              ) : !isLoadingAssistants ? (
+                <li className="col-span-full text-center py-8">
+                  No assistants found. Create one using the &quot;Add Assistant&quot; button.
+                </li>
+              ) : null}
+            </ul>
+          </CardContent>
+        </Card>
       </div>
       <AddAssistantDialog
         open={isCreateDialogOpen}

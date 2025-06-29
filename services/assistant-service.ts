@@ -1,4 +1,4 @@
-import { AI_ENDPOINT_V2, HttpMethod } from '@/constants/response-constant';
+import { AI_ENDPOINT_V2, HttpMethod, AI_ENDPOINT } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import { IAssistant, CreateAssistantRequest, UpdateAssistantRequest } from '@/types/assistant';
 import { User } from 'next-auth';
@@ -8,6 +8,15 @@ export interface GetAssistantsParams {
   payload?: {
     pageNumber?: number;
     maxPerPage?: number;
+  };
+}
+
+export interface GetAdvancedAssistantsParams {
+  user: User;
+  payload?: {
+    pageNumber?: number;
+    maxPerPage?: number;
+    assistant_type?: string;
   };
 }
 
@@ -32,21 +41,41 @@ export interface DeleteAssistantParams {
   assistantId: string;
 }
 
-export const getAssistants = async (params: GetAssistantsParams): Promise<IAssistant[]> => {
+export const getGeneralAssistants = async (params: GetAssistantsParams): Promise<IAssistant> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
-    const response: IResponse<{ fullInfoAssistants: IAssistant[] }> = await sendRequest({
-      url: `${AI_ENDPOINT_V2}/assistant/${params.user.id}/get-all`,
+    const response: IResponse<IAssistant> = await sendRequest({
+      url: `${AI_ENDPOINT}/assistant/get-or-create-general-assistant`,
+      method: HttpMethod.GET,
+      headers: headers,
+    });
+
+    return response?.data || ({} as IAssistant);
+  } catch (error) {
+    console.error('Error getting assistants: ', error);
+    throw error;
+  }
+};
+
+export const getAdvancedAssistants = async (
+  params: GetAdvancedAssistantsParams,
+): Promise<IAssistant[]> => {
+  try {
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
+
+    const response: IResponse<{ assistants: IAssistant[] }> = await sendRequest({
+      url: `${AI_ENDPOINT}/assistant/get-all`,
       method: HttpMethod.GET,
       headers: headers,
       queryParams: {
-        pageNumber: params.payload?.pageNumber,
-        maxPerPage: params.payload?.maxPerPage,
+        pageNumber: params.payload?.pageNumber || 1,
+        maxPerPage: params.payload?.maxPerPage || 10,
+        assistant_type: 'advanced_assistant',
       },
     });
 
-    return response.data?.fullInfoAssistants || [];
+    return response?.data?.assistants || [];
   } catch (error) {
     console.error('Error getting assistants: ', error);
     throw error;
@@ -60,7 +89,7 @@ export const createAssistant = async (params: CreateAssistantParams): Promise<IA
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IAssistant> = await sendRequest({
-      url: `${AI_ENDPOINT_V2}/assistant/${params.user.id}/create`,
+      url: `${AI_ENDPOINT}/assistant/create`,
       method: HttpMethod.POST,
       body: params.payload,
       headers: headers,
@@ -95,7 +124,7 @@ export const updateAssistant = async (params: UpdateAssistantParams): Promise<IA
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IAssistant> = await sendRequest({
-      url: `${AI_ENDPOINT_V2}/assistant/${params.user.id}/${params.assistantId}/update`,
+      url: `${AI_ENDPOINT}/assistant${params.assistantId}/update-advanced-assistant`,
       method: HttpMethod.PATCH,
       body: params.payload,
       headers: headers,
@@ -115,7 +144,7 @@ export const deleteAssistant = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<{ deleted: boolean }> = await sendRequest({
-      url: `${AI_ENDPOINT_V2}/assistant/${params.user.id}/${params.assistantId}/delete`,
+      url: `${AI_ENDPOINT}/assistant/${params.user.id}/${params.assistantId}/hard-delete-advanced-assistant`,
       method: HttpMethod.DELETE,
       headers: headers,
     });
