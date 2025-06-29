@@ -2,6 +2,10 @@ import { IConnectedExtension } from '@/types/extension';
 import { IMCP } from '@/types/mcp';
 import { AssistantType } from '@/constants/assistant-constants';
 
+export interface ITeamProps {
+  id: string;
+  workflow_type: string;
+}
 export interface IAssistant {
   id: string;
   name: string;
@@ -10,13 +14,16 @@ export interface IAssistant {
   description?: string;
   createdAt?: string;
   updatedAt?: string;
+  teams?: ITeamProps[];
 }
 
 export interface CreateAssistantRequest {
   name: string;
-  type: AssistantType;
-  workerIds: string[];
+  // type: AssistantType;
   description?: string;
+  mcpIds?: string[];
+  exensionIds?: string[];
+  supportUnits?: string[];
 }
 
 export interface UpdateAssistantRequest {

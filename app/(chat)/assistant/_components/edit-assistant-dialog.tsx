@@ -94,28 +94,26 @@ export function EditAssistantDialog({
       return;
     }
 
-    if (!workerIds || workerIds.length === 0) {
-      const hasOptions =
-        assistant?.type === AssistantType.EXTENSION
-          ? extensionsChoice.length > 0
-          : mcpChoice.length > 0;
+    // if (!workerIds || workerIds.length === 0) {
+    //   const hasOptions =
+    //     assistant?.type === AssistantType.EXTENSION
+    //       ? extensionsChoice.length > 0
+    //       : mcpChoice.length > 0;
 
-      if (hasOptions) {
-        toast({
-          description: `Please select at least one ${assistant?.type === 'extension' ? 'extension' : 'MCP server'}.`,
-          type: 'error',
-        });
-        return;
-      }
-    }
+    //   if (hasOptions) {
+    //     toast({
+    //       description: `Please select at least one ${assistant?.type === 'extension' ? 'extension' : 'MCP server'}.`,
+    //       type: 'error',
+    //     });
+    //     return;
+    //   }
+    // }
 
     try {
       setIsLoading(true);
       const payload = {
         name,
         description,
-        type: assistant.type,
-        workerIds: workerIds,
       };
 
       await updateAssistant({
@@ -190,38 +188,34 @@ export function EditAssistantDialog({
           {/* Extensions or MCP Servers */}
           {assistant && (
             <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label className="pt-1.5">
-                {assistant.type === AssistantType.EXTENSION ? 'Extensions' : 'MCP Servers'}
-              </Label>
-              {assistant.type === AssistantType.EXTENSION ? (
-                <>
-                  <MultiSelect
-                    options={extensionsChoice}
-                    values={workerIds}
-                    onChange={setWorkerIds}
-                    className="w-full max-w-sm"
-                  />
-                  {extensionsChoice.length === 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      No extensions available. Please connect some extensions first.
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <MultiSelect
-                    options={mcpChoice}
-                    values={workerIds}
-                    onChange={setWorkerIds}
-                    className="w-full max-w-sm"
-                  />
-                  {mcpChoice.length === 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      No MCP servers available. Please connect some MCP servers first.
-                    </p>
-                  )}
-                </>
-              )}
+              <Label className="pt-1.5">Extensions</Label>
+              <>
+                <MultiSelect
+                  options={extensionsChoice}
+                  values={workerIds}
+                  onChange={setWorkerIds}
+                  className="w-full max-w-sm"
+                />
+                {extensionsChoice.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    No extensions available. Please connect some extensions first.
+                  </p>
+                )}
+              </>
+              <Label className="pt-1.5">MCP Servers</Label>
+              <>
+                <MultiSelect
+                  options={mcpChoice}
+                  values={workerIds}
+                  onChange={setWorkerIds}
+                  className="w-full max-w-sm"
+                />
+                {mcpChoice.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    No MCP servers available. Please connect some MCP servers first.
+                  </p>
+                )}
+              </>
             </div>
           )}
         </div>
