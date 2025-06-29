@@ -1,5 +1,10 @@
 import { Extension } from '@/constants/data';
-import { AI_ENDPOINT, AI_ENDPOINT_V2, HttpMethod } from '@/constants/response-constant';
+import {
+  AI_ENDPOINT,
+  AI_ENDPOINT_V2,
+  EXTENSION_ENDPOINT,
+  HttpMethod,
+} from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import {
   IConnectedExtension,
@@ -29,7 +34,7 @@ export const getAllExtensions = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IGetAllExtensionResponse> = await sendRequest({
-      url: `${AI_ENDPOINT}/extension/get-all`,
+      url: `${EXTENSION_ENDPOINT}/apps?limit=1000`,
       method: HttpMethod.GET,
       headers: headers,
     });
@@ -52,6 +57,7 @@ export const getConnectedExtensions = async (
       method: HttpMethod.GET,
       headers: headers,
     });
+    console.log('response.data: ', response.data);
 
     return response.data as IGetConnectedExtensions;
   } catch (error) {
