@@ -7,6 +7,7 @@ import useChatStore from '@/store/chat-store';
 import { User } from 'next-auth';
 import { IMessage } from '@/types/ai';
 import { ExtensionType } from '@/constants/extension-constant';
+import { useAssistantStore } from '@/store/assistant-store';
 
 interface ChatProps {
   id: string;
@@ -24,12 +25,17 @@ export function Chat(props: ChatProps) {
   const setThreadId = useChatStore((state) => state.setThreadId);
   const setExtension = useChatStore((state) => state.setExtension);
   const reloadChat = useChatStore((state) => state.reloadChat);
+  const generalAssistants = useAssistantStore((state) => state.generalAssistants);
+  const fetchAssistants = useAssistantStore((state) => state.fetchAssistants);
+
+  console.log('fetch General Assistants', generalAssistants);
 
   useEffect(() => {
     reloadChat();
     setMessages(initialMessages);
     setThreadId(id);
     setExtension(extensionName as ExtensionType);
+    fetchAssistants(user);
   }, [reloadChat, initialMessages, id, extensionName, setMessages, setThreadId, setExtension]);
 
   return (

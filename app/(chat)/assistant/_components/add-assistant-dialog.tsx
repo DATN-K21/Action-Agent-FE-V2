@@ -81,18 +81,18 @@ export function AddAssistantDialog({
       return;
     }
 
-    if (!workerIds.length) {
-      toast({
-        description: `Please select at least one ${type === 'extension' ? 'extension' : 'MCP server'}.`,
-        type: 'error',
-      });
-      return;
-    }
+    // if (!workerIds.length) {
+    //   toast({
+    //     description: `Please select at least one ${type === 'extension' ? 'extension' : 'MCP server'}.`,
+    //     type: 'error',
+    //   });
+    //   return;
+    // }
 
     setIsLoading(true);
 
     try {
-      const payload = { name, description, type, workerIds };
+      const payload = { name, description };
 
       await createAssistant({ user, payload });
 
@@ -164,26 +164,21 @@ export function AddAssistantDialog({
 
           {/* Extensions or MCP Servers */}
           <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Label className="pt-1.5">
-              {type === AssistantType.EXTENSION ? 'Extensions' : 'MCP Servers'}
-            </Label>
-            {type === AssistantType.EXTENSION ? (
-              <MultiSelect
-                options={extensionsChoice}
-                values={workerIds}
-                onChange={setWorkerIds}
-                className="w-full max-w-sm"
-              />
-            ) : (
-              mcpOptions && (
-                <MultiSelect
-                  options={mcpChoice}
-                  values={workerIds}
-                  onChange={setWorkerIds}
-                  className="w-full max-w-sm"
-                />
-              )
-            )}
+            <Label className="pt-1.5">Extensions</Label>
+
+            <MultiSelect
+              options={extensionsChoice}
+              values={workerIds}
+              onChange={setWorkerIds}
+              className="w-full max-w-sm"
+            />
+            <Label className="pt-1.5">MCP Servers</Label>
+            <MultiSelect
+              options={mcpChoice}
+              values={workerIds}
+              onChange={setWorkerIds}
+              className="w-full max-w-sm"
+            />
           </div>
         </div>
 
