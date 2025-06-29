@@ -1,4 +1,4 @@
-import { AI_ENDPOINT_V2, HttpMethod, AI_ENDPOINT } from '@/constants/response-constant';
+import { AI_ENDPOINT_V2, HttpMethod, AI_ENDPOINT_V1 } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import { IAssistant, CreateAssistantRequest, UpdateAssistantRequest } from '@/types/assistant';
 import { User } from 'next-auth';
@@ -46,7 +46,7 @@ export const getGeneralAssistants = async (params: GetAssistantsParams): Promise
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IAssistant> = await sendRequest({
-      url: `${AI_ENDPOINT}/assistant/get-or-create-general-assistant`,
+      url: `${AI_ENDPOINT_V1}/assistant/get-or-create-general-assistant`,
       method: HttpMethod.GET,
       headers: headers,
     });
@@ -65,7 +65,7 @@ export const getAdvancedAssistants = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<{ assistants: IAssistant[] }> = await sendRequest({
-      url: `${AI_ENDPOINT}/assistant/get-all`,
+      url: `${AI_ENDPOINT_V1}/assistant/get-all`,
       method: HttpMethod.GET,
       headers: headers,
       queryParams: {
@@ -89,7 +89,7 @@ export const createAssistant = async (params: CreateAssistantParams): Promise<IA
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IAssistant> = await sendRequest({
-      url: `${AI_ENDPOINT}/assistant/create`,
+      url: `${AI_ENDPOINT_V1}/assistant/create`,
       method: HttpMethod.POST,
       body: params.payload,
       headers: headers,
@@ -124,7 +124,7 @@ export const updateAssistant = async (params: UpdateAssistantParams): Promise<IA
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IAssistant> = await sendRequest({
-      url: `${AI_ENDPOINT}/assistant${params.assistantId}/update-advanced-assistant`,
+      url: `${AI_ENDPOINT_V1}/assistant${params.assistantId}/update-advanced-assistant`,
       method: HttpMethod.PATCH,
       body: params.payload,
       headers: headers,
@@ -144,7 +144,7 @@ export const deleteAssistant = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<{ deleted: boolean }> = await sendRequest({
-      url: `${AI_ENDPOINT}/assistant/${params.user.id}/${params.assistantId}/hard-delete-advanced-assistant`,
+      url: `${AI_ENDPOINT_V1}/assistant/${params.user.id}/${params.assistantId}/hard-delete-advanced-assistant`,
       method: HttpMethod.DELETE,
       headers: headers,
     });

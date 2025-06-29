@@ -15,7 +15,6 @@ import {
   IconSortDescendingLetters,
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
-import { extensions, Extension } from '@/constants/data';
 import { Separator } from '@/components/ui/separator';
 import ExtensionDialog from './extension-dialog';
 import {
@@ -27,6 +26,8 @@ import {
 import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
 import { ExtensionCardSkeleton } from '@/components/skeleton/extension-card-skeleton';
+import { IExtension } from '@/types/extension';
+import Image from 'next/image';
 
 export type ExtensionListProps = {
   user: User;
@@ -36,8 +37,8 @@ export default function ExtensionList(props: ExtensionListProps) {
   const { user } = props;
 
   const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
-  const [filteredExtensions, setFilteredExtensions] = useState<Extension[]>([]);
-  const [selectedExtension, setSelectedExtension] = useState<Extension | null>(null);
+  const [filteredExtensions, setFilteredExtensions] = useState<IExtension[]>([]);
+  const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
   const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
@@ -54,22 +55,18 @@ export default function ExtensionList(props: ExtensionListProps) {
       setLoading(true);
       try {
         const extensionParams = { user } as ExtensionParams;
+        const allExtension = await getAllExtensions(extensionParams);
+        const connectedExtensionData = await getConnectedExtensions(extensionParams);
 
-        const [allExtensionsData, connectedExtensionsData] = await Promise.all([
-          getAllExtensions(extensionParams),
-          getConnectedExtensions(extensionParams),
-        ]);
-
-        const getExtensions = extensions.filter(
-          (ext) => ext.key && allExtensionsData?.extensions.includes(ext.key),
-        );
-        const updatedExtensions = getExtensions.map((extension) => ({
+        console.log('All Extensions: ', allExtension);
+        const updatedExtensions = allExtension.map((extension) => ({
           ...extension,
           connected:
-            connectedExtensionsData.connectedExtensions?.some(
+            connectedExtensionData.connectedExtensions?.some(
               (ext) => ext.extensionName === extension.key,
             ) || false,
         }));
+        console.log('Updated Extensions: ', updatedExtensions);
 
         const newFilteredExtensions = updatedExtensions
           .sort((a, b) =>
@@ -198,7 +195,18 @@ export default function ExtensionList(props: ExtensionListProps) {
                   <div
                     className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
                   >
-                    <extension.logo />
+                    {
+                      // NOTE: it is recommended to use next/image for images
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={extension.logo}
+                        alt={extension.name}
+                        width={40}
+                        height={40}
+                        loading="lazy"
+                        className="size-8 object-contain"
+                      />
+                    }
                   </div>
                   <Button
                     variant="outline"
@@ -213,8 +221,8 @@ export default function ExtensionList(props: ExtensionListProps) {
                   </Button>
                 </div>
                 <div>
-                  <h2 className="mb-1 font-semibold">{extension.name}</h2>
-                  <p className="line-clamp-2 text-gray-500">{extension.desc}</p>
+                  <h2 className="mb-1 font-semibold">{extension.name.toUpperCase()}</h2>
+                  <p className="line-clamp-2 text-gray-500">{extension.description}</p>
                 </div>
               </li>
             ))
