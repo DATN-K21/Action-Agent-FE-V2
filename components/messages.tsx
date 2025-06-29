@@ -3,7 +3,7 @@ import { useScrollToBottom } from './use-scroll-to-bottom';
 import { Overview } from './overview';
 import { Fragment, memo, useEffect } from 'react';
 import equal from 'fast-deep-equal';
-import { ChatStatus, MessageRole } from '@/constants/ai-constant';
+import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
 import { ActionConfirmation } from '@/components/action-confirmation';
 import { User } from 'next-auth';
@@ -29,22 +29,22 @@ function PureMessages({ status, messages, user }: MessagesProps) {
       {messages.map((message, index) => (
         <Fragment key={message.id}>
           {message.content &&
-            (message.role === MessageRole.AI || message.role === MessageRole.HUMAN) && (
+            (message.type === MessageType.AI || message.type === MessageType.HUMAN) && (
               <PreviewMessage
                 message={message}
                 isLoading={status === ChatStatus.STREAMING && index === messages.length - 1}
               />
             )}
 
-          {message.interrupted && message.toolcalls && (
-            <ActionConfirmation toolCalls={message.toolcalls} user={user} />
+          {message.interrupted && message.tool_calls && (
+            <ActionConfirmation toolCalls={message.tool_calls} user={user} />
           )}
         </Fragment>
       ))}
 
       {(status === ChatStatus.SUBMITTED ||
         (messages[messages.length - 1]?.content === '' &&
-          messages[messages.length - 1]?.role === MessageRole.AI &&
+          messages[messages.length - 1]?.type === MessageType.AI &&
           status === ChatStatus.STREAMING)) && <ThinkingMessage />}
 
       <div ref={endRef} className="shrink-0 min-h-[24px]" />

@@ -5,7 +5,7 @@ import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
 
 import { getThread, getThreadHistory } from '@/services/thread-service';
-import { IMessage, IThreadHistoryResponse } from '@/types/ai';
+import { IMessage, IGetThreadHistoryResponse } from '@/types/ai';
 import { User } from 'next-auth';
 import { ExtensionType } from '@/constants/extension-constant';
 import { Metadata } from 'next';
@@ -42,7 +42,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const session = await auth();
@@ -60,22 +60,30 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   };
 
   try {
-    const response: IThreadHistoryResponse = await getThreadHistory({
+    const response: IGetThreadHistoryResponse = await getThreadHistory({
       user,
       payload: { threadId: id },
     });
 
-    const initialMessages: IMessage[] = response.messages?.map((message) => ({
-      id: uuidv4(),
+    console.log('response', response);
+
+    const initialMessages: IMessage[] = response?.messages?.map((message) => ({
+      id: message.id,
+      name: message.name,
+      type: message.type,
       content: message.content,
-      role: message.role,
+      imgdata: message.imgdata,
+      tool_calls: message.tool_calls,
+      tool_output: message.tool_output,
+      documents: message.documents,
+      next: message.next,
     }));
 
     return (
       <Chat
         id={id}
         user={user}
-        initialMessages={initialMessages}
+        initialMessages={initialMessages || []}
         extensionName={ExtensionType.DEFAULT}
       />
     );
