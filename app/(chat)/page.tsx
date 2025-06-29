@@ -3,7 +3,6 @@ import { Chat } from '@/components/chat';
 import { ExtensionType } from '@/constants/extension-constant';
 import { User } from 'next-auth';
 import { notFound } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
 
 export const metadata = {
   title: 'New Chat',
@@ -25,7 +24,5 @@ export default async function Page() {
     expiresAt: session.expiresAt,
   };
 
-  return (
-    <Chat id={uuidv4()} user={user} initialMessages={[]} extensionName={ExtensionType.DEFAULT} />
-  );
+  return <Chat id={''} user={user} initialMessages={[]} extensionName={ExtensionType.DEFAULT} />;
 }

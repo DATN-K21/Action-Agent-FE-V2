@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ChatStatus, MessageRole } from '@/constants/ai-constant';
+import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { SparklesIcon } from './icons';
 import useChatStore from '@/store/chat-store';
 import { User } from 'next-auth';
@@ -70,7 +70,7 @@ const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: U
         className="w-full mx-auto max-w-4xl px-4 group/message"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        data-role={MessageRole.AI}
+        data-role={MessageType.AI}
       >
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">

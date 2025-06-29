@@ -78,7 +78,7 @@ export const useThreadStore = create<ThreadState>((set, get) => ({
       if (shouldCallApi) {
         const response: ICreateThreadResponse = await updateThread({
           user,
-          payload: { id: threadId, title },
+          payload: { threadId, title },
         });
         finalTitle = response.title;
       }

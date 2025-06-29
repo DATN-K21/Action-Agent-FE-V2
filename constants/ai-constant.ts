@@ -4,7 +4,7 @@ export enum AgentType {
   RAG = 'rag-agent',
 }
 
-export enum MessageRole {
+export enum MessageType {
   AI = 'ai',
   HUMAN = 'human',
 }
@@ -14,4 +14,10 @@ export enum ChatStatus {
   STREAMING = 'streaming',
   READY = 'ready',
   ERROR = 'error',
+}
+
+export enum TeamType {
+  CHATBOT = 'chatbot',
+  SEARCHBOT = 'searchbot',
+  RAGBOT = 'ragbot',
 }

@@ -1,4 +1,4 @@
-import { MessageRole } from '@/constants/ai-constant';
+import { MessageType } from '@/constants/ai-constant';
 import { ThreadType } from '@/constants/extension-constant';
 
 export interface IChatRequest {
@@ -13,40 +13,44 @@ export interface IChatResponse {
 
 export interface IMessage {
   id: string;
-  role: MessageRole;
+  name: string;
+  type: MessageType;
   content: string;
+  imgdata?: string | null;
+  tool_calls?: any[];
+  tool_output?: any;
+  documents?: any;
+  next?: any;
   interrupted?: boolean;
-  toolcalls?: any[];
 }
 
 export interface IMessageWithoutId {
-  role: MessageRole;
+  role: MessageType;
   content: string;
 }
 
 export interface IThread {
   id: string;
   title: string;
-  userId: string;
-  threadType: string;
+  assistantId: string;
   createdAt: string;
 }
 
 export interface IThreadsResponse {
-  cursor?: string;
-  nextCursor?: string;
-  prevCursor?: string;
+  cursor: string;
+  nextCursor: string;
+  prevCursor: string;
   threads: IThread[];
 }
 
-export interface ICreateThreadResponse {
-  id: string;
-  title: string;
-  userId: string;
-  threadType: string;
-  createdAt: string;
-}
+export interface ICreateThreadResponse extends IThread {}
 
-export interface IThreadHistoryResponse {
+export interface IGetThreadResponse extends IThread {}
+
+export interface IUpdateThreadResponse extends IThread {}
+
+export interface IGetThreadHistoryResponse {
+  threadId: string;
+  assistantId: string;
   messages: IMessage[];
 }

@@ -1,4 +1,4 @@
-import { AI_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { AI_ENDPOINT_V1, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import { User } from 'next-auth';
 
@@ -26,7 +26,7 @@ export const chatWithMcp = async (
   try {
     // Send the request
     const response = await fetch(
-      `${AI_ENDPOINT}/api/v2/mcp-agent/stream/${params.user.id}/${params.threadId}`,
+      `${AI_ENDPOINT_V1}/api/v2/mcp-agent/stream/${params.user.id}/${params.threadId}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(params.payload),

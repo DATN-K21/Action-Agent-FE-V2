@@ -1,37 +1,31 @@
-'use client'
+'use client';
 
-import cx from 'classnames'
-import { AnimatePresence, motion } from 'framer-motion'
-import { memo } from 'react'
-import { SparklesIcon } from './icons'
-import { Markdown } from './markdown'
-import { cn } from '@/lib/utils'
-import { IMessage } from '@/types/ai'
-import { MessageRole } from '@/constants/ai-constant'
-import { MessageActions } from '@/components/ui/message-actions'
+import cx from 'classnames';
+import { AnimatePresence, motion } from 'framer-motion';
+import { memo } from 'react';
+import { SparklesIcon } from './icons';
+import { Markdown } from './markdown';
+import { cn } from '@/lib/utils';
+import { IMessage } from '@/types/ai';
+import { MessageType } from '@/constants/ai-constant';
+import { MessageActions } from '@/components/ui/message-actions';
 
-const PurePreviewMessage = ({
-  message,
-  isLoading,
-}: {
-  message: IMessage
-  isLoading: boolean
-}) => {
+const PurePreviewMessage = ({ message, isLoading }: { message: IMessage; isLoading: boolean }) => {
   return (
     <AnimatePresence>
       <motion.div
-        data-testid={`message-${message.role}`}
+        data-testid={`message-${message.type}`}
         className="w-full mx-auto max-w-4xl px-4 group/message"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        data-role={message.role}
+        data-role={message.type}
       >
         <div
           className={cn(
             'flex gap-4 w-full group-data-[role=human]/message:ml-auto group-data-[role=human]/message:max-w-2xl group-data-[role=human]/message:w-fit',
           )}
         >
-          {message.role === MessageRole.AI && (
+          {message.type === MessageType.AI && (
             <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
               <div className="translate-y-px">
                 <SparklesIcon size={14} />
@@ -55,14 +49,11 @@ const PurePreviewMessage = ({
             )} */}
 
             {message.content && (
-              <div
-                data-testid="message-content"
-                className="flex flex-row gap-2 items-start"
-              >
+              <div data-testid="message-content" className="flex flex-row gap-2 items-start">
                 <div
                   className={cn('flex flex-col gap-4', {
                     'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                      message.role === MessageRole.HUMAN,
+                      message.type === MessageType.HUMAN,
                   })}
                 >
                   <Markdown>{message.content as string}</Markdown>
@@ -70,30 +61,23 @@ const PurePreviewMessage = ({
               </div>
             )}
 
-            <MessageActions
-              key={`action-${message.id}`}
-              message={message}
-              isLoading={isLoading}
-            />
+            <MessageActions key={`action-${message.id}`} message={message} isLoading={isLoading} />
           </div>
         </div>
       </motion.div>
     </AnimatePresence>
-  )
-}
+  );
+};
 
-export const PreviewMessage = memo(
-  PurePreviewMessage,
-  (prevProps, nextProps) => {
-    if (prevProps.isLoading !== nextProps.isLoading) return false
-    if (prevProps.message.content !== nextProps.message.content) return false
+export const PreviewMessage = memo(PurePreviewMessage, (prevProps, nextProps) => {
+  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.message.content !== nextProps.message.content) return false;
 
-    return true
-  },
-)
+  return true;
+});
 
 export const ThinkingMessage = () => {
-  const role = MessageRole.AI
+  const role = MessageType.AI;
 
   return (
     <motion.div
@@ -116,11 +100,9 @@ export const ThinkingMessage = () => {
         </div>
 
         <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">
-            Thinking...
-          </div>
+          <div className="flex flex-col gap-4 text-muted-foreground">Thinking...</div>
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};

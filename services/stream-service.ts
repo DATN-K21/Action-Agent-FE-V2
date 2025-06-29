@@ -1,6 +1,6 @@
-import { AgentType } from '@/constants/ai-constant';
+import { AgentType, MessageType } from '@/constants/ai-constant';
 import { ExtensionType } from '@/constants/extension-constant';
-import { AI_ENDPOINT, AI_ENDPOINT_V2, HttpMethod } from '@/constants/response-constant';
+import { AI_ENDPOINT_V1, AI_ENDPOINT_V2, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders } from '@/lib/utils';
 import { IChatRequest } from '@/types/ai';
 import { User } from 'next-auth';
@@ -48,6 +48,20 @@ export interface ChatAssistantParams {
   payload: IChatRequest;
 }
 
+export interface StreamTeamParams {
+  user: User;
+  threadId: string;
+  teamId: string;
+  payload: {
+    messages: [
+      {
+        type: MessageType.HUMAN;
+        content: string;
+      },
+    ];
+  };
+}
+
 export const streamAgent = async (
   params: StreamAgentParams,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
@@ -62,7 +76,7 @@ export const streamAgent = async (
   try {
     // Send the request
     const response = await fetch(
-      `${AI_ENDPOINT}/agent/stream/${params.user.id}/${params.threadId}/${params.agentName}`,
+      `${AI_ENDPOINT_V1}/agent/stream/${params.user.id}/${params.threadId}/${params.agentName}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(params.payload),
@@ -105,7 +119,7 @@ export const streamExtension = async (
   try {
     // Send the request
     const response = await fetch(
-      `${AI_ENDPOINT}/extension/stream/${params.user.id}/${params.threadId}/${params.extensionName}`,
+      `${AI_ENDPOINT_V1}/extension/stream/${params.user.id}/${params.threadId}/${params.extensionName}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(params.payload),
@@ -148,7 +162,7 @@ export const interruptStream = async (
   try {
     // Send the request
     const response = await fetch(
-      `${AI_ENDPOINT}/extension/stream-interrupt/${params.user.id}/${params.threadId}/${params.extensionName}`,
+      `${AI_ENDPOINT_V1}/extension/stream-interrupt/${params.user.id}/${params.threadId}/${params.extensionName}`,
       {
         method: HttpMethod.POST,
         body: JSON.stringify(payload),
@@ -289,5 +303,48 @@ export const chatAssistant = async (params: ChatAssistantParams): Promise<any> =
   } catch (error) {
     console.error('Error in assistant chat:', error);
     throw new Error('Error communicating with assistant, please try again!');
+  }
+};
+
+export const streamTeam = async (
+  params: StreamTeamParams,
+): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
+  if (!params.threadId) throw new Error("Missing 'threadId'");
+  if (!params.teamId) throw new Error("Missing 'teamId'");
+  if (!params.payload.messages[0].content) throw new Error("Missing 'message'");
+
+  let headers: Record<string, string> = createUserAuthHeaders(params.user);
+  headers['Content-Type'] = 'application/json';
+  headers['Accept'] = 'application/json';
+
+  try {
+    // Send the request
+    const response = await fetch(
+      `${AI_ENDPOINT_V1}/team/${params.teamId}/stream/${params.threadId}`,
+      {
+        method: HttpMethod.POST,
+        body: JSON.stringify(params.payload),
+        headers: headers,
+      },
+    );
+
+    // Handle non-OK responses
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Failed to stream team: ${response.status} ${response.statusText} - ${errorText}`,
+      );
+    }
+
+    // Ensure response body exists
+    if (!response.body) {
+      throw new Error('Response body is null or undefined');
+    }
+
+    // Return the readable stream reader
+    return response.body.getReader();
+  } catch (error) {
+    console.error('Error in stream team:', error);
+    throw new Error('Error stream team, please try again!');
   }
 };
