@@ -1,6 +1,6 @@
 import { Extension } from '@/constants/data';
 import {
-  AI_ENDPOINT,
+  AI_ENDPOINT_V1,
   AI_ENDPOINT_V2,
   EXTENSION_ENDPOINT,
   HttpMethod,
@@ -94,7 +94,7 @@ export const getExtensionActions = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IGetExtensionActionsResponse> = await sendRequest({
-      url: `${AI_ENDPOINT}/extension/${params.extension.key}/get-actions`,
+      url: `${AI_ENDPOINT_V1}/extension/${params.extension.key}/get-actions`,
       method: HttpMethod.GET,
       headers: headers,
     });
@@ -116,7 +116,7 @@ export const activeExtension = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IActiveExtensionResponse> = await sendRequest({
-      url: `${AI_ENDPOINT}/extension/active`,
+      url: `${AI_ENDPOINT_V1}/extension/active`,
       method: HttpMethod.POST,
       headers: headers,
       queryParams: {
@@ -142,7 +142,7 @@ export const disconnectExtension = async (
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<DisconnectExtensionReponse> = await sendRequest({
-      url: `${AI_ENDPOINT}/extension/disconnect`,
+      url: `${AI_ENDPOINT_V1}/extension/disconnect`,
       method: HttpMethod.POST,
       headers: headers,
       queryParams: {

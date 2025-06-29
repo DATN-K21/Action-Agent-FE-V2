@@ -1,4 +1,4 @@
-import { AI_ENDPOINT, HttpMethod } from '@/constants/response-constant';
+import { AI_ENDPOINT_V1, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import { IMCP } from '@/types/mcp';
 import { User } from 'next-auth';
@@ -45,7 +45,7 @@ export const getConnectedMCPs = async (params: GetMCPsParams): Promise<IMCP[]> =
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<{ connectedMcps: IMCP[] }> = await sendRequest({
-      url: `${AI_ENDPOINT}/mcp/${params.user.id}/get-all`,
+      url: `${AI_ENDPOINT_V1}/mcp/${params.user.id}/get-all`,
       method: HttpMethod.GET,
       headers: headers,
       queryParams: {
@@ -70,7 +70,7 @@ export const createMCP = async (params: CreateMCPParams): Promise<IMCP> => {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IMCP> = await sendRequest({
-      url: `${AI_ENDPOINT}/mcp/${params.user.id}/create`,
+      url: `${AI_ENDPOINT_V1}/mcp/${params.user.id}/create`,
       method: HttpMethod.POST,
       body: params.payload,
       headers: headers,
@@ -88,7 +88,7 @@ export const getMCPDetail = async (params: GetMCPDetailParams): Promise<IMCP> =>
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IMCP> = await sendRequest({
-      url: `${AI_ENDPOINT}/mcp/${params.user.id}/${params.connectedMcpId}/get-detail`,
+      url: `${AI_ENDPOINT_V1}/mcp/${params.user.id}/${params.connectedMcpId}/get-detail`,
       method: HttpMethod.GET,
       headers: headers,
     });
@@ -110,7 +110,7 @@ export const updateMCP = async (params: UpdateMCPParams): Promise<IMCP> => {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IMCP> = await sendRequest({
-      url: `${AI_ENDPOINT}/mcp/${params.user.id}/${params.connectedMcpId}/update`,
+      url: `${AI_ENDPOINT_V1}/mcp/${params.user.id}/${params.connectedMcpId}/update`,
       method: HttpMethod.PATCH,
       body: params.payload,
       headers: headers,
@@ -128,7 +128,7 @@ export const deleteMCP = async (params: DeleteMCPParams): Promise<void> => {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     await sendRequest({
-      url: `${AI_ENDPOINT}/mcp/${params.user.id}/${params.connectedMcpId}/delete`,
+      url: `${AI_ENDPOINT_V1}/mcp/${params.user.id}/${params.connectedMcpId}/delete`,
       method: HttpMethod.DELETE,
       headers: headers,
     });

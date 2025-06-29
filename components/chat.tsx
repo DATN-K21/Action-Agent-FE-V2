@@ -7,6 +7,7 @@ import useChatStore from '@/store/chat-store';
 import { User } from 'next-auth';
 import { IMessage } from '@/types/ai';
 import { ExtensionType } from '@/constants/extension-constant';
+import { useAssistantStore } from '@/store/assistant-store';
 
 interface ChatProps {
   id: string;
@@ -24,13 +25,18 @@ export function Chat(props: ChatProps) {
   const setThreadId = useChatStore((state) => state.setThreadId);
   const setExtension = useChatStore((state) => state.setExtension);
   const reloadChat = useChatStore((state) => state.reloadChat);
+  const generalAssistants = useAssistantStore((state) => state.generalAssistants);
+  const fetchAssistants = useAssistantStore((state) => state.fetchAssistants);
+
+  console.log('fetch General Assistants', generalAssistants);
 
   useEffect(() => {
     reloadChat();
-    setMessages(initialMessages);
+    fetchAssistants(user);
     setThreadId(id);
+    setMessages(initialMessages);
     setExtension(extensionName as ExtensionType);
-  }, [reloadChat, initialMessages, id, extensionName, setMessages, setThreadId, setExtension]);
+  }, [id, initialMessages, extensionName, reloadChat, setMessages, setThreadId, setExtension]);
 
   return (
     <>
@@ -48,7 +54,7 @@ export function Chat(props: ChatProps) {
         <>
           <Messages status={status} messages={messages} user={user} />
           <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-4xl">
-            <MultimodalInput chatId={id} user={user} status={status} />
+            <MultimodalInput user={user} status={status} />
           </form>
         </>
       )}

@@ -1,4 +1,4 @@
-// import { AI_ENDPOINT } from '@/constants/response-constant';
+// import { AI_ENDPOINT_V1 } from '@/constants/response-constant';
 // import { io, Socket } from 'socket.io-client';
 
 // class SocketService {
@@ -11,7 +11,7 @@
 //   }
 
 //   connect() {
-//     this.socket = io(`${AI_ENDPOINT}/${this.namespace}`, {
+//     this.socket = io(`${AI_ENDPOINT_V1}/${this.namespace}`, {
 //       withCredentials: true,
 //       transports: ['websocket'],
 //     });
