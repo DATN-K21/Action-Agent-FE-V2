@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { ExtensionCardSkeleton } from '@/components/skeleton/extension-card-skeleton';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -9,24 +10,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  IconAdjustmentsHorizontal,
-  IconSortAscendingLetters,
-  IconSortDescendingLetters,
-} from '@tabler/icons-react';
-import { Button } from '@/components/ui/button';
-import { extensions, Extension } from '@/constants/data';
 import { Separator } from '@/components/ui/separator';
-import ExtensionDialog from './extension-dialog';
 import {
   disconnectExtension,
   ExtensionParams,
   getAllExtensions,
   getConnectedExtensions,
 } from '@/services/extension-service';
-import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
-import { ExtensionCardSkeleton } from '@/components/skeleton/extension-card-skeleton';
+import { IExtension } from '@/types/extension';
+import {
+  IconAdjustmentsHorizontal,
+  IconSortAscendingLetters,
+  IconSortDescendingLetters,
+} from '@tabler/icons-react';
+import { User } from 'next-auth';
+import { useEffect, useRef, useState } from 'react';
+import { SiRetool } from 'react-icons/si';
+import ExtensionDialog from './extension-dialog';
 
 export type ExtensionListProps = {
   user: User;
@@ -35,38 +36,37 @@ export type ExtensionListProps = {
 export default function ExtensionList(props: ExtensionListProps) {
   const { user } = props;
 
+  const isExtensionListFetchedRef = useRef<boolean>(false);
+
   const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
-  const [filteredExtensions, setFilteredExtensions] = useState<Extension[]>([]);
-  const [selectedExtension, setSelectedExtension] = useState<Extension | null>(null);
+  const [filteredExtensions, setFilteredExtensions] = useState<IExtension[]>([]);
+  const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
   const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const reloadChat = useChatStore((state) => state.reloadChat);
 
   useEffect(() => {
     if (!user) {
       return;
     }
 
-    const fetchExtensionData = async () => {
+    const fetchExtensionData = async (): Promise<void> => {
+      if (isExtensionListFetchedRef.current === true) {
+        return;
+      }
+
       setLoading(true);
       try {
         const extensionParams = { user } as ExtensionParams;
+        const allExtension = await getAllExtensions(extensionParams);
+        const connectedExtensionData = await getConnectedExtensions(extensionParams);
 
-        const [allExtensionsData, connectedExtensionsData] = await Promise.all([
-          getAllExtensions(extensionParams),
-          getConnectedExtensions(extensionParams),
-        ]);
-
-        const getExtensions = extensions.filter(
-          (ext) => ext.key && allExtensionsData?.extensions.includes(ext.key),
-        );
-        const updatedExtensions = getExtensions.map((extension) => ({
+        isExtensionListFetchedRef.current = true;
+        const updatedExtensions = allExtension.map((extension) => ({
           ...extension,
           connected:
-            connectedExtensionsData.connectedExtensions?.some(
+            connectedExtensionData.connectedExtensions?.some(
               (ext) => ext.extensionName === extension.key,
             ) || false,
         }));
@@ -89,12 +89,12 @@ export default function ExtensionList(props: ExtensionListProps) {
         console.error('Error fetching extension data: ', error);
       } finally {
         setLoading(false);
+        isExtensionListFetchedRef.current = false;
       }
     };
 
-    reloadChat();
     fetchExtensionData();
-  }, [user, extensionType, searchTerm, sort, reloadChat]);
+  }, [user, extensionType, searchTerm, sort]);
 
   const handleDisconnectExtension = async () => {
     if (!selectedExtension || !selectedExtension.connected) return;
@@ -195,11 +195,43 @@ export default function ExtensionList(props: ExtensionListProps) {
                 }}
               >
                 <div className="mb-8 flex items-center justify-between">
-                  <div
-                    className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
-                  >
-                    <extension.logo />
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
+                    >
+                      {
+                        // NOTE: it is recommended to use next/image for images
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={extension.logo}
+                          alt={extension.name}
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          className="size-8 object-contain"
+                        />
+                      }
+                    </div>
+
+                    <div className="flex flex-col items-start gap-2">
+                      {/* Only shows 2 categories as maximum for the category list of an extension */}
+                      {extension.categories?.slice(0, 2).map((category, index) => {
+                        const categoryStyleClass =
+                          index % 2 === 0
+                            ? `bg-blue-100 text-blue-750 ring-blue-600/20 ring-inset`
+                            : `bg-green-100 text-green-750 ring-green-600/20 ring-inset`;
+                        return (
+                          <span
+                            key={category}
+                            className={`text-[10px] font-semibold italic px-2 py-1 rounded-full ${categoryStyleClass}`}
+                          >
+                            {category}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -213,8 +245,14 @@ export default function ExtensionList(props: ExtensionListProps) {
                   </Button>
                 </div>
                 <div>
-                  <h2 className="mb-1 font-semibold">{extension.name}</h2>
-                  <p className="line-clamp-2 text-gray-500">{extension.desc}</p>
+                  <div className="mb-2 flex items-center justify-start gap-2 px-2 py-1 rounded-md">
+                    <h2 className="mb-0 font-semibold">{extension.name.toUpperCase()}</h2>
+                    <div className="flex items-center gap-1 text-sm bg-pink-300 px-2 rounded-xl">
+                      <SiRetool />
+                      {`${extension.actionsCount || 0} Actions`}
+                    </div>
+                  </div>
+                  <p className="line-clamp-2 text-gray-500">{extension.description}</p>
                 </div>
               </li>
             ))

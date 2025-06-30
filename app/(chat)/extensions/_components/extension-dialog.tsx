@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import { Icons } from '@/components/icon';
+import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
+import { toast } from '@/components/toast';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -10,22 +13,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/icon';
-import { Extension, IExtensionAction, extensionActionList } from '@/constants/data';
+import { IExtensionAction } from '@/constants/data';
 import { activeExtension, getExtensionActions } from '@/services/extension-service';
+import { IActiveExtensionResponse, IExtension } from '@/types/extension';
 import { User } from 'next-auth';
-import { IActiveExtensionResponse, IGetExtensionActionsResponse } from '@/types/extension';
-import useChatStore from '@/store/chat-store';
-import { ThreadType } from '@/constants/extension-constant';
-import { toast } from '@/components/toast';
-import { useRouter } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
-import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface ExtensionDialogProps {
   user: User;
-  extension?: Extension;
+  extension?: IExtension;
   isOpen: boolean;
   onClose: () => void;
   onDisconnect: () => Promise<void>;
@@ -42,31 +38,26 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
   const [extensionActions, setExtensionActions] = useState<IExtensionAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false); // Add actionLoading state
-  const createThread = useChatStore((state) => state.createThread);
-  const router = useRouter();
-
-  const fetchExtensionActions = async () => {
-    if (!user || !extension) return;
-
-    setActionLoading(true);
-    try {
-      const response: IGetExtensionActionsResponse = await getExtensionActions({ user, extension });
-      setExtensionActions(
-        extensionActionList.filter((action) => response.actions.includes(action.key)),
-      );
-    } catch (error) {
-      toast({ type: 'error', description: 'Failed to fetch extension actions' });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   useEffect(() => {
-    if (extension) {
-      setIsConnected(extension.connected || false);
-      fetchExtensionActions();
-    }
-  }, [extension]);
+    if (!user || !extension) return;
+
+    const fetchExtensionActions = async () => {
+      setActionLoading(true);
+      try {
+        const extensionActions: IExtensionAction[] = await getExtensionActions({ user, extension });
+        console.log('Fetched Extension Actions: ', extensionActions);
+        setExtensionActions(extensionActions || []);
+      } catch (error) {
+        toast({ type: 'error', description: 'Failed to fetch extension actions' });
+      } finally {
+        setActionLoading(false);
+      }
+    };
+
+    setIsConnected(extension.connected || false);
+    fetchExtensionActions();
+  }, [extension, user]);
 
   const handleClickConnect = useCallback(async () => {
     if (isConnected || !extension) return;
@@ -106,23 +97,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       onClose();
       setIsLoading(false);
     }
-  }, [user, extension, isConnected, onClose, onDisconnect]);
-
-  const handleClickStartChat = async () => {
-    if (!extension) return;
-
-    try {
-      const threadId = uuidv4();
-      await createThread(user, threadId, `New ${extension.name} Chat`, extension.key as ThreadType);
-      toast({ type: 'success', description: `Starting chat with ${extension.name}` });
-      router.push(`/chat/${threadId}/${extension.key}`);
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      toast({ type: 'error', description: 'Failed to start chat' });
-    } finally {
-      onClose();
-    }
-  };
+  }, [isConnected, onClose, onDisconnect]);
 
   if (!isOpen || !extension) return null;
 
@@ -134,8 +109,8 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
           <DialogDescription>{`Integrate ${extension.name} into your chat!`}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
-          <Card className="w-full md:w-[600px] overflow-y-auto max-h-[50vh]">
-            <CardContent className="grid gap-4 p-4">
+          <Card className="w-full md:w-[600px] overflow-y-auto h-[50vh]">
+            <CardContent className="grid gap-4 p-4 h-full">
               {actionLoading ? (
                 Array(4)
                   .fill(0)
@@ -143,18 +118,20 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
               ) : extensionActions.length > 0 ? (
                 extensionActions.map((action) => (
                   <div
-                    key={action.key}
+                    key={action.enum}
                     className="mb-1 grid grid-cols-[25px_1fr] items-start pb-1 last:mb-0 last:pb-0"
                   >
                     <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
                     <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{action.name}</p>
+                      <p className="text-sm font-medium leading-none">
+                        {action.name.toUpperCase()}
+                      </p>
                       <p className="text-sm text-muted-foreground">{action.description}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4 text-muted-foreground">
+                <div className="flex h-full text-center py-4 text-muted-foreground items-center justify-center">
                   No actions available for this extension
                 </div>
               )}
@@ -171,13 +148,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
               {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />} Connect
             </Button>
           )}
-          <Button
-            className="bg-green-600 text-white hover:bg-green-700 mb-2"
-            disabled={!isConnected || isLoading}
-            onClick={handleClickStartChat}
-          >
-            Start Chat
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
