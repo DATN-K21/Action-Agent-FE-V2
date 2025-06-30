@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { ExtensionCardSkeleton } from '@/components/skeleton/extension-card-skeleton';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -9,25 +10,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  IconAdjustmentsHorizontal,
-  IconSortAscendingLetters,
-  IconSortDescendingLetters,
-} from '@tabler/icons-react';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import ExtensionDialog from './extension-dialog';
 import {
   disconnectExtension,
   ExtensionParams,
   getAllExtensions,
   getConnectedExtensions,
 } from '@/services/extension-service';
-import { User } from 'next-auth';
 import useChatStore from '@/store/chat-store';
-import { ExtensionCardSkeleton } from '@/components/skeleton/extension-card-skeleton';
 import { IExtension } from '@/types/extension';
-import Image from 'next/image';
+import {
+  IconAdjustmentsHorizontal,
+  IconSortAscendingLetters,
+  IconSortDescendingLetters,
+} from '@tabler/icons-react';
+import { User } from 'next-auth';
+import { useEffect, useRef, useState } from 'react';
+import { SiRetool } from 'react-icons/si';
+import ExtensionDialog from './extension-dialog';
 
 export type ExtensionListProps = {
   user: User;
@@ -197,22 +197,43 @@ export default function ExtensionList(props: ExtensionListProps) {
                 }}
               >
                 <div className="mb-8 flex items-center justify-between">
-                  <div
-                    className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
-                  >
-                    {
-                      // NOTE: it is recommended to use next/image for images
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={extension.logo}
-                        alt={extension.name}
-                        width={40}
-                        height={40}
-                        loading="lazy"
-                        className="size-8 object-contain"
-                      />
-                    }
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
+                    >
+                      {
+                        // NOTE: it is recommended to use next/image for images
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={extension.logo}
+                          alt={extension.name}
+                          width={40}
+                          height={40}
+                          loading="lazy"
+                          className="size-8 object-contain"
+                        />
+                      }
+                    </div>
+
+                    <div className="flex flex-col items-start gap-2">
+                      {/* Only shows 2 categories as maximum for the category list of an extension */}
+                      {extension.categories?.slice(0, 2).map((category, index) => {
+                        const categoryStyleClass =
+                          index % 2 === 0
+                            ? `bg-blue-100 text-blue-750 ring-blue-600/20 ring-inset`
+                            : `bg-green-100 text-green-750 ring-green-600/20 ring-inset`;
+                        return (
+                          <span
+                            key={category}
+                            className={`text-[10px] font-semibold italic px-2 py-1 rounded-full ${categoryStyleClass}`}
+                          >
+                            {category}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -226,7 +247,13 @@ export default function ExtensionList(props: ExtensionListProps) {
                   </Button>
                 </div>
                 <div>
-                  <h2 className="mb-1 font-semibold">{extension.name.toUpperCase()}</h2>
+                  <div className="mb-2 flex items-center justify-start gap-2 px-2 py-1 rounded-md">
+                    <h2 className="mb-0 font-semibold">{extension.name.toUpperCase()}</h2>
+                    <div className="flex items-center gap-1 text-sm bg-pink-300 px-2 rounded-xl">
+                      <SiRetool />
+                      {`${extension.actionsCount || 0} Actions`}
+                    </div>
+                  </div>
                   <p className="line-clamp-2 text-gray-500">{extension.description}</p>
                 </div>
               </li>

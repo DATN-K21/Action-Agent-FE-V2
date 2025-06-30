@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import { Icons } from '@/components/icon';
+import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
+import { toast } from '@/components/toast';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -10,16 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/icon';
 import { IExtensionAction } from '@/constants/data';
 import { activeExtension, getExtensionActions } from '@/services/extension-service';
-import { User } from 'next-auth';
 import { IActiveExtensionResponse, IExtension } from '@/types/extension';
-import useChatStore from '@/store/chat-store';
-import { toast } from '@/components/toast';
-import { useRouter } from 'next/navigation';
-import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
+import { User } from 'next-auth';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface ExtensionDialogProps {
   user: User;
@@ -40,8 +38,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
   const [extensionActions, setExtensionActions] = useState<IExtensionAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false); // Add actionLoading state
-  const createThread = useChatStore((state) => state.createThread);
-  const router = useRouter();
 
   useEffect(() => {
     if (!user || !extension) return;
@@ -50,6 +46,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       setActionLoading(true);
       try {
         const extensionActions: IExtensionAction[] = await getExtensionActions({ user, extension });
+        console.log('Fetched Extension Actions: ', extensionActions);
         setExtensionActions(extensionActions || []);
       } catch (error) {
         toast({ type: 'error', description: 'Failed to fetch extension actions' });
@@ -112,8 +109,8 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
           <DialogDescription>{`Integrate ${extension.name} into your chat!`}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
-          <Card className="w-full md:w-[600px] overflow-y-auto max-h-[50vh]">
-            <CardContent className="grid gap-4 p-4">
+          <Card className="w-full md:w-[600px] overflow-y-auto h-[50vh]">
+            <CardContent className="grid gap-4 p-4 h-full">
               {actionLoading ? (
                 Array(4)
                   .fill(0)
@@ -126,13 +123,15 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
                   >
                     <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
                     <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{action.name}</p>
+                      <p className="text-sm font-medium leading-none">
+                        {action.name.toUpperCase()}
+                      </p>
                       <p className="text-sm text-muted-foreground">{action.description}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4 text-muted-foreground">
+                <div className="flex h-full text-center py-4 text-muted-foreground items-center justify-center">
                   No actions available for this extension
                 </div>
               )}
