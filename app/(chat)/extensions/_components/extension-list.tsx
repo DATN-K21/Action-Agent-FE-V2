@@ -46,8 +46,6 @@ export default function ExtensionList(props: ExtensionListProps) {
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const reloadChat = useChatStore((state) => state.reloadChat);
-
   useEffect(() => {
     if (!user) {
       return;
@@ -91,12 +89,12 @@ export default function ExtensionList(props: ExtensionListProps) {
         console.error('Error fetching extension data: ', error);
       } finally {
         setLoading(false);
+        isExtensionListFetchedRef.current = false;
       }
     };
 
-    reloadChat();
     fetchExtensionData();
-  }, [user, extensionType, searchTerm, sort, reloadChat]);
+  }, [user, extensionType, searchTerm, sort]);
 
   const handleDisconnectExtension = async () => {
     if (!selectedExtension || !selectedExtension.connected) return;
