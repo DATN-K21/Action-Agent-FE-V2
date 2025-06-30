@@ -12,20 +12,18 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icon';
-import { Extension, IExtensionAction, extensionActionList } from '@/constants/data';
+import { IExtensionAction } from '@/constants/data';
 import { activeExtension, getExtensionActions } from '@/services/extension-service';
 import { User } from 'next-auth';
-import { IActiveExtensionResponse, IGetExtensionActionsResponse } from '@/types/extension';
+import { IActiveExtensionResponse, IExtension } from '@/types/extension';
 import useChatStore from '@/store/chat-store';
-import { ThreadType } from '@/constants/extension-constant';
 import { toast } from '@/components/toast';
 import { useRouter } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
 import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
 
 interface ExtensionDialogProps {
   user: User;
-  extension?: Extension;
+  extension?: IExtension;
   isOpen: boolean;
   onClose: () => void;
   onDisconnect: () => Promise<void>;
@@ -45,28 +43,24 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
   const createThread = useChatStore((state) => state.createThread);
   const router = useRouter();
 
-  const fetchExtensionActions = async () => {
+  useEffect(() => {
     if (!user || !extension) return;
 
-    setActionLoading(true);
-    try {
-      const response: IGetExtensionActionsResponse = await getExtensionActions({ user, extension });
-      setExtensionActions(
-        extensionActionList.filter((action) => response.actions.includes(action.key)),
-      );
-    } catch (error) {
-      toast({ type: 'error', description: 'Failed to fetch extension actions' });
-    } finally {
-      setActionLoading(false);
-    }
-  };
+    const fetchExtensionActions = async () => {
+      setActionLoading(true);
+      try {
+        const extensionActions: IExtensionAction[] = await getExtensionActions({ user, extension });
+        setExtensionActions(extensionActions || []);
+      } catch (error) {
+        toast({ type: 'error', description: 'Failed to fetch extension actions' });
+      } finally {
+        setActionLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    if (extension) {
-      setIsConnected(extension.connected || false);
-      fetchExtensionActions();
-    }
-  }, [extension]);
+    setIsConnected(extension.connected || false);
+    fetchExtensionActions();
+  }, [extension, user]);
 
   const handleClickConnect = useCallback(async () => {
     if (isConnected || !extension) return;
@@ -106,23 +100,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       onClose();
       setIsLoading(false);
     }
-  }, [user, extension, isConnected, onClose, onDisconnect]);
-
-  const handleClickStartChat = async () => {
-    if (!extension) return;
-
-    try {
-      const threadId = uuidv4();
-      await createThread(user, threadId, `New ${extension.name} Chat`, extension.key as ThreadType);
-      toast({ type: 'success', description: `Starting chat with ${extension.name}` });
-      router.push(`/chat/${threadId}/${extension.key}`);
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      toast({ type: 'error', description: 'Failed to start chat' });
-    } finally {
-      onClose();
-    }
-  };
+  }, [isConnected, onClose, onDisconnect]);
 
   if (!isOpen || !extension) return null;
 
@@ -143,7 +121,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
               ) : extensionActions.length > 0 ? (
                 extensionActions.map((action) => (
                   <div
-                    key={action.key}
+                    key={action.enum}
                     className="mb-1 grid grid-cols-[25px_1fr] items-start pb-1 last:mb-0 last:pb-0"
                   >
                     <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
@@ -171,13 +149,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
               {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />} Connect
             </Button>
           )}
-          <Button
-            className="bg-green-600 text-white hover:bg-green-700 mb-2"
-            disabled={!isConnected || isLoading}
-            onClick={handleClickStartChat}
-          >
-            Start Chat
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

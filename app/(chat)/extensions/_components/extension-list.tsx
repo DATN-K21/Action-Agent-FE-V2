@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -36,6 +36,8 @@ export type ExtensionListProps = {
 export default function ExtensionList(props: ExtensionListProps) {
   const { user } = props;
 
+  const isExtensionListFetchedRef = useRef<boolean>(false);
+
   const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
   const [filteredExtensions, setFilteredExtensions] = useState<IExtension[]>([]);
   const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
@@ -51,14 +53,18 @@ export default function ExtensionList(props: ExtensionListProps) {
       return;
     }
 
-    const fetchExtensionData = async () => {
+    const fetchExtensionData = async (): Promise<void> => {
+      if (isExtensionListFetchedRef.current === true) {
+        return;
+      }
+
       setLoading(true);
       try {
         const extensionParams = { user } as ExtensionParams;
         const allExtension = await getAllExtensions(extensionParams);
         const connectedExtensionData = await getConnectedExtensions(extensionParams);
 
-        console.log('All Extensions: ', allExtension);
+        isExtensionListFetchedRef.current = true;
         const updatedExtensions = allExtension.map((extension) => ({
           ...extension,
           connected:
@@ -66,7 +72,6 @@ export default function ExtensionList(props: ExtensionListProps) {
               (ext) => ext.extensionName === extension.key,
             ) || false,
         }));
-        console.log('Updated Extensions: ', updatedExtensions);
 
         const newFilteredExtensions = updatedExtensions
           .sort((a, b) =>

@@ -1,9 +1,9 @@
+import { IExtensionAction } from '@/constants/data';
 import { AI_ENDPOINT_V1, EXTENSION_ENDPOINT, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import {
   IConnectedExtension,
   IGetConnectedExtensions,
-  IGetExtensionActionsResponse,
   IActiveExtensionResponse,
   IExtension,
 } from '@/types/extension';
@@ -80,21 +80,18 @@ export const getDetailExtension = async (params: ExtensionParams): Promise<IConn
   }
 };
 
-export const getExtensionActions = async (
-  params: ExtensionParams,
-): Promise<IGetExtensionActionsResponse> => {
+export const getExtensionActions = async (params: ExtensionParams): Promise<IExtensionAction[]> => {
   try {
     if (!params.extension) throw new Error('Extension is required');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
-    const response: IResponse<IGetExtensionActionsResponse> = await sendRequest({
-      url: `${AI_ENDPOINT_V1}/extension/${params.extension.key}/get-actions`,
+    const response: IResponse<IExtensionAction[]> = await sendRequest({
+      url: `${EXTENSION_ENDPOINT}/actions?appKey=${params.extension.key}`,
       method: HttpMethod.GET,
-      headers: headers,
     });
 
-    return response.data as IGetExtensionActionsResponse;
+    return response.data as IExtensionAction[];
   } catch (error) {
     console.error('Error getting extension actions: ', error);
     throw error;

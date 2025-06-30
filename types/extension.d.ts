@@ -36,10 +36,6 @@ export interface IGetConnectedExtensions {
   connectedExtensions: IConnectedExtension[];
 }
 
-export interface IGetExtensionActionsResponse {
-  actions: string[];
-}
-
 export interface IActiveExtensionResponse {
   isExisted: boolean;
   redirectUrl: string;
