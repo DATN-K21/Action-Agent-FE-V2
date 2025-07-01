@@ -9,7 +9,6 @@ import {
 import { IAssistant } from '@/types/assistant';
 import { MoreHorizontal, Pencil, Trash, Bot } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
 import useChatStore from '@/store/chat-store';
 import { ThreadType } from '@/constants/extension-constant';
 import { toast } from '@/components/toast';
@@ -35,10 +34,9 @@ export function AssistantCard({ user, assistant, onEdit, onDelete }: AssistantCa
 
     setIsLoading(true);
     try {
-      const threadId = uuidv4();
-      await createThread(user, threadId, `Chat with ${assistant.name}`, ThreadType.ASSISTANT);
+      const thread = await createThread(user, `Chat with ${assistant.name}`, assistant.id);
       toast({ type: 'success', description: `Starting chat with ${assistant.name}` });
-      router.push(`/chat/${threadId}/${ThreadType.ASSISTANT}`);
+      router.push(`/chat/${thread.id}`);
     } catch (error) {
       console.error('Error starting chat:', error);
       toast({ type: 'error', description: 'Failed to start chat' });

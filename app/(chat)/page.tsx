@@ -24,5 +24,13 @@ export default async function Page() {
     expiresAt: session.expiresAt,
   };
 
-  return <Chat id={''} user={user} initialMessages={[]} extensionName={ExtensionType.DEFAULT} />;
+  return (
+    <Chat
+      id={''}
+      assistantId={''}
+      user={user}
+      initialMessages={[]}
+      extensionName={ExtensionType.DEFAULT}
+    />
+  );
 }

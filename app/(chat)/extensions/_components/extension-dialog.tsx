@@ -97,6 +97,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       onClose();
       setIsLoading(false);
     }
+
   }, [isConnected, onClose, onDisconnect]);
 
   if (!isOpen || !extension) return null;

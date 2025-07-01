@@ -180,10 +180,9 @@ export default function MCPServerTable(props: { user: User }) {
   const handleStartChat = async () => {
     try {
       setLoading(true);
-      const threadId = uuid();
-      await createThread(user, threadId, `New MCP Chat`, ThreadType.MCP);
+      const thread = await createThread(user, `New MCP Chat`, ThreadType.MCP);
 
-      router.push(`/chat/${threadId}/mcp`);
+      router.push(`/chat/${thread.id}/mcp`);
       toast({
         type: 'success',
         description: `Started a new chat with MCP`,

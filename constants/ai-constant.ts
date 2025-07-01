@@ -7,6 +7,8 @@ export enum AgentType {
 export enum MessageType {
   AI = 'ai',
   HUMAN = 'human',
+  TOOL = 'tool',
+  INTERRUPT = 'interrupt',
 }
 
 export enum ChatStatus {
@@ -20,4 +22,5 @@ export enum TeamType {
   CHATBOT = 'chatbot',
   SEARCHBOT = 'searchbot',
   RAGBOT = 'ragbot',
+  HIERARCHICAL = 'hierarchical',
 }

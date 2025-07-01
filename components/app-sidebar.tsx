@@ -20,6 +20,8 @@ import {
   HiOutlineServer,
   HiOutlinePuzzle,
 } from 'react-icons/hi';
+import { useAssistantStore } from '@/store/assistant-store';
+import { useEffect } from 'react';
 
 type navCustomItemProps = {
   title: string;
@@ -52,6 +54,11 @@ const navCustomItems: navCustomItemProps[] = [
 
 export function AppSidebar({ user }: { user: User }) {
   const { setOpenMobile } = useSidebar();
+  const fetchAssistants = useAssistantStore((state) => state.fetchAssistants);
+
+  useEffect(() => {
+    fetchAssistants(user);
+  }, [user, fetchAssistants]);
 
   return (
     <Sidebar className="group-data-[side=left]:border-r-0">

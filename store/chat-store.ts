@@ -19,6 +19,7 @@ import {
 import { createThread } from '@/services/thread-service';
 import { useThreadStore } from '@/store/thread-store';
 import { ExtensionType } from '@/constants/extension-constant';
+import { assistants } from '@/constants/data';
 
 type ChatState = {
   agent: AgentType;
@@ -26,6 +27,7 @@ type ChatState = {
   messages: IMessage[];
   humanInput: string;
   status: ChatStatus;
+  selectedAssistant: any;
   threadId: string;
   teamId: string;
   isCreatingThread: boolean;
@@ -36,6 +38,7 @@ type ChatActions = {
   setExtension: (extension: ExtensionType) => void;
   setMessages: (messages: IMessage[]) => void;
   setHumanInput: (text: string) => void;
+  setSelectedAssistant: (assistantId: string) => void;
   setThreadId: (threadId: string) => void;
   setTeamId: (teamId: string) => void;
   setStatus: (status: ChatStatus) => void;
@@ -56,11 +59,12 @@ type ChatStore = ChatState & ChatActions;
 const useChatStore = create<ChatStore>()(
   devtools(
     immer((set, get) => ({
-      agent: AgentType.CHAT,
+      agent: AgentType.CHAT as AgentType,
       extension: ExtensionType.DEFAULT,
-      messages: [],
+      messages: [] as IMessage[],
       humanInput: '',
       status: ChatStatus.READY,
+      selectedAssistant: null,
       threadId: '',
       teamId: '',
       isCreatingThread: false,
@@ -71,6 +75,10 @@ const useChatStore = create<ChatStore>()(
       setHumanInput: (text) => set({ humanInput: text }),
       setThreadId: (threadId) => set({ threadId }),
       setTeamId: (teamId) => set({ teamId }),
+      setSelectedAssistant: (assistantId) => {
+        const assistant = assistants.find((assistant: any) => assistant.id === assistantId);
+        set({ selectedAssistant: assistant });
+      },
       setStatus: (status) => set({ status }),
 
       // Create a new chat thread
@@ -515,7 +523,7 @@ const useChatStore = create<ChatStore>()(
                   const jsonString = line.substring(6).trim();
                   const data = JSON.parse(jsonString);
 
-                  if (data.type === MessageType && data.content) {
+                  if (data.type === MessageType.AI && data.content) {
                     set((state) => {
                       const lastIndex = state.messages.length - 1;
                       if (lastIndex >= 0 && state.messages[lastIndex].type === MessageType.AI) {
