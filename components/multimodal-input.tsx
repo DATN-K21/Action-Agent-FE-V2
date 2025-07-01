@@ -19,7 +19,6 @@ import { Brain, Mic, Check, X } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { generateTitle, handleUploadFile, recognizeVoice } from '@/services/thread-service';
 import { useThreadStore } from '@/store/thread-store';
-import { selectedAssistant } from '@/constants/data';
 
 interface MultimodalInputProps {
   user: User;
@@ -30,14 +29,13 @@ interface MultimodalInputProps {
 function PureMultimodalInput(props: MultimodalInputProps) {
   const { user, status, className } = props;
 
-  const agent = useChatStore((state) => state.agent);
   const extension = useChatStore((state) => state.extension);
   const messages = useChatStore((state) => state.messages);
   const input = useChatStore((state) => state.humanInput);
+  const selectedAssistant = useChatStore((state) => state.selectedAssistant);
   const threadId = useChatStore((state) => state.threadId);
   const teamId = useChatStore((state) => state.teamId);
   const setInput = useChatStore((state) => state.setHumanInput);
-  const setAgent = useChatStore((state) => state.setAgent);
   const setTeamId = useChatStore((state) => state.setTeamId);
   const append = useChatStore((state) => state.appendMessage);
   const stop = useChatStore((state) => state.stopStream);
@@ -58,10 +56,12 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const [pendingFiles, setPendingFiles] = useState<Array<File>>([]);
 
+  const isAdvancedAssistant = selectedAssistant?.assistantType === 'advanced_assistant';
+
   // Helper function to get team ID by workflow type
   const getTeamIdByWorkflowType = (workflowType: TeamType): string => {
-    const team = selectedAssistant.teams.find((team) => team.workflow_type === workflowType);
-    return team?.id || selectedAssistant.teams[0].id;
+    const team = selectedAssistant?.teams.find((team: any) => team.workflow_type === workflowType);
+    return team?.id || selectedAssistant?.teams[0].id;
   };
 
   // Auto-generate title when two messages are sent and status is ready and threadId is set
@@ -435,6 +435,32 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+        {isAdvancedAssistant && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                data-testid="search-agent-button"
+                className={cx(
+                  'rounded-md p-[7px] h-fit dark:border-zinc-700',
+                  teamId === getTeamIdByWorkflowType(TeamType.HIERARCHICAL)
+                    ? 'bg-zinc-600 text-white hover:bg-zinc-800 hover:text-white dark:hover:bg-zinc-700'
+                    : 'hover:bg-zinc-300 dark:hover:bg-zinc-900',
+                )}
+                variant="ghost"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const hierarchicalTeamId = getTeamIdByWorkflowType(TeamType.HIERARCHICAL);
+                  const mainTeamId = getTeamIdByWorkflowType(TeamType.CHATBOT);
+                  setTeamId(teamId === hierarchicalTeamId ? mainTeamId : hierarchicalTeamId);
+                }}
+              >
+                <GlobeIcon size={14} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Hierarhical</TooltipContent>
+          </Tooltip>
+        )}
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

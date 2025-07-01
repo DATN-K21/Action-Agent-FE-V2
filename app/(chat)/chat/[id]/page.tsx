@@ -65,7 +65,10 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
       payload: { threadId: id },
     });
 
-    console.log('response', response);
+    const thread = await getThread({
+      user,
+      payload: { threadId: id },
+    });
 
     const initialMessages: IMessage[] = response?.messages?.map((message) => ({
       id: message.id,
@@ -82,6 +85,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
     return (
       <Chat
         id={id}
+        assistantId={thread.assistantId}
         user={user}
         initialMessages={initialMessages || []}
         extensionName={ExtensionType.DEFAULT}

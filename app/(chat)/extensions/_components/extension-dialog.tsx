@@ -112,10 +112,9 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
     if (!extension) return;
 
     try {
-      const threadId = uuidv4();
-      await createThread(user, threadId, `New ${extension.name} Chat`, extension.key as ThreadType);
+      const thread = await createThread(user, `New ${extension.name} Chat`, extension.key);
       toast({ type: 'success', description: `Starting chat with ${extension.name}` });
-      router.push(`/chat/${threadId}/${extension.key}`);
+      router.push(`/chat/${thread.id}/${extension.key}`);
     } catch (error) {
       console.error('Error starting chat:', error);
       toast({ type: 'error', description: 'Failed to start chat' });
