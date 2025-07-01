@@ -1,5 +1,25 @@
-export interface IGetAllExtensionResponse {
-  extensions: string[];
+export interface IExtension {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  logo: string;
+  displayName?: string;
+  isCustomApp?: boolean;
+  noAuth?: boolean;
+  enabled?: boolean;
+  docs?: string;
+  categories?: string[];
+  tags?: string[];
+  authSchemes?: string[];
+  getCurrentUserEndpoint?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  testConnectors?: any[];
+  triggerCount?: number;
+  actionsCount?: number;
+  // Custom properties
+  connected?: boolean;
 }
 
 export interface IConnectedExtension {
@@ -14,10 +34,6 @@ export interface IConnectedExtension {
 
 export interface IGetConnectedExtensions {
   connectedExtensions: IConnectedExtension[];
-}
-
-export interface IGetExtensionActionsResponse {
-  actions: string[];
 }
 
 export interface IActiveExtensionResponse {

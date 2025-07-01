@@ -1,18 +1,17 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
-import { useState, memo, useEffect } from 'react';
+import { Icons } from '@/components/icon';
+import { toast } from '@/components/toast';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
-import { SparklesIcon } from './icons';
 import useChatStore from '@/store/chat-store';
+import { AnimatePresence, motion } from 'framer-motion';
 import { User } from 'next-auth';
-import { toast } from '@/components/toast';
-import { Icons } from '@/components/icon';
-import { extensionActionList } from '@/constants/data';
+import { memo, useEffect, useMemo, useState } from 'react';
+import { SparklesIcon } from './icons';
 
 const formatArgumentKey = (key: string): string => {
   return key
@@ -21,25 +20,76 @@ const formatArgumentKey = (key: string): string => {
     .join(' ');
 };
 
-const getActionName = (actionKey: string): string => {
-  const action = extensionActionList.find((action) => action.key === actionKey);
-  return action ? action.name : actionKey;
-};
+interface ActionArg {
+  key: string;
+  value: any;
+  label: string;
+  component: JSX.Element;
+}
+
+interface ToolCallProps {
+  name: string;
+  args: Record<string, any>;
+  id: string;
+  type: string;
+}
 
 const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: User }) => {
   const status = useChatStore((state) => state.status);
   const handleStreamInterrupt = useChatStore((state) => state.handleStreamInterrupt);
 
-  const firstToolCall = toolCalls[0] || {};
-  const pureArgs = firstToolCall.args || {};
+  const firstToolCall = useMemo<ToolCallProps>((): ToolCallProps => {
+    return toolCalls[0] || {};
+  }, [toolCalls]);
+  const pureArgs = useMemo((): Record<string, any> => {
+    if (!firstToolCall || !firstToolCall.args) {
+      return {};
+    }
+
+    return Object.keys(firstToolCall.args).reduce((acc: Record<string, any>, key: string) => {
+      if (['string', 'number'].includes(typeof firstToolCall.args[key]) === true) {
+        acc[key] = firstToolCall.args[key];
+      }
+      return acc;
+    }, {});
+  }, [firstToolCall]);
+
+  const argTextInputElements = useMemo<ActionArg[]>((): ActionArg[] => {
+    if (!pureArgs || Object.keys(pureArgs).length === 0) {
+      return [];
+    }
+
+    return Object.keys(pureArgs).map((key: string) => {
+      const value = pureArgs[key];
+      const isUsingTextArea = typeof value === 'string' && value.length > 50;
+      return {
+        key: key,
+        value: value,
+        label: formatArgumentKey(key),
+        component: isUsingTextArea ? (
+          <Textarea
+            value={value}
+            onChange={(e) => setArgs((prev: any) => ({ ...prev, [key]: e.target.value }))}
+            className="mt-1 w-full"
+            disabled={status !== ChatStatus.READY}
+          />
+        ) : (
+          <Input
+            value={value}
+            onChange={(e) => setArgs((prev: any) => ({ ...prev, [key]: e.target.value }))}
+            className="mt-1 w-full"
+            disabled={status !== ChatStatus.READY}
+          />
+        ),
+      };
+    });
+  }, [pureArgs, status]);
 
   const [args, setArgs] = useState(pureArgs);
-  const actionKey = firstToolCall.name || 'Unknown Action';
-  const actionName = getActionName(actionKey);
 
   useEffect(() => {
     setArgs(firstToolCall.args || {});
-  }, [toolCalls, firstToolCall.args]);
+  }, [firstToolCall.args]);
 
   const handleConfirmAction = async () => {
     try {
@@ -85,33 +135,21 @@ const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: U
               <CardContent className="space-y-4">
                 <div>
                   <p className="font-semibold">Action Type:</p>
-                  <p className="p-2 border rounded bg-gray-100">{actionName}</p>
+                  <p className="p-2 border rounded bg-gray-100">
+                    {firstToolCall?.name || 'Unknown Action'}
+                  </p>
                 </div>
 
-                {Object.keys(pureArgs).map((key) => (
-                  <div key={key}>
-                    <label className="font-semibold">{formatArgumentKey(key)}</label>
-                    {pureArgs[key] && pureArgs[key].length > 50 ? (
-                      <Textarea
-                        value={args[key]}
-                        onChange={(e) =>
-                          setArgs((prev: any) => ({ ...prev, [key]: e.target.value }))
-                        }
-                        className="mt-1 w-full"
-                        disabled={status !== ChatStatus.READY}
-                      />
-                    ) : (
-                      <Input
-                        value={args[key]}
-                        onChange={(e) =>
-                          setArgs((prev: any) => ({ ...prev, [key]: e.target.value }))
-                        }
-                        className="mt-1 w-full"
-                        disabled={status !== ChatStatus.READY}
-                      />
-                    )}
-                  </div>
-                ))}
+                {argTextInputElements &&
+                  argTextInputElements.length > 0 &&
+                  argTextInputElements.map((arg: ActionArg) => {
+                    return (
+                      <div key={arg.key}>
+                        <label className="font-semibold">{arg.label}</label>
+                        {arg.component}
+                      </div>
+                    );
+                  })}
 
                 <div className="flex flex-col sm:flex-row justify-end gap-2">
                   <Button
