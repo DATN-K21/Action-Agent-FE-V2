@@ -13,19 +13,28 @@ image:
 # Environment variables
 env:
   # Public endpoints
-  - name: NEXT_PUBLIC_USER_API__V1_ENDPOINT
+  - name: NEXT_PUBLIC_USER_APIV1_ENDPOINT
     value: "https://api.action-agent.software/user/api/v1"
-  - name: NEXT_PUBLIC_AI_API__V1_ENDPOINT
+    
+  - name: NEXT_PUBLIC_AI_APIV1_ENDPOINT
     value: "https://api.action-agent.software/ai/api/v1"
+
+  - name: NEXT_PUBLIC_AI_APIV2_ENDPOINT
+    value: "https://api.action-agent.software/ai/api/v2"
+
+  - name: NEXT_PUBLIC_EXTENSION_APIV1_ENDPOINT
+    value: "https://api.action-agent.software/extension"
   
   # Auth
   - name: NEXTAUTH_URL
     value: "https://action-agent.software"
+
   - name: NEXTAUTH_SECRET
     valueFrom:
       secretKeyRef:
         name: fe-env-secret
         key: nextauthsecret
+        
   - name: AUTH_GOOGLE_ID
     valueFrom:
       secretKeyRef:
