@@ -1,6 +1,5 @@
 import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
-import { ExtensionType } from '@/constants/extension-constant';
 import { User } from 'next-auth';
 import { notFound } from 'next/navigation';
 
@@ -24,13 +23,5 @@ export default async function Page() {
     expiresAt: session.expiresAt,
   };
 
-  return (
-    <Chat
-      id={''}
-      assistantId={''}
-      user={user}
-      initialMessages={[]}
-      extensionName={ExtensionType.DEFAULT}
-    />
-  );
+  return <Chat id={''} assistantId={''} user={user} initialMessages={[]} />;
 }

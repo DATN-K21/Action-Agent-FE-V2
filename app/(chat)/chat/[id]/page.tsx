@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
 
 import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
@@ -7,7 +6,6 @@ import { Chat } from '@/components/chat';
 import { getThread, getThreadHistory } from '@/services/thread-service';
 import { IMessage, IGetThreadHistoryResponse } from '@/types/ai';
 import { User } from 'next-auth';
-import { ExtensionType } from '@/constants/extension-constant';
 import { Metadata } from 'next';
 
 export async function generateMetadata({
@@ -88,7 +86,6 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
         assistantId={thread.assistantId}
         user={user}
         initialMessages={initialMessages || []}
-        extensionName={ExtensionType.DEFAULT}
       />
     );
   } catch {

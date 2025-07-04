@@ -16,10 +16,8 @@ import { IAssistant } from '@/types/assistant';
 import { updateAssistant } from '@/services/assistant-service';
 import { toast } from '@/components/toast';
 import { MultiSelect } from './multiple-select';
-import { extensions } from '@/constants/data';
 import { IConnectedExtension } from '@/types/extension';
 import { IMCP } from '@/types/mcp';
-import { AssistantType } from '@/constants/assistant-constant';
 
 type EditAssistantDialogProps = {
   open: boolean;
@@ -56,21 +54,6 @@ export function EditAssistantDialog({
       );
     }
   }, [assistant]);
-
-  const extensionsChoice = useMemo(() => {
-    if (!extensionOptions || extensionOptions.length === 0) {
-      return [];
-    }
-
-    return extensions
-      .filter((extension) =>
-        extensionOptions.some((option) => option.extensionName === extension.key),
-      )
-      .map((ext) => ({
-        name: ext.name,
-        key: extensionOptions.find((option) => option.extensionName === ext.key)?.id || '',
-      }));
-  }, [extensionOptions]);
 
   const mcpChoice = useMemo(() => {
     if (!mcpOptions || mcpOptions.length === 0) {
@@ -189,7 +172,7 @@ export function EditAssistantDialog({
           {assistant && (
             <div className="grid w-full max-w-sm items-center gap-1.5">
               <Label className="pt-1.5">Extensions</Label>
-              <>
+              {/* <>
                 <MultiSelect
                   options={extensionsChoice}
                   values={workerIds}
@@ -201,7 +184,7 @@ export function EditAssistantDialog({
                     No extensions available. Please connect some extensions first.
                   </p>
                 )}
-              </>
+              </> */}
               <Label className="pt-1.5">MCP Servers</Label>
               <>
                 <MultiSelect

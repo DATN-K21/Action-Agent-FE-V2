@@ -41,17 +41,17 @@ export interface DeleteAssistantParams {
   assistantId: string;
 }
 
-export const getGeneralAssistants = async (params: GetAssistantsParams): Promise<IAssistant> => {
+export const getAllAssistants = async (params: GetAssistantsParams): Promise<IAssistant[]> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
-    const response: IResponse<IAssistant> = await sendRequest({
-      url: `${AI_ENDPOINT_V1}/assistant/get-or-create-general-assistant`,
+    const response: IResponse<{ assistants: IAssistant[] }> = await sendRequest({
+      url: `${AI_ENDPOINT_V1}/assistant/get-all`,
       method: HttpMethod.GET,
       headers: headers,
     });
 
-    return response?.data || ({} as IAssistant);
+    return response.data?.assistants as IAssistant[];
   } catch (error) {
     console.error('Error getting assistants: ', error);
     throw error;

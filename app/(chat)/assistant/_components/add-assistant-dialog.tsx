@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { MultiSelect } from './multiple-select';
-import { extensions } from '@/constants/data';
 import { createAssistant } from '@/services/assistant-service';
 import { User } from 'next-auth';
 import { toast } from '@/components/toast';
@@ -43,17 +42,6 @@ export function AddAssistantDialog({
   const [description, setDescription] = useState('');
   const [workerIds, setWorkerIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  const extensionsChoice = useMemo(() => {
-    return extensions
-      .filter((extension) =>
-        extensionOptions?.some((option) => option.extensionName === extension.key),
-      )
-      .map((ext) => ({
-        name: ext.name,
-        key: extensionOptions?.find((option) => option.extensionName === ext.key)?.id || '',
-      }));
-  }, [extensionOptions]);
 
   const mcpChoice = useMemo(() => {
     return (
@@ -166,12 +154,12 @@ export function AddAssistantDialog({
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label className="pt-1.5">Extensions</Label>
 
-            <MultiSelect
+            {/* <MultiSelect
               options={extensionsChoice}
               values={workerIds}
               onChange={setWorkerIds}
               className="w-full max-w-sm"
-            />
+            /> */}
             <Label className="pt-1.5">MCP Servers</Label>
             <MultiSelect
               options={mcpChoice}

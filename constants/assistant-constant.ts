@@ -1,4 +1,4 @@
 export enum AssistantType {
-  EXTENSION = 'extension',
-  MCP_SERVER = 'mcp',
+  GENERAL_ASSISTANT = 'general_assistant',
+  ADVANCED_ASSISTANT = 'advanced_assistant',
 }

@@ -4,17 +4,17 @@ import { AssistantType } from '@/constants/assistant-constants';
 
 export interface ITeamProps {
   id: string;
+  name: string;
+  description: string;
   workflow_type: string;
 }
 export interface IAssistant {
   id: string;
   name: string;
-  type: AssistantType;
+  assistantType: AssistantType;
   workers: (IMCP | IConnectedExtension)[];
-  description?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  teams?: ITeamProps[];
+  description: string;
+  teams: ITeamProps[];
 }
 
 export interface CreateAssistantRequest {
