@@ -36,8 +36,8 @@ function PureMessages({ status, messages, user }: MessagesProps) {
               />
             )}
 
-          {message.interrupted && message.tool_calls && (
-            <ActionConfirmation toolCalls={message.tool_calls} user={user} />
+          {message.type === MessageType.INTERRUPT && (message.tool_calls || message.content) && (
+            <ActionConfirmation message={message} user={user} />
           )}
         </Fragment>
       ))}

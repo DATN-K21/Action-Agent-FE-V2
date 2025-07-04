@@ -22,6 +22,7 @@ export function Chat(props: ChatProps) {
   const status = useChatStore((state) => state.status);
   const isCreatingThread = useChatStore((state) => state.isCreatingThread);
   const setMessages = useChatStore((state) => state.setMessages);
+  const setTeamId = useChatStore((state) => state.setTeamId);
   const setThreadId = useChatStore((state) => state.setThreadId);
   const setAssistant = useChatStore((state) => state.setAssistant);
   const reloadChat = useChatStore((state) => state.reloadChat);
@@ -32,11 +33,13 @@ export function Chat(props: ChatProps) {
     reloadChat();
     setThreadId(id);
     setMessages(initialMessages);
-  }, [id, assistantId, initialMessages, reloadChat, setMessages, setThreadId, setAssistant]);
+  }, [assistants, assistantId]);
 
   useEffect(() => {
     const assistant = assistants.find((assistant) => assistant.id === assistantId) || assistants[0];
-    setAssistant(assistant?.id);
+
+    setAssistant(assistant);
+    setTeamId(assistant?.teams?.[0]?.id);
   }, [assistants]);
 
   return (
