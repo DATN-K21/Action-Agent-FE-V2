@@ -3,23 +3,23 @@
 import type { Attachment } from 'ai';
 import cx from 'classnames';
 import type React from 'react';
-import { useRef, useState, useCallback, type ChangeEvent, memo, useEffect } from 'react';
+import { memo, useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon, GlobeIcon, BotIcon } from './icons';
+import { toast } from '@/components/toast';
+import { ChatStatus, MessageType, TeamType } from '@/constants/ai-constant';
+import { AssistantType } from '@/constants/assistant-constant';
+import { generateTitle, handleUploadFile, recognizeVoice } from '@/services/thread-service';
+import useChatStore from '@/store/chat-store';
+import { useThreadStore } from '@/store/thread-store';
+import { Brain, Check, Mic, X } from 'lucide-react';
+import { User } from 'next-auth';
+import { ArrowUpIcon, BotIcon, GlobeIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
+import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { SuggestedActions } from './suggested-actions';
-import { ChatStatus, MessageType, TeamType } from '@/constants/ai-constant';
-import { User } from 'next-auth';
-import useChatStore from '@/store/chat-store';
-import { toast } from '@/components/toast';
-import { Brain, Mic, Check, X } from 'lucide-react';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { generateTitle, handleUploadFile, recognizeVoice } from '@/services/thread-service';
-import { useThreadStore } from '@/store/thread-store';
-import { AssistantType } from '@/constants/assistant-constant';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface MultimodalInputProps {
   user: User;
@@ -98,35 +98,55 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
-  const uploadFile = async (file: File) => {
-    try {
-      //Create new thread if on home page
-      if (window.location.pathname === '/') {
-        const thread = await createThread(user, 'New Chat', assistant!.id);
-        setThreadId(thread.id);
-        window.history.replaceState({}, '', `/chat/${thread.id}`);
-      }
+  const uploadFile = useCallback(
+    async (file: File) => {
+      try {
+        //Create new thread if on home page
+        if (window.location.pathname === '/') {
+          const thread = await createThread(user, 'New Chat', assistant!.id);
+          setThreadId(thread.id);
+          window.history.replaceState({}, '', `/chat/${thread.id}`);
+        }
 
-      const response = await handleUploadFile({
-        user,
-        threadId,
-        payload: { file },
-      });
+        const response = await handleUploadFile({
+          user,
+          threadId,
+          payload: { file },
+        });
 
-      if (response.isSuccess) {
-        return {
-          url: response.output,
-          name: file.name,
-          contentType: file.type,
-        };
-      } else {
+        if (response.isSuccess) {
+          return {
+            url: response.output,
+            name: file.name,
+            contentType: file.type,
+          };
+        } else {
+          toast({
+            type: 'error',
+            description: 'Error uploading file, please try again!',
+          });
+          // Apend error message to chat
+          append({
+            id: 'upload-file-error',
+            type: MessageType.AI,
+            name: '',
+            content: 'Error uploading file, please try again!',
+            documents: null,
+            imgdata: '',
+            tool_calls: [],
+            tool_output: null,
+            next: '',
+          });
+          return undefined;
+        }
+      } catch (error) {
         toast({
           type: 'error',
           description: 'Error uploading file, please try again!',
         });
         // Apend error message to chat
         append({
-          id: 'upload-file-error',
+          id: 'error',
           type: MessageType.AI,
           name: '',
           content: 'Error uploading file, please try again!',
@@ -136,27 +156,10 @@ function PureMultimodalInput(props: MultimodalInputProps) {
           tool_output: null,
           next: '',
         });
-        return undefined;
       }
-    } catch (error) {
-      toast({
-        type: 'error',
-        description: 'Error uploading file, please try again!',
-      });
-      // Apend error message to chat
-      append({
-        id: 'error',
-        type: MessageType.AI,
-        name: '',
-        content: 'Error uploading file, please try again!',
-        documents: null,
-        imgdata: '',
-        tool_calls: [],
-        tool_output: null,
-        next: '',
-      });
-    }
-  };
+    },
+    [append, assistant, createThread, setThreadId, threadId, user],
+  );
 
   const submitForm = useCallback(async () => {
     setStatus(ChatStatus.SUBMITTED);
@@ -218,19 +221,17 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       });
     }
   }, [
-    attachments,
-    user,
-    width,
-    pendingFiles,
-    threadId,
+    append,
+    assistant,
+    createThread,
     handleStreamTeam,
-    renameThread,
+    pendingFiles,
     setInput,
     setStatus,
-    setAttachments,
+    setThreadId,
     uploadFile,
-    append,
-    createThread,
+    user,
+    width,
   ]);
 
   const handleFileChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
@@ -276,11 +277,9 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   };
 
   const handleStartRecord = async () => {
-    console.log('handleStartRecord called');
     let currentStream = streaming;
 
     if (!micPermission || !currentStream) {
-      console.log('Requesting microphone permission');
       const permissionStream = await getMicrophonePermission();
       if (!permissionStream) {
         return;
@@ -301,8 +300,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     };
 
     mediaRecorder.onstop = async () => {
-      console.log('Recording stopped, preparing to send...');
-
       const blob = new Blob(chunks, { type: 'audio/webm' });
       const formData = new FormData();
       formData.append('audioFile', blob, 'voice.webm');
@@ -347,7 +344,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     }
     setInput('');
     setIsRecording(false);
-    console.log('Recording canceled');
   };
 
   return (

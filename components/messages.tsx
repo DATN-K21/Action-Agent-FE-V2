@@ -1,13 +1,14 @@
-import { PreviewMessage, ThinkingMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import { Overview } from './overview';
-import { Fragment, memo, useEffect } from 'react';
-import equal from 'fast-deep-equal';
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
-import { ActionConfirmation } from '@/components/action-confirmation';
-import { User } from 'next-auth';
+import { Root as AccordionRoot } from '@radix-ui/react-accordion';
+import equal from 'fast-deep-equal';
 import { ArrowDown } from 'lucide-react';
+import { User } from 'next-auth';
+import { memo, useEffect, useState } from 'react';
+import { ThinkingMessage } from './message';
+import MessageContainer from './message-container';
+import { Overview } from './overview';
+import { useScrollToBottom } from './use-scroll-to-bottom';
 
 interface MessagesProps {
   status: ChatStatus;
@@ -17,30 +18,33 @@ interface MessagesProps {
 
 function PureMessages({ status, messages, user }: MessagesProps) {
   const { containerRef, endRef, isAtBottom, scrollToBottom } = useScrollToBottom<HTMLDivElement>();
+  const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
 
   useEffect(() => {
     scrollToBottom('smooth');
-  }, [messages.length]);
+    setSelectedMessageIds(messages.map((message) => message.id));
+  }, [messages, scrollToBottom]);
 
   return (
     <div ref={containerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4">
       {messages.length === 0 && <Overview />}
 
-      {messages.map((message, index) => (
-        <Fragment key={message.id}>
-          {message.content &&
-            (message.type === MessageType.AI || message.type === MessageType.HUMAN) && (
-              <PreviewMessage
-                message={message}
-                isLoading={status === ChatStatus.STREAMING && index === messages.length - 1}
-              />
-            )}
-
-          {message.type === MessageType.INTERRUPT && (message.tool_calls || message.content) && (
-            <ActionConfirmation message={message} user={user} />
-          )}
-        </Fragment>
-      ))}
+      <AccordionRoot
+        type="multiple"
+        value={selectedMessageIds}
+        onValueChange={setSelectedMessageIds}
+      >
+        {messages.map((message, index) => (
+          <div key={message.id} className="mb-4">
+            <MessageContainer
+              status={status}
+              message={message}
+              user={user}
+              isLastMessage={index === messages.length - 1}
+            />
+          </div>
+        ))}
+      </AccordionRoot>
 
       {(status === ChatStatus.SUBMITTED ||
         (messages[messages.length - 1]?.content === '' &&

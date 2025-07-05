@@ -210,7 +210,6 @@ const useChatStore = create<ChatStore>()(
       }
 
       try {
-        console.log('Sending interrupt payload:', payload);
         const interruptParams: InterruptTeamParams = {
           user,
           threadId,

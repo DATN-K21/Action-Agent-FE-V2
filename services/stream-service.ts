@@ -75,8 +75,6 @@ export const interruptTeam = async (params: InterruptTeamParams) => {
   let headers: Record<string, string> = createUserAuthHeaders(params.user);
   headers['Content-Type'] = 'application/json';
   headers['Accept'] = 'application/json';
-  console.log('stringified payload:', JSON.stringify(params.payload));
-
   try {
     // Send the request
     const response = await fetch(
