@@ -443,7 +443,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
                 <BotIcon size={14} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Hierarhical</TooltipContent>
+            <TooltipContent>Hierarchical</TooltipContent>
           </Tooltip>
         )}
 

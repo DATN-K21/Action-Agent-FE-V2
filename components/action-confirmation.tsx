@@ -6,13 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ChatStatus, MessageType } from '@/constants/ai-constant';
+import {
+  ChatStatus,
+  InterruptDecisionType,
+  InterruptType,
+  MessageType,
+} from '@/constants/ai-constant';
 import useChatStore from '@/store/chat-store';
 import { IMessage } from '@/types/ai';
 import { AnimatePresence, motion } from 'framer-motion';
 import { User } from 'next-auth';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { SparklesIcon } from './icons';
+import { IMessageInterruptPayload } from '@/types/assistant';
 
 const formatArgumentKey = (key: string): string => {
   return key
@@ -37,13 +43,14 @@ interface ToolCallProps {
 
 const PureActionConfirmation = ({ message, user }: { message: IMessage; user: User }) => {
   const status = useChatStore((state) => state.status);
-  const handleStreamTeam = useChatStore((state) => state.handleStreamTeam);
+  const handleInterruptTeam = useChatStore((state) => state.handleInterruptTeam);
 
   console.log(message);
 
   const firstToolCall = useMemo<ToolCallProps>((): ToolCallProps => {
     return message.tool_calls?.[0] || {};
   }, [message.tool_calls]);
+
   const pureArgs = useMemo((): Record<string, any> => {
     if (!firstToolCall || !firstToolCall.args) {
       return {};
@@ -94,26 +101,30 @@ const PureActionConfirmation = ({ message, user }: { message: IMessage; user: Us
     setArgs(firstToolCall.args || {});
   }, [firstToolCall.args]);
 
-  const handleConfirmAction = async () => {
+  const handleInterruptAction = async (type: InterruptDecisionType) => {
+    const interruptPayload: IMessageInterruptPayload = {
+      messages: [],
+      interrupt: {
+        interaction_type:
+          message.name === InterruptType.TOOL_REVIEW
+            ? InterruptType.TOOL_REVIEW.toString()
+            : InterruptType.CONTEXT_INPUT.toString(),
+        decision: (type || InterruptDecisionType.REJECTED).toString(),
+        tool_message: JSON.stringify(args),
+      },
+    };
     try {
-      const toolCallsData = message.tool_calls?.map((toolCall) => ({
-        name: toolCall.name,
-        args: { ...toolCall.args, ...args },
-        id: toolCall.id,
-        type: toolCall.type,
-      }));
-
-      await handleStreamTeam(user);
+      await handleInterruptTeam(user, interruptPayload);
+      toast({
+        type: 'success',
+        description: `Action ${type} successfully.`,
+      });
     } catch (error) {
       toast({
         type: 'error',
-        description: 'Failed to confirm action.',
+        description: `Failed to make ${type} action.`,
       });
     }
-  };
-
-  const handleCancelAction = () => {
-    toast({ type: 'info', description: 'Action canceled.' });
   };
 
   return (
@@ -157,7 +168,7 @@ const PureActionConfirmation = ({ message, user }: { message: IMessage; user: Us
                 <div className="flex flex-col sm:flex-row justify-end gap-2">
                   <Button
                     variant="outline"
-                    onClick={handleCancelAction}
+                    onClick={() => handleInterruptAction(InterruptDecisionType.REJECTED)}
                     disabled={status !== ChatStatus.READY}
                   >
                     {status !== ChatStatus.READY && (
@@ -165,7 +176,10 @@ const PureActionConfirmation = ({ message, user }: { message: IMessage; user: Us
                     )}
                     Cancel
                   </Button>
-                  <Button onClick={handleConfirmAction} disabled={status !== ChatStatus.READY}>
+                  <Button
+                    onClick={() => handleInterruptAction(InterruptDecisionType.UPDATE)}
+                    disabled={status !== ChatStatus.READY}
+                  >
                     {status !== ChatStatus.READY && (
                       <Icons.spinner className="mr-2 size-4 animate-spin" />
                     )}
