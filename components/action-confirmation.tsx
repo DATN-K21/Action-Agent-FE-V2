@@ -3,7 +3,16 @@
 import { Icons } from '@/components/icon';
 import { toast } from '@/components/toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -19,6 +28,25 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { User } from 'next-auth';
 import { memo, useEffect, useMemo, useState } from 'react';
 
+interface ActionArg {
+  key: string;
+  value: string | number;
+  label: string;
+  component: JSX.Element;
+}
+
+interface ToolCallProps {
+  name: string;
+  args: Record<string, string | number>;
+  id: string;
+  type: string;
+}
+
+interface ActionConfirmationProps {
+  message: IMessage;
+  user: User;
+}
+
 const formatArgumentKey = (key: string): string => {
   return key
     .split('_')
@@ -26,79 +54,52 @@ const formatArgumentKey = (key: string): string => {
     .join(' ');
 };
 
-interface ActionArg {
-  key: string;
-  value: any;
-  label: string;
-  component: JSX.Element;
-}
-
-interface ToolCallProps {
-  name: string;
-  args: Record<string, any>;
-  id: string;
-  type: string;
-}
-
-const PureActionConfirmation = ({ message, user }: { message: IMessage; user: User }) => {
+const PureActionConfirmation = ({ message, user }: ActionConfirmationProps) => {
   const status = useChatStore((state) => state.status);
   const handleInterruptTeam = useChatStore((state) => state.handleInterruptTeam);
 
-  console.log(message);
-
-  const firstToolCall = useMemo<ToolCallProps>((): ToolCallProps => {
-    return message.tool_calls?.[0] || {};
+  const firstToolCall = useMemo<ToolCallProps>(() => {
+    return message.tool_calls?.[0] || { name: '', args: {}, id: '', type: '' };
   }, [message.tool_calls]);
 
-  const pureArgs = useMemo((): Record<string, any> => {
-    if (!firstToolCall || !firstToolCall.args) {
-      return {};
-    }
+  const [args, setArgs] = useState<Record<string, string | number>>(firstToolCall.args || {});
 
-    return Object.keys(firstToolCall.args).reduce((acc: Record<string, any>, key: string) => {
-      if (['string', 'number'].includes(typeof firstToolCall.args[key]) === true) {
-        acc[key] = firstToolCall.args[key];
-      }
-      return acc;
-    }, {});
-  }, [firstToolCall]);
+  useEffect(() => {
+    setArgs(firstToolCall.args || {});
+  }, [firstToolCall.args]);
 
-  const argTextInputElements = useMemo<ActionArg[]>((): ActionArg[] => {
-    if (!pureArgs || Object.keys(pureArgs).length === 0) {
-      return [];
-    }
+  const handleInputChange = (key: string, value: string) => {
+    setArgs((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
-    return Object.keys(pureArgs).map((key: string) => {
-      const value = pureArgs[key];
-      const isUsingTextArea = typeof value === 'string' && value.length > 50;
-      return {
-        key: key,
-        value: value,
-        label: formatArgumentKey(key),
-        component: isUsingTextArea ? (
+  const argTextInputElements = useMemo(() => {
+    return Object.entries(args).map(([key, value]) => ({
+      key,
+      value,
+      label: formatArgumentKey(key),
+      component:
+        typeof value === 'string' && value.length > 50 ? (
           <Textarea
-            value={value}
-            onChange={(e) => setArgs((prev: any) => ({ ...prev, [key]: e.target.value }))}
+            key={`textarea-${key}`}
+            value={value.toString()}
+            onChange={(e) => handleInputChange(key, e.target.value)}
             className="mt-1 w-full"
             disabled={status !== ChatStatus.READY}
           />
         ) : (
           <Input
-            value={value}
-            onChange={(e) => setArgs((prev: any) => ({ ...prev, [key]: e.target.value }))}
+            key={`input-${key}`}
+            value={value.toString()}
+            onChange={(e) => handleInputChange(key, e.target.value)}
             className="mt-1 w-full"
             disabled={status !== ChatStatus.READY}
           />
         ),
-      };
-    });
-  }, [pureArgs, status]);
-
-  const [args, setArgs] = useState(pureArgs);
-
-  useEffect(() => {
-    setArgs(firstToolCall.args || {});
-  }, [firstToolCall.args]);
+    }));
+  }, [args, status]);
 
   const handleInterruptAction = async (type: InterruptDecisionType) => {
     const interruptPayload: IMessageInterruptPayload = {
@@ -108,20 +109,21 @@ const PureActionConfirmation = ({ message, user }: { message: IMessage; user: Us
           message.name === InterruptType.TOOL_REVIEW
             ? InterruptType.TOOL_REVIEW.toString()
             : InterruptType.CONTEXT_INPUT.toString(),
-        decision: (type || InterruptDecisionType.REJECTED).toString(),
+        decision: type.toString(),
         tool_message: JSON.stringify(args),
       },
     };
+
     try {
       await handleInterruptTeam(user, interruptPayload);
       toast({
         type: 'success',
-        description: `Action ${type} successfully.`,
+        description: `Action "${firstToolCall.name}" (${type}) was performed successfully.`,
       });
     } catch (error) {
       toast({
         type: 'error',
-        description: `Failed to make ${type} action.`,
+        description: `Failed to perform action "${firstToolCall.name}" (${type}).`,
       });
     }
   };
@@ -130,59 +132,58 @@ const PureActionConfirmation = ({ message, user }: { message: IMessage; user: Us
     <AnimatePresence>
       <motion.div
         data-testid="message-action-confirmation"
-        className="w-full mx-auto max-w-4xl group/message"
+        className="w-full mx-auto max-w-4xl"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role={MessageType.AI}
       >
-        <div className="flex flex-col gap-4 w-full py-2">
-          <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl shadow-md">
-            <CardHeader>
-              <CardTitle>Confirm Action</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="font-semibold">Action Type:</p>
-                <p className="p-2 border rounded bg-gray-100">
-                  {firstToolCall?.name || 'Unknown Action'}
-                </p>
+        <AlertDialog defaultOpen>
+          <AlertDialogContent className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl">
+            <AlertDialogHeader className="pb-4 space-y-4">
+              <AlertDialogTitle className="text-xl font-[550]">
+                Allow tool from "{firstToolCall.name}"?
+              </AlertDialogTitle>
+            </AlertDialogHeader>
+            <div className="space-y-6">
+              <div className="rounded-lg border bg-neutral-50 p-4">
+                <p className="text-sm font-medium mb-3">Run {firstToolCall.name}</p>
+                <div className="space-y-4">
+                  {argTextInputElements.map((arg) => (
+                    <div key={arg.key} className="space-y-2">
+                      <label className="text-sm font-medium block">{arg.label}</label>
+                      <div className="relative rounded-md focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-blue-500 focus-within:ring-opacity-50 transition-shadow duration-200">
+                        {arg.component}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {argTextInputElements &&
-                argTextInputElements.length > 0 &&
-                argTextInputElements.map((arg: ActionArg) => {
-                  return (
-                    <div key={arg.key}>
-                      <label className="font-semibold">{arg.label}</label>
-                      {arg.component}
-                    </div>
-                  );
-                })}
-
-              <div className="flex flex-col sm:flex-row justify-end gap-2">
-                <Button
-                  variant="outline"
+              <AlertDialogFooter className="flex flex-row justify-end items-center gap-3 pt-4">
+                <AlertDialogCancel
                   onClick={() => handleInterruptAction(InterruptDecisionType.REJECTED)}
                   disabled={status !== ChatStatus.READY}
+                  className="hover:bg-neutral-100 transition-colors duration-200"
                 >
                   {status !== ChatStatus.READY && (
                     <Icons.spinner className="mr-2 size-4 animate-spin" />
                   )}
-                  Cancel
-                </Button>
-                <Button
+                  Deny
+                </AlertDialogCancel>
+                <AlertDialogAction
                   onClick={() => handleInterruptAction(InterruptDecisionType.UPDATE)}
                   disabled={status !== ChatStatus.READY}
+                  className="bg-black text-white hover:bg-neutral-800 transition-colors duration-200"
                 >
                   {status !== ChatStatus.READY && (
                     <Icons.spinner className="mr-2 size-4 animate-spin" />
                   )}
-                  Confirm
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  Allow
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </motion.div>
     </AnimatePresence>
   );

@@ -21,6 +21,8 @@ interface ChatStore {
   threadId: string;
   teamId: string;
   isCreatingThread: boolean;
+  isInterrupting: boolean;
+  setIsInterrupting: (isInterrupting: boolean) => void;
   setAssistant: (assistant: IAssistant) => void;
   setMessages: (messages: IMessage[]) => void;
   setInput: (input: string) => void;
@@ -44,13 +46,14 @@ const useChatStore = create<ChatStore>()(
     threadId: '',
     teamId: '',
     isCreatingThread: false,
+    isInterrupting: false,
     setAssistant: (assistant) => set({ assistant }),
     setMessages: (messages) => set({ messages }),
     setInput: (input) => set({ input }),
     setThreadId: (threadId) => set({ threadId }),
     setTeamId: (teamId) => set({ teamId }),
     setStatus: (status) => set({ status }),
-
+    setIsInterrupting: (isInterrupting) => set({ isInterrupting }),
     // Create a new chat thread
     createThread: async (
       user: User,
@@ -146,7 +149,14 @@ const useChatStore = create<ChatStore>()(
                 const jsonString = line.substring(6).trim();
                 const data = JSON.parse(jsonString);
 
-                if (data.content || data.tool_calls) {
+                if (
+                  (data.type === MessageType.AI && data.content) ||
+                  (data.type !== MessageType.AI && data.tool_calls)
+                ) {
+                  if (data.type === MessageType.INTERRUPT && data.tool_calls) {
+                    set({ isInterrupting: true });
+                  }
+
                   set((state) => {
                     const lastIndex = state.messages.length - 1;
                     const isTheSameMessageGroup =
@@ -158,7 +168,7 @@ const useChatStore = create<ChatStore>()(
                       state.messages[lastIndex] = {
                         ...state.messages[lastIndex],
                         type: data.type,
-                        content: (state.messages[lastIndex].content || '') + data.content,
+                        content: (state.messages[lastIndex].content || '') + (data.content || ''),
                         name: data.name,
                         imgdata: data.imgdata,
                         tool_calls: data.tool_calls,
@@ -204,6 +214,8 @@ const useChatStore = create<ChatStore>()(
     },
 
     handleInterruptTeam: async (user: User, payload: IMessageInterruptPayload) => {
+      set({ status: ChatStatus.SUBMITTED });
+
       const { threadId, teamId } = get();
       if (!threadId || !teamId) {
         throw new Error('Thread ID and Team ID are required for interrupt handling.');
@@ -217,9 +229,10 @@ const useChatStore = create<ChatStore>()(
           payload,
         };
         const reader = await interruptTeam(interruptParams);
+        set({ status: ChatStatus.SUBMITTED });
+
         const decoder = new TextDecoder();
         let accumulatedText = '';
-        set({ status: ChatStatus.STREAMING });
 
         while (true) {
           const { value, done } = await reader.read();
@@ -242,7 +255,10 @@ const useChatStore = create<ChatStore>()(
                 const jsonString = line.substring(6).trim();
                 const data = JSON.parse(jsonString);
 
-                if (data.content) {
+                if (
+                  (data.type === MessageType.AI && data.content) ||
+                  (data.type !== MessageType.AI && data.tool_calls)
+                ) {
                   set((state) => {
                     const lastIndex = state.messages.length - 1;
                     const isTheSameMessageGroup =
@@ -254,7 +270,7 @@ const useChatStore = create<ChatStore>()(
                       state.messages[lastIndex] = {
                         ...state.messages[lastIndex],
                         type: data.type,
-                        content: (state.messages[lastIndex].content || '') + data.content,
+                        content: (state.messages[lastIndex].content || '') + (data.content || ''),
                         name: data.name,
                         imgdata: data.imgdata,
                         tool_calls: data.tool_calls,

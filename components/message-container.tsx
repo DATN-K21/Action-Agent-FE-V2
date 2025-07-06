@@ -1,16 +1,9 @@
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
-import {
-  Content as AccordionContent,
-  Item as AccordionItem,
-  Trigger as AccordionTrigger,
-} from '@radix-ui/react-accordion';
 import { motion } from 'framer-motion';
 import { SparklesIcon } from 'lucide-react';
 import { User } from 'next-auth';
-import { useMemo, useState } from 'react';
-import { HiOutlineChevronDown } from 'react-icons/hi';
-import { ActionConfirmation } from './action-confirmation';
+import { useMemo } from 'react';
 import { PreviewMessage } from './message';
 
 export interface MessageNameProps {
@@ -21,10 +14,7 @@ export interface MessageNameProps {
 }
 
 function MessageContainer(props: MessageNameProps) {
-  const { status, message, user, isLastMessage } = props;
-  const [isOpen, setIsOpen] = useState(false);
-
-  const uuidRegex = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i;
+  const { status, message, isLastMessage } = props;
 
   const title = useMemo<string>((): string => {
     let name = message?.name || 'Unknown';
@@ -52,9 +42,6 @@ function MessageContainer(props: MessageNameProps) {
       .join(' ');
   }, [message?.name]);
 
-  if (message.content === null && message.type !== MessageType.INTERRUPT) {
-    return null;
-  }
   if (message.type === MessageType.HUMAN) {
     return (
       <PreviewMessage
@@ -67,61 +54,32 @@ function MessageContainer(props: MessageNameProps) {
   return (
     <motion.div
       data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-4xl group/message rounded-lg p-1"
+      className="w-full mx-auto max-w-4xl group/message rounded-lg"
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
       data-role={message.type}
     >
-      {message.type === MessageType.AI && message.content && (
-        <AccordionItem value={message.id}>
-          <AccordionTrigger
-            className="flex justify-between items-center gap-4 w-full rounded-lg pb-1"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <div className="flex items-center gap-2">
-              <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-                <div className="translate-y-px">
-                  <SparklesIcon size={14} />
+      {(message.type === MessageType.AI || message.type === MessageType.TOOL) &&
+        message.content && (
+          <div>
+            <div className="flex justify-between items-center gap-3 w-full rounded-lg cursor-pointer">
+              <div className="flex items-center gap-2">
+                <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
+                  <div className="translate-y-px">
+                    <SparklesIcon size={14} />
+                  </div>
                 </div>
+                <span className="font-semibold text-base">{title}</span>
               </div>
-              <span className="font-semibold text-lg">{title}</span>
             </div>
-            <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
-              <HiOutlineChevronDown />
-            </motion.div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <PreviewMessage
-              message={message}
-              isLoading={status === ChatStatus.STREAMING && isLastMessage}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      )}
-
-      {message.type === MessageType.INTERRUPT && (message.tool_calls || message.content) && (
-        <AccordionItem value={message.id}>
-          <AccordionTrigger
-            className="flex justify-between items-center gap-4 w-full rounded-lg pb-1"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <div className="flex items-center gap-2">
-              <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-                <div className="translate-y-px">
-                  <SparklesIcon size={14} />
-                </div>
-              </div>
-              <span className="font-bold text-lg">{title}</span>
+            <div>
+              <PreviewMessage
+                message={message}
+                isLoading={status === ChatStatus.STREAMING && isLastMessage}
+              />
             </div>
-            <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
-              <HiOutlineChevronDown />
-            </motion.div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <ActionConfirmation message={message} user={user} />
-          </AccordionContent>
-        </AccordionItem>
-      )}
+          </div>
+        )}
     </motion.div>
   );
 }
