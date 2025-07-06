@@ -15,9 +15,8 @@ import {
   disconnectExtension,
   ExtensionParams,
   getAllExtensions,
-  getConnectedExtensions,
+  ICursorFilterProps,
 } from '@/services/extension-service';
-import useChatStore from '@/store/chat-store';
 import { IExtension } from '@/types/extension';
 import {
   IconAdjustmentsHorizontal,
@@ -25,7 +24,7 @@ import {
   IconSortDescendingLetters,
 } from '@tabler/icons-react';
 import { User } from 'next-auth';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { SiRetool } from 'react-icons/si';
 import ExtensionDialog from './extension-dialog';
 
@@ -37,14 +36,103 @@ export default function ExtensionList(props: ExtensionListProps) {
   const { user } = props;
 
   const isExtensionListFetchedRef = useRef<boolean>(false);
+  const loadingMoreRef = useRef<boolean>(false);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
-  const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
-  const [filteredExtensions, setFilteredExtensions] = useState<IExtension[]>([]);
+  const [extensions, setExtensions] = useState<IExtension[]>([]);
   const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
   const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
+  const getDisplayedExtensionName = (extName: string) => {
+    if (extName.length > 20) {
+      return `${extName.slice(0, 20)}...`;
+    }
+    return extName;
+  };
+
+  const [filter, setFilter] = useState<ICursorFilterProps>({
+    limit: 24,
+    category: null,
+    sortBy: 'id',
+    sortOrder: 'asc',
+    search: '',
+    connected: null,
+  });
+
+  const updateFilter = useCallback((field: string, value: any) => {
+    setFilter((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    setExtensions([]);
+    setNextCursor(null);
+    setHasMore(true);
+    isExtensionListFetchedRef.current = false;
+  }, []);
+
+  const loadMoreExtensions = useCallback(async () => {
+    if (!user || !nextCursor || !hasMore || loadingMoreRef.current === true) {
+      return;
+    }
+
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+
+    try {
+      const extensionParams: ExtensionParams = {
+        user,
+        filter: {
+          ...filter,
+          cursor: nextCursor,
+        },
+      } as ExtensionParams;
+      const { data, meta } = await getAllExtensions(extensionParams);
+      if (data.length <= 0 || !meta || !meta.nextCursor || meta.hasMore === false) {
+        setHasMore(false);
+      } else {
+        setNextCursor(meta.nextCursor);
+        setExtensions((prev) => [
+          ...prev,
+          ...data.filter((ext) => !prev.some((e) => e.key === ext.key)),
+        ]);
+        setHasMore(meta.hasMore);
+      }
+    } catch (error) {
+      console.error('Error loading more extensions: ', error);
+    } finally {
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
+    }
+  }, [filter, hasMore, nextCursor, user]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && hasMore && !loadingMore) {
+          loadMoreExtensions();
+        }
+      },
+      { threshold: 1.0, rootMargin: '100px' },
+    );
+    const currentObserverRef = observerRef.current;
+    if (currentObserverRef) {
+      observer.observe(currentObserverRef);
+    }
+
+    return () => {
+      if (currentObserverRef) {
+        observer.unobserve(currentObserverRef);
+      }
+    };
+  }, [hasMore, loadMoreExtensions, loadingMore]);
 
   useEffect(() => {
     if (!user) {
@@ -58,33 +146,17 @@ export default function ExtensionList(props: ExtensionListProps) {
 
       setLoading(true);
       try {
-        const extensionParams = { user } as ExtensionParams;
-        const allExtension = await getAllExtensions(extensionParams);
-        const connectedExtensionData = await getConnectedExtensions(extensionParams);
-
         isExtensionListFetchedRef.current = true;
-        const updatedExtensions = allExtension.map((extension) => ({
-          ...extension,
-          connected:
-            connectedExtensionData.connectedExtensions?.some(
-              (ext) => ext.extensionName === extension.key,
-            ) || false,
-        }));
+        const extensionParams = {
+          user,
+          filter,
+        } as ExtensionParams;
 
-        const newFilteredExtensions = updatedExtensions
-          .sort((a, b) =>
-            sort === 'ascending' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name),
-          )
-          .filter((extension) =>
-            extensionType === 'connected'
-              ? extension.connected
-              : extensionType === 'notConnected'
-                ? !extension.connected
-                : true,
-          )
-          .filter((extension) => extension.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-        setFilteredExtensions(newFilteredExtensions);
+        const { data, meta } = await getAllExtensions(extensionParams);
+        setNextCursor(meta?.nextCursor || null);
+        setHasMore(meta?.hasMore || false);
+        console.log('Fetched extensions: ', data);
+        setExtensions(data);
       } catch (error) {
         console.error('Error fetching extension data: ', error);
       } finally {
@@ -94,12 +166,14 @@ export default function ExtensionList(props: ExtensionListProps) {
     };
 
     fetchExtensionData();
-  }, [user, extensionType, searchTerm, sort]);
+  }, [filter, user]);
 
   const handleDisconnectExtension = async () => {
-    if (!selectedExtension || !selectedExtension.connected) return;
+    if (!selectedExtension || !selectedExtension.connected) {
+      return;
+    }
     await disconnectExtension({ user, extension: selectedExtension });
-    setFilteredExtensions((prev) =>
+    setExtensions((prev) =>
       prev.map((extension) =>
         extension.key === selectedExtension.key ? { ...extension, connected: false } : extension,
       ),
@@ -124,8 +198,8 @@ export default function ExtensionList(props: ExtensionListProps) {
             <Input
               placeholder="Filter apps..."
               className="h-9 w-40 lg:w-[250px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={filter.search}
+              onChange={(e) => updateFilter('search', e.target.value)}
             />
             <Select
               value={extensionType}
@@ -151,8 +225,8 @@ export default function ExtensionList(props: ExtensionListProps) {
           </div>
 
           <Select
-            value={sort}
-            onValueChange={(value) => setSort(value as 'ascending' | 'descending')}
+            value={filter.sortOrder}
+            onValueChange={(value) => updateFilter('sortOrder', value as 'asc' | 'desc')}
           >
             <SelectTrigger className="w-16">
               <SelectValue>
@@ -160,13 +234,13 @@ export default function ExtensionList(props: ExtensionListProps) {
               </SelectValue>
             </SelectTrigger>
             <SelectContent align="end">
-              <SelectItem value="ascending">
+              <SelectItem value="asc">
                 <div className="flex items-center gap-4">
                   <IconSortAscendingLetters size={16} />
                   <span>Ascending</span>
                 </div>
               </SelectItem>
-              <SelectItem value="descending">
+              <SelectItem value="desc">
                 <div className="flex items-center gap-4">
                   <IconSortDescendingLetters size={16} />
                   <span>Descending</span>
@@ -184,78 +258,96 @@ export default function ExtensionList(props: ExtensionListProps) {
             Array(6)
               .fill(0)
               .map((_, index) => <ExtensionCardSkeleton key={`skeleton-${index}`} />)
-          ) : filteredExtensions.length > 0 ? (
-            filteredExtensions.map((extension) => (
-              <li
-                key={extension.name}
-                className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer"
-                onClick={() => {
-                  setSelectedExtension(extension);
-                  setIsOpenDialog(true);
-                }}
-              >
-                <div className="mb-8 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
+          ) : extensions.length > 0 ? (
+            <>
+              {extensions.map((extension) => (
+                <li
+                  key={extension.name}
+                  className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer"
+                  onClick={() => {
+                    setSelectedExtension(extension);
+                    setIsOpenDialog(true);
+                  }}
+                >
+                  <div className="mb-8 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
+                      >
+                        {!imageErrors.has(extension.key) ? (
+                          // NOTE: it is recommended to use next/image for images
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={extension.logo}
+                            alt={extension.name}
+                            width={40}
+                            height={40}
+                            loading="lazy"
+                            className="size-8 object-contain"
+                            onError={() => {
+                              setImageErrors((prev) => new Set(prev).add(extension.key));
+                            }}
+                          />
+                        ) : (
+                          <SiRetool className="size-8 text-yellow-500" />
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-start gap-2">
+                        {/* Only shows 2 categories as maximum for the category list of an extension */}
+                        {extension.categories?.slice(0, 2).map((category, index) => {
+                          const categoryStyleClass =
+                            index % 2 === 0
+                              ? `bg-blue-100 text-blue-750 ring-blue-600/20 ring-inset`
+                              : `bg-green-100 text-green-750 ring-green-600/20 ring-inset`;
+                          return (
+                            <span
+                              key={category}
+                              className={`text-[10px] font-semibold italic px-2 py-1 rounded-full ${categoryStyleClass}`}
+                            >
+                              {category}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`${
+                        extension.connected
+                          ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
+                          : ''
+                      }`}
                     >
-                      {
-                        // NOTE: it is recommended to use next/image for images
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={extension.logo}
-                          alt={extension.name}
-                          width={40}
-                          height={40}
-                          loading="lazy"
-                          className="size-8 object-contain"
-                        />
-                      }
-                    </div>
-
-                    <div className="flex flex-col items-start gap-2">
-                      {/* Only shows 2 categories as maximum for the category list of an extension */}
-                      {extension.categories?.slice(0, 2).map((category, index) => {
-                        const categoryStyleClass =
-                          index % 2 === 0
-                            ? `bg-blue-100 text-blue-750 ring-blue-600/20 ring-inset`
-                            : `bg-green-100 text-green-750 ring-green-600/20 ring-inset`;
-                        return (
-                          <span
-                            key={category}
-                            className={`text-[10px] font-semibold italic px-2 py-1 rounded-full ${categoryStyleClass}`}
-                          >
-                            {category}
-                          </span>
-                        );
-                      })}
-                    </div>
+                      {extension.connected ? 'Connected' : 'Connect'}
+                    </Button>
                   </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`${
-                      extension.connected
-                        ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
-                        : ''
-                    }`}
-                  >
-                    {extension.connected ? 'Connected' : 'Connect'}
-                  </Button>
-                </div>
-                <div>
-                  <div className="mb-2 flex items-center justify-start gap-2 px-2 py-1 rounded-md">
-                    <h2 className="mb-0 font-semibold">{extension.name.toUpperCase()}</h2>
-                    <div className="flex items-center gap-1 text-sm bg-pink-300 px-2 rounded-xl">
-                      <SiRetool />
-                      {`${extension.actionsCount || 0} Actions`}
+                  <div>
+                    <div className="mb-2 flex items-center justify-start gap-2 px-2 py-1 rounded-md">
+                      <h2 className="mb-0 font-semibold">
+                        {getDisplayedExtensionName(extension.name.toUpperCase())}
+                      </h2>
+                      <div className="flex items-center gap-1 text-sm bg-pink-300 px-2 rounded-xl">
+                        <SiRetool />
+                        {`${extension.actionsCount || 0} Actions`}
+                      </div>
                     </div>
+                    <p className="line-clamp-2 text-gray-500">{extension.description}</p>
                   </div>
-                  <p className="line-clamp-2 text-gray-500">{extension.description}</p>
-                </div>
-              </li>
-            ))
+                </li>
+              ))}
+
+              {/* Loading more indicator */}
+              {loadingMore &&
+                Array(3)
+                  .fill(0)
+                  .map((_, index) => <ExtensionCardSkeleton key={`loading-more-${index}`} />)}
+
+              {/* Observer target for infinite scrolling */}
+              {hasMore && <div ref={observerRef} className="col-span-full h-4" />}
+            </>
           ) : (
             <li className="col-span-full text-center py-10 text-gray-500">
               No extensions found matching your criteria

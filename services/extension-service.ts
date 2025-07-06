@@ -1,17 +1,23 @@
 import { IExtensionAction } from '@/constants/data';
 import { AI_ENDPOINT_V1, EXTENSION_ENDPOINT, HttpMethod } from '@/constants/response-constant';
-import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
-import {
-  IConnectedExtension,
-  IGetConnectedExtensions,
-  IActiveExtensionResponse,
-  IExtension,
-} from '@/types/extension';
+import { buildQueryParams, createUserAuthHeaders, sendRequest } from '@/lib/utils';
+import { IConnectedExtension, IActiveExtensionResponse, IExtension } from '@/types/extension';
 import { User } from 'next-auth';
+
+export interface ICursorFilterProps {
+  cursor?: string | null;
+  category?: string | null;
+  sortBy?: string | null;
+  sortOrder?: 'asc' | 'desc';
+  search?: string | '';
+  limit?: number;
+  connected?: boolean | null;
+}
 
 export interface ExtensionParams {
   user: User;
   extension: IExtension | null;
+  filter?: ICursorFilterProps;
 }
 
 export interface DisconnectExtensionReponse {
@@ -21,39 +27,37 @@ export interface DisconnectExtensionReponse {
   errorCode: string | null;
 }
 
-export const getAllExtensions = async (params: ExtensionParams): Promise<IExtension[]> => {
+export interface ExtensionListResponse {
+  data: IExtension[];
+  meta: Record<string, any>;
+}
+
+export const getAllExtensions = async (params: ExtensionParams): Promise<ExtensionListResponse> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
+
+    // Build the query Url with optional filter parameters
+    const queryParams = buildQueryParams({
+      limit: params.filter?.limit || 24,
+      cursor: params.filter?.cursor,
+      category: params.filter?.category,
+      sortBy: params.filter?.sortBy,
+      sortOrder: params.filter?.sortOrder,
+      search: params.filter?.search,
+    });
 
     const response: IResponse<IExtension[]> = await sendRequest({
-      url: `${EXTENSION_ENDPOINT}/apps?limit=1000`,
+      url: `${EXTENSION_ENDPOINT}/apps${queryParams}`,
       method: HttpMethod.GET,
       headers: headers,
     });
 
-    return response.data as IExtension[];
+    return {
+      data: response.data as IExtension[],
+      meta: response.metadata || {},
+    };
   } catch (error) {
     console.error('Error getting extensions: ', error);
-    throw error;
-  }
-};
-
-export const getConnectedExtensions = async (
-  params: ExtensionParams,
-): Promise<IGetConnectedExtensions> => {
-  try {
-    const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
-    const response: IResponse<IGetConnectedExtensions> = await sendRequest({
-      url: `${AI_ENDPOINT_V1}/connected-extension/get-all`,
-      method: HttpMethod.GET,
-      headers: headers,
-    });
-    console.log('response.data: ', response.data);
-
-    return response.data as IGetConnectedExtensions;
-  } catch (error) {
-    console.error('Error getting connected extensions: ', error);
     throw error;
   }
 };
