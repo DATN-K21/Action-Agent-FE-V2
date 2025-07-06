@@ -24,13 +24,32 @@ function MessageContainer(props: MessageNameProps) {
   const { status, message, user, isLastMessage } = props;
   const [isOpen, setIsOpen] = useState(false);
 
+  const uuidRegex = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i;
+
   const title = useMemo<string>((): string => {
     let name = message?.name || 'Unknown';
-    if (name.includes('-')) {
-      name = name.split('-')[0];
+
+    // Remove UUID patterns from the name
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+    name = name.replace(uuidRegex, '');
+
+    // Clean up remaining hyphens and underscores
+    name = name.replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+    name = name.replace(/-+/g, ' '); // Replace multiple hyphens with space
+    name = name.replace(/_+/g, ' '); // Replace underscores with space
+    name = name.replace(/\s+/g, ' '); // Replace multiple spaces with single space
+    name = name.trim(); // Remove leading/trailing spaces
+
+    // Handle special cases
+    if (name === '' || name === 'user') {
+      return name === 'user' ? 'User' : 'Assistant';
     }
-    name = name.replace(/_/g, ' ');
-    return name.charAt(0).toUpperCase() + name.slice(1);
+
+    // Capitalize each word
+    return name
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }, [message?.name]);
 
   if (message.content === null && message.type !== MessageType.INTERRUPT) {
@@ -48,43 +67,61 @@ function MessageContainer(props: MessageNameProps) {
   return (
     <motion.div
       data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-4xl px-4 group/message rounded-lg p-1 border border-[#cccccc]"
+      className="w-full mx-auto max-w-4xl group/message rounded-lg p-1"
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
       data-role={message.type}
     >
-      <AccordionItem value={message.id}>
-        <AccordionTrigger
-          className="flex justify-between items-center gap-4 w-full rounded-lg pb-1 border-b-2 border-dashed"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <div className="flex items-center gap-2">
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px">
-                <SparklesIcon size={14} />
+      {message.type === MessageType.AI && message.content && (
+        <AccordionItem value={message.id}>
+          <AccordionTrigger
+            className="flex justify-between items-center gap-4 w-full rounded-lg pb-1"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
+                <div className="translate-y-px">
+                  <SparklesIcon size={14} />
+                </div>
               </div>
+              <span className="font-semibold text-lg">{title}</span>
             </div>
-            <span className="font-semibold text-lg">{title}</span>
-          </div>
-
-          {/* <HiOutlineChevronDown className="transition-transform duration-300 data-[state=open]:rotate-180" /> */}
-          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
-            <HiOutlineChevronDown />
-          </motion.div>
-        </AccordionTrigger>
-        <AccordionContent>
-          {message.type === MessageType.AI && (
+            <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
+              <HiOutlineChevronDown />
+            </motion.div>
+          </AccordionTrigger>
+          <AccordionContent>
             <PreviewMessage
               message={message}
               isLoading={status === ChatStatus.STREAMING && isLastMessage}
             />
-          )}
+          </AccordionContent>
+        </AccordionItem>
+      )}
 
-          {message.type === MessageType.INTERRUPT && (message.tool_calls || message.content) && (
+      {message.type === MessageType.INTERRUPT && (message.tool_calls || message.content) && (
+        <AccordionItem value={message.id}>
+          <AccordionTrigger
+            className="flex justify-between items-center gap-4 w-full rounded-lg pb-1"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
+                <div className="translate-y-px">
+                  <SparklesIcon size={14} />
+                </div>
+              </div>
+              <span className="font-bold text-lg">{title}</span>
+            </div>
+            <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
+              <HiOutlineChevronDown />
+            </motion.div>
+          </AccordionTrigger>
+          <AccordionContent>
             <ActionConfirmation message={message} user={user} />
-          )}
-        </AccordionContent>
-      </AccordionItem>
+          </AccordionContent>
+        </AccordionItem>
+      )}
     </motion.div>
   );
 }
