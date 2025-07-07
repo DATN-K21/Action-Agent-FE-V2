@@ -18,7 +18,6 @@ import { toast } from '@/components/toast';
 import { MultiSelect } from './multiple-select';
 import { IConnectedExtension } from '@/types/extension';
 import { IMCP } from '@/types/mcp';
-import { AssistantType } from '@/constants/assistant-constant';
 
 type EditAssistantDialogProps = {
   open: boolean;
@@ -186,7 +185,7 @@ export function EditAssistantDialog({
           {assistant && (
             <div className="grid w-full max-w-sm items-center gap-1.5">
               <Label className="pt-1.5">Extensions</Label>
-              <>
+              {/* <>
                 <MultiSelect
                   options={extensionsChoice}
                   values={extensionIds}
@@ -198,7 +197,7 @@ export function EditAssistantDialog({
                     No extensions available. Please connect some extensions first.
                   </p>
                 )}
-              </>
+              </> */}
               <Label className="pt-1.5">MCP Servers</Label>
               <>
                 <MultiSelect

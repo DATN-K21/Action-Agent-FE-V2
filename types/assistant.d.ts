@@ -4,6 +4,8 @@ import { AssistantType } from '@/constants/assistant-constants';
 
 export interface ITeamProps {
   id: string;
+  name: string;
+  description: string;
   workflow_type: string;
 }
 export interface IAssistant {

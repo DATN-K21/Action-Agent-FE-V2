@@ -16,12 +16,11 @@ export interface IMessage {
   name: string;
   type: MessageType;
   content: string;
-  imgdata?: string | null;
-  tool_calls?: any[];
-  tool_output?: any;
-  documents?: any;
-  next?: any;
-  interrupted?: boolean;
+  imgdata: string;
+  tool_calls: any[];
+  tool_output: any;
+  documents: any;
+  next: string;
 }
 
 export interface IMessageWithoutId {

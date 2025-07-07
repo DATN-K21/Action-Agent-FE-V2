@@ -12,36 +12,7 @@ image:
 
 # Environment variables
 env:
-  # Public endpoints
-  - name: NEXT_PUBLIC_USER_API__V1_ENDPOINT
-    value: "https://api.action-agent.software/user/api/v1"
-  - name: NEXT_PUBLIC_AI_API__V1_ENDPOINT
-    value: "https://api.action-agent.software/ai/api/v1"
-  
-  # Auth
-  - name: NEXTAUTH_URL
-    value: "http://localhost:3000"
-  - name: NEXTAUTH_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: fe-env-secret
-        key: nextauthsecret
-  - name: AUTH_GOOGLE_ID
-    valueFrom:
-      secretKeyRef:
-        name: fe-env-secret
-        key: authgoogleid
-  - name: AUTH_GOOGLE_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: fe-env-secret
-        key: authgooglesecret
-  
-  # Server binding
-  - name: PORT
-    value: "80"
-  - name: AUTH_TRUST_HOST
-    value: "true"
+  # Placeholder
 
 imagePullSecrets: 
   - name: regcred

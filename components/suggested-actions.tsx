@@ -10,7 +10,7 @@ interface SuggestedActionsProps {
 }
 
 function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
-  const setInput = useChatStore((state) => state.setHumanInput);
+  const setInput = useChatStore((state) => state.setInput);
 
   const suggestedActions = [
     {

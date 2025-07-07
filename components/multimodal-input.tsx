@@ -6,7 +6,7 @@ import type React from 'react';
 import { useRef, useState, useCallback, type ChangeEvent, memo, useEffect } from 'react';
 import { useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon, GlobeIcon } from './icons';
+import { ArrowUpIcon, PaperclipIcon, StopIcon, GlobeIcon, BotIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -19,6 +19,7 @@ import { Brain, Mic, Check, X } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { generateTitle, handleUploadFile, recognizeVoice } from '@/services/thread-service';
 import { useThreadStore } from '@/store/thread-store';
+import { AssistantType } from '@/constants/assistant-constant';
 
 interface MultimodalInputProps {
   user: User;
@@ -29,23 +30,18 @@ interface MultimodalInputProps {
 function PureMultimodalInput(props: MultimodalInputProps) {
   const { user, status, className } = props;
 
-  const extension = useChatStore((state) => state.extension);
   const messages = useChatStore((state) => state.messages);
-  const input = useChatStore((state) => state.humanInput);
-  const selectedAssistant = useChatStore((state) => state.selectedAssistant);
+  const input = useChatStore((state) => state.input);
+  const assistant = useChatStore((state) => state.assistant);
   const threadId = useChatStore((state) => state.threadId);
   const teamId = useChatStore((state) => state.teamId);
-  const setInput = useChatStore((state) => state.setHumanInput);
+  const setInput = useChatStore((state) => state.setInput);
   const setTeamId = useChatStore((state) => state.setTeamId);
   const append = useChatStore((state) => state.appendMessage);
   const stop = useChatStore((state) => state.stopStream);
   const setStatus = useChatStore((state) => state.setStatus);
   const setThreadId = useChatStore((state) => state.setThreadId);
   const createThread = useChatStore((state) => state.createThread);
-  const handleStreamAgent = useChatStore((state) => state.handleStreamAgent);
-  const handleStreamExtension = useChatStore((state) => state.handleStreamExtension);
-  const handleStreamMCPAgent = useChatStore((state) => state.handleStreamMCPAgent);
-  const handleStreamAssistant = useChatStore((state) => state.handleStreamAssistant);
   const handleStreamTeam = useChatStore((state) => state.handleStreamTeam);
 
   const renameThread = useThreadStore((state) => state.renameThread);
@@ -56,12 +52,11 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const [pendingFiles, setPendingFiles] = useState<Array<File>>([]);
 
-  const isAdvancedAssistant = selectedAssistant?.assistantType === 'advanced_assistant';
+  const isAdvancedAssistant = assistant?.assistantType === AssistantType.ADVANCED_ASSISTANT;
 
-  // Helper function to get team ID by workflow type
   const getTeamIdByWorkflowType = (workflowType: TeamType): string => {
-    const team = selectedAssistant?.teams.find((team: any) => team.workflow_type === workflowType);
-    return team?.id || selectedAssistant?.teams[0].id;
+    const team = assistant?.teams.find((team: any) => team.workflow_type === workflowType);
+    return team?.id || assistant?.teams[0].id!;
   };
 
   // Auto-generate title when two messages are sent and status is ready and threadId is set
@@ -107,7 +102,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     try {
       //Create new thread if on home page
       if (window.location.pathname === '/') {
-        const thread = await createThread(user, 'New Chat', selectedAssistant.id);
+        const thread = await createThread(user, 'New Chat', assistant!.id);
         setThreadId(thread.id);
         window.history.replaceState({}, '', `/chat/${thread.id}`);
       }
@@ -135,6 +130,11 @@ function PureMultimodalInput(props: MultimodalInputProps) {
           type: MessageType.AI,
           name: '',
           content: 'Error uploading file, please try again!',
+          documents: null,
+          imgdata: '',
+          tool_calls: [],
+          tool_output: null,
+          next: '',
         });
         return undefined;
       }
@@ -149,6 +149,11 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         type: MessageType.AI,
         name: '',
         content: 'Error uploading file, please try again!',
+        documents: null,
+        imgdata: '',
+        tool_calls: [],
+        tool_output: null,
+        next: '',
       });
     }
   };
@@ -182,31 +187,12 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
       // Check if is a home page, create a new thread
       if (window.location.pathname === '/') {
-        const thread = await createThread(user, 'New Chat', selectedAssistant.id);
+        const thread = await createThread(user, 'New Chat', assistant!.id);
         setThreadId(thread.id);
         window.history.replaceState({}, '', `/chat/${thread.id}`);
       }
 
-      await handleStreamTeam(user, teamId || selectedAssistant.teams[0].id);
-
-      // switch (extension) {
-      //   case ThreadType.DEFAULT:
-      //     await handleStreamAgent(user);
-      //     break;
-
-      //   case ThreadType.MCP:
-      //     await handleStreamMCPAgent(user);
-      //     break;
-
-      //   case ThreadType.ASSISTANT:
-      //     const assistantId = 'abbe1e33-c50a-4a5f-bce2-6edec516b38e';
-      //     await handleStreamAssistant(user, assistantId);
-      //     break;
-
-      //   default:
-      //     await handleStreamExtension(user);
-      //     break;
-      // }
+      await handleStreamTeam(user);
 
       if (width && width > 768) {
         textareaRef.current?.focus();
@@ -224,6 +210,11 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         type: MessageType.AI,
         name: '',
         content: 'Error sending message, please try again!',
+        documents: null,
+        imgdata: '',
+        tool_calls: [],
+        tool_output: null,
+        next: '',
       });
     }
   }, [
@@ -231,13 +222,8 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     user,
     width,
     pendingFiles,
-    extension,
     threadId,
-    handleStreamAssistant,
-    handleStreamExtension,
-    handleStreamMCPAgent,
     handleStreamTeam,
-    handleStreamAgent,
     renameThread,
     setInput,
     setStatus,
@@ -454,7 +440,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
                   setTeamId(teamId === hierarchicalTeamId ? mainTeamId : hierarchicalTeamId);
                 }}
               >
-                <GlobeIcon size={14} />
+                <BotIcon size={14} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Hierarhical</TooltipContent>

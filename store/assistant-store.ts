@@ -1,22 +1,22 @@
 import { IAssistant } from '@/types/assistant';
 import { create } from 'zustand';
-import { getGeneralAssistants } from '@/services/assistant-service';
+import { getAllAssistants } from '@/services/assistant-service';
 import type { User } from 'next-auth';
 
 interface AssistantState {
-  generalAssistants: IAssistant;
+  assistants: IAssistant[];
   isLoading: boolean;
   fetchAssistants: (user: User) => Promise<void>;
 }
 
 export const useAssistantStore = create<AssistantState>((set, get) => ({
-  generalAssistants: {} as IAssistant,
+  assistants: [] as IAssistant[],
   isLoading: false,
   fetchAssistants: async (user) => {
     set({ isLoading: true });
     try {
-      const response = await getGeneralAssistants({ user });
-      set({ generalAssistants: response, isLoading: false });
+      const response = await getAllAssistants({ user });
+      set({ assistants: response, isLoading: false });
     } catch (error) {
       console.error('Error fetching assistants:', error);
       set({ isLoading: false });

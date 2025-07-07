@@ -6,45 +6,41 @@ import { Messages } from './messages';
 import useChatStore from '@/store/chat-store';
 import { User } from 'next-auth';
 import { IMessage } from '@/types/ai';
-import { ExtensionType } from '@/constants/extension-constant';
+import { useAssistantStore } from '@/store/assistant-store';
 
 interface ChatProps {
   id: string;
   assistantId: string;
   user: User;
   initialMessages: IMessage[];
-  extensionName?: string;
 }
 
 export function Chat(props: ChatProps) {
-  const { id, assistantId, user, initialMessages, extensionName } = props;
+  const { id, assistantId, user, initialMessages } = props;
 
   const messages = useChatStore((state) => state.messages);
   const status = useChatStore((state) => state.status);
   const isCreatingThread = useChatStore((state) => state.isCreatingThread);
   const setMessages = useChatStore((state) => state.setMessages);
+  const setTeamId = useChatStore((state) => state.setTeamId);
   const setThreadId = useChatStore((state) => state.setThreadId);
-  const setExtension = useChatStore((state) => state.setExtension);
-  const setSelectedAssistant = useChatStore((state) => state.setSelectedAssistant);
+  const setAssistant = useChatStore((state) => state.setAssistant);
   const reloadChat = useChatStore((state) => state.reloadChat);
+
+  const assistants = useAssistantStore((state) => state.assistants);
 
   useEffect(() => {
     reloadChat();
     setThreadId(id);
     setMessages(initialMessages);
-    setExtension(extensionName as ExtensionType);
-    setSelectedAssistant(assistantId);
-  }, [
-    id,
-    assistantId,
-    initialMessages,
-    extensionName,
-    reloadChat,
-    setMessages,
-    setThreadId,
-    setExtension,
-    setSelectedAssistant,
-  ]);
+  }, [assistants, assistantId]);
+
+  useEffect(() => {
+    const assistant = assistants.find((assistant) => assistant.id === assistantId) || assistants[0];
+
+    setAssistant(assistant);
+    setTeamId(assistant?.teams?.[0]?.id);
+  }, [assistants]);
 
   return (
     <>

@@ -34,7 +34,7 @@ export function AddAssistantDialog({
   open,
   onOpenChange,
   extensionOptions,
-  type = AssistantType.EXTENSION,
+  type = AssistantType.ADVANCED_ASSISTANT,
   mcpOptions,
   user,
   onAssistantCreated,

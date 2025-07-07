@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import useChatStore from '@/store/chat-store';
+import { IMessage } from '@/types/ai';
 import { AnimatePresence, motion } from 'framer-motion';
 import { User } from 'next-auth';
 import { memo, useEffect, useMemo, useState } from 'react';
@@ -34,13 +35,15 @@ interface ToolCallProps {
   type: string;
 }
 
-const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: User }) => {
+const PureActionConfirmation = ({ message, user }: { message: IMessage; user: User }) => {
   const status = useChatStore((state) => state.status);
-  const handleStreamInterrupt = useChatStore((state) => state.handleStreamInterrupt);
+  const handleStreamTeam = useChatStore((state) => state.handleStreamTeam);
+
+  console.log(message);
 
   const firstToolCall = useMemo<ToolCallProps>((): ToolCallProps => {
-    return toolCalls[0] || {};
-  }, [toolCalls]);
+    return message.tool_calls?.[0] || {};
+  }, [message.tool_calls]);
   const pureArgs = useMemo((): Record<string, any> => {
     if (!firstToolCall || !firstToolCall.args) {
       return {};
@@ -93,14 +96,14 @@ const PureActionConfirmation = ({ toolCalls, user }: { toolCalls: any[]; user: U
 
   const handleConfirmAction = async () => {
     try {
-      const toolCallsData = toolCalls.map((toolCall) => ({
+      const toolCallsData = message.tool_calls?.map((toolCall) => ({
         name: toolCall.name,
         args: { ...toolCall.args, ...args },
         id: toolCall.id,
         type: toolCall.type,
       }));
 
-      await handleStreamInterrupt(user, toolCallsData);
+      await handleStreamTeam(user);
     } catch (error) {
       toast({
         type: 'error',
