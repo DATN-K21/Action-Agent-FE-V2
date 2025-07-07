@@ -26,6 +26,7 @@ import {
 import { User } from 'next-auth';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SiRetool } from 'react-icons/si';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import ExtensionDialog from './extension-dialog';
 
 export type ExtensionListProps = {
@@ -37,8 +38,6 @@ export default function ExtensionList(props: ExtensionListProps) {
 
   const isExtensionListFetchedRef = useRef<boolean>(false);
   const loadingMoreRef = useRef<boolean>(false);
-  const observerRef = useRef<HTMLDivElement | null>(null);
-  const loadMoreExtensionsRef = useRef<() => void>();
 
   const [extensions, setExtensions] = useState<IExtension[]>([]);
   const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
@@ -46,7 +45,7 @@ export default function ExtensionList(props: ExtensionListProps) {
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [hasMore, setHasMore] = useState<boolean>(true);
-  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
@@ -58,7 +57,6 @@ export default function ExtensionList(props: ExtensionListProps) {
   };
 
   const [filter, setFilter] = useState<IPageFilterProps>({
-    page: 1,
     limit: 24,
     category: null,
     sortBy: 'id',
@@ -70,26 +68,19 @@ export default function ExtensionList(props: ExtensionListProps) {
   const updateFilter = useCallback((field: string, value: any) => {
     setFilter((prev: IPageFilterProps) => ({
       ...prev,
-      page: 1,
       [field]: value,
+      page: field === 'page' ? value : 1, // Reset page to 1 if any other field is updated
     }));
-    setExtensions([]);
-    setHasMore(true);
-    isExtensionListFetchedRef.current = false;
   }, []);
 
-  const loadMoreExtensions = useCallback(async () => {
-    console.log('Validation condition: ', user, hasMore, loadingMoreRef.current);
+  const loadMoreExtensions = async () => {
     if (!user || !hasMore || loadingMoreRef.current === true) {
       return;
     }
-    console.log('PASSED');
-
     loadingMoreRef.current = true;
-    setLoadingMore(true);
 
     try {
-      const nextPage = filter.page ? filter.page + 1 : 2;
+      const nextPage = currentPage ? currentPage + 1 : 2;
       const extensionParams: ExtensionParams = {
         user,
         filter: {
@@ -98,14 +89,11 @@ export default function ExtensionList(props: ExtensionListProps) {
         },
       } as ExtensionParams;
       const { data, meta } = await getAllExtensions(extensionParams);
+
       if (data.length <= 0 || !meta || meta?.page >= meta?.totalPages) {
         setHasMore(false);
       } else {
-        setFilter((prev: IPageFilterProps) => ({
-          ...prev,
-          page: nextPage,
-        }));
-
+        setCurrentPage(nextPage);
         setExtensions((prev: IExtension[]) => [
           ...prev,
           ...data.filter((ext: IExtension) => !prev.some((e: IExtension) => e.key === ext.key)),
@@ -115,38 +103,9 @@ export default function ExtensionList(props: ExtensionListProps) {
     } catch (error) {
       console.error('Error loading more extensions: ', error);
     } finally {
-      setLoadingMore(false);
       loadingMoreRef.current = false;
     }
-  }, [filter, hasMore, user]);
-
-  useEffect(() => {
-    loadMoreExtensionsRef.current = loadMoreExtensions;
-  }, [loadMoreExtensions]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        console.log('Have called observer callback');
-        const target = entries[0];
-        if (target.isIntersecting && hasMore && !loadingMore) {
-          console.log('Should load more extensions');
-          loadMoreExtensionsRef.current?.();
-        }
-      },
-      { threshold: 1.0, rootMargin: '100px' },
-    );
-    const currentObserverRef = observerRef.current;
-    if (currentObserverRef) {
-      observer.observe(currentObserverRef);
-    }
-
-    return () => {
-      if (currentObserverRef) {
-        observer.unobserve(currentObserverRef);
-      }
-    };
-  }, [hasMore, loadingMore]);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -167,7 +126,6 @@ export default function ExtensionList(props: ExtensionListProps) {
         } as ExtensionParams;
 
         const { data, meta } = await getAllExtensions(extensionParams);
-        console.log('Meta data: ', meta);
 
         setHasMore(meta?.page < meta?.totalPages);
         setExtensions(data);
@@ -267,107 +225,117 @@ export default function ExtensionList(props: ExtensionListProps) {
         <Separator className="shadow" />
 
         {/* Extension List */}
-        <ul className="faded-bottom no-scrollbar grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
+        <div id="extension-list-scroll" className="faded-bottom no-scrollbar">
           {loading ? (
-            Array(6)
-              .fill(0)
-              .map((_, index) => <ExtensionCardSkeleton key={`skeleton-${index}`} />)
+            <ul className="grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array(6)
+                .fill(0)
+                .map((_, index) => (
+                  <ExtensionCardSkeleton key={`skeleton-${index}`} />
+                ))}
+            </ul>
           ) : extensions.length > 0 ? (
-            <>
-              {extensions.map((extension) => (
-                <li
-                  key={extension.name}
-                  className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer"
-                  onClick={() => {
-                    setSelectedExtension(extension);
-                    setIsOpenDialog(true);
-                  }}
-                >
-                  <div className="mb-8 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
+            <InfiniteScroll
+              dataLength={extensions.length}
+              next={loadMoreExtensions}
+              hasMore={hasMore}
+              loader={
+                <ul className="grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
+                  {Array(3)
+                    .fill(0)
+                    .map((_, i) => (
+                      <ExtensionCardSkeleton key={i} />
+                    ))}
+                </ul>
+              }
+            >
+              <ul className="grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
+                {extensions.map((extension) => (
+                  <li
+                    key={extension.name}
+                    className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer"
+                    onClick={() => {
+                      setSelectedExtension(extension);
+                      setIsOpenDialog(true);
+                    }}
+                  >
+                    <div className="mb-8 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}
+                        >
+                          {!imageErrors.has(extension.key) ? (
+                            // NOTE: it is recommended to use next/image for images
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={extension.logo}
+                              alt={extension.name}
+                              width={40}
+                              height={40}
+                              loading="lazy"
+                              className="size-8 object-contain"
+                              onError={() => {
+                                setImageErrors((prev) => new Set(prev).add(extension.key));
+                              }}
+                            />
+                          ) : (
+                            <SiRetool className="size-8 text-yellow-500" />
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-start gap-2">
+                          {/* Only shows 2 categories as maximum for the category list of an extension */}
+                          {extension.categories?.slice(0, 2).map((category, index) => {
+                            const categoryStyleClass =
+                              index % 2 === 0
+                                ? `bg-blue-100 text-blue-750 ring-blue-600/20 ring-inset`
+                                : `bg-green-100 text-green-750 ring-green-600/20 ring-inset`;
+                            return (
+                              <span
+                                key={category}
+                                className={`text-[10px] font-semibold italic px-2 py-1 rounded-full ${categoryStyleClass}`}
+                              >
+                                {category}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`${
+                          extension.connected
+                            ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
+                            : ''
+                        }`}
                       >
-                        {!imageErrors.has(extension.key) ? (
-                          // NOTE: it is recommended to use next/image for images
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={extension.logo}
-                            alt={extension.name}
-                            width={40}
-                            height={40}
-                            loading="lazy"
-                            className="size-8 object-contain"
-                            onError={() => {
-                              setImageErrors((prev) => new Set(prev).add(extension.key));
-                            }}
-                          />
-                        ) : (
-                          <SiRetool className="size-8 text-yellow-500" />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col items-start gap-2">
-                        {/* Only shows 2 categories as maximum for the category list of an extension */}
-                        {extension.categories?.slice(0, 2).map((category, index) => {
-                          const categoryStyleClass =
-                            index % 2 === 0
-                              ? `bg-blue-100 text-blue-750 ring-blue-600/20 ring-inset`
-                              : `bg-green-100 text-green-750 ring-green-600/20 ring-inset`;
-                          return (
-                            <span
-                              key={category}
-                              className={`text-[10px] font-semibold italic px-2 py-1 rounded-full ${categoryStyleClass}`}
-                            >
-                              {category}
-                            </span>
-                          );
-                        })}
-                      </div>
+                        {extension.connected ? 'Connected' : 'Connect'}
+                      </Button>
                     </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={`${
-                        extension.connected
-                          ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
-                          : ''
-                      }`}
-                    >
-                      {extension.connected ? 'Connected' : 'Connect'}
-                    </Button>
-                  </div>
-                  <div>
-                    <div className="mb-2 flex items-center justify-start gap-2 px-2 py-1 rounded-md">
-                      <h2 className="mb-0 font-semibold">
-                        {getDisplayedExtensionName(extension.name.toUpperCase())}
-                      </h2>
-                      <div className="flex items-center gap-1 text-sm bg-pink-300 px-2 rounded-xl">
-                        <SiRetool />
-                        {`${extension.actionsCount || 0} Actions`}
+                    <div>
+                      <div className="mb-2 flex items-center justify-start gap-2 px-2 py-1 rounded-md">
+                        <h2 className="mb-0 font-semibold">
+                          {getDisplayedExtensionName(extension.name.toUpperCase())}
+                        </h2>
+                        <div className="flex items-center gap-1 text-sm bg-pink-300 px-2 rounded-xl">
+                          <SiRetool />
+                          {`${extension.actionsCount || 0} Actions`}
+                        </div>
                       </div>
+                      <p className="line-clamp-2 text-gray-500">{extension.description}</p>
                     </div>
-                    <p className="line-clamp-2 text-gray-500">{extension.description}</p>
-                  </div>
-                </li>
-              ))}
-
-              {/* Loading more indicator */}
-              {loadingMore &&
-                Array(3)
-                  .fill(0)
-                  .map((_, index) => <ExtensionCardSkeleton key={`loading-more-${index}`} />)}
-
-              {/* Observer target for infinite scrolling */}
-              {hasMore && <div ref={observerRef} className="col-span-full h-4" />}
-            </>
+                  </li>
+                ))}
+              </ul>
+            </InfiniteScroll>
           ) : (
             <li className="col-span-full text-center py-10 text-gray-500">
               No extensions found matching your criteria
             </li>
           )}
-        </ul>
+        </div>
       </div>
 
       {/* Extension Dialog */}
