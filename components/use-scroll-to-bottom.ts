@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useScrollToBottom<T extends HTMLElement>() {
   const containerRef = useRef<T>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     endRef.current?.scrollIntoView({ behavior });
-  };
+  }, []);
 
   useEffect(() => {
     const end = endRef.current;
     if (!end || !isAtBottom) return;
 
     scrollToBottom('auto');
-  }, [isAtBottom]);
+  }, [isAtBottom, scrollToBottom]);
 
   useEffect(() => {
     const container = containerRef.current;

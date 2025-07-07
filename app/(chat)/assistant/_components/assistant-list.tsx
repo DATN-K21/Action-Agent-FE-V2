@@ -30,7 +30,9 @@ export default function AssistantsList(props: AssistantListProps) {
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [availableExtensions, setAvailableExtensions] = useState<IConnectedExtension[]>([]);
   const [availableMCPServers, setAvailableMCPServers] = useState<IMCP[]>([]);
-  const [assistantType, setAssistantType] = useState<AssistantType>(AssistantType.EXTENSION);
+  const [assistantType, setAssistantType] = useState<AssistantType>(
+    AssistantType.ADVANCED_ASSISTANT,
+  );
   const [assistants, setAssistants] = useState<IAssistant[]>([]);
   // const [mcpAssistants, setMcpAssistants] = useState<IAssistant[]>([]);
   const [isLoadingAssistants, setIsLoadingAssistants] = useState<boolean>(false);

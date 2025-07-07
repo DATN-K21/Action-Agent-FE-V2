@@ -24,3 +24,14 @@ export enum TeamType {
   RAGBOT = 'ragbot',
   HIERARCHICAL = 'hierarchical',
 }
+
+export enum InterruptType {
+  TOOL_REVIEW = 'tool_review',
+  CONTEXT_INPUT = 'context_input',
+}
+
+export enum InterruptDecisionType {
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  UPDATE = 'update',
+}

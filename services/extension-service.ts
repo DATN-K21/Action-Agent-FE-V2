@@ -49,7 +49,6 @@ export const getConnectedExtensions = async (
       method: HttpMethod.GET,
       headers: headers,
     });
-    console.log('response.data: ', response.data);
 
     return response.data as IGetConnectedExtensions;
   } catch (error) {

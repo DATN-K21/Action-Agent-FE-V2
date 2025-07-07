@@ -3,10 +3,15 @@ import { immer } from 'zustand/middleware/immer';
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { ICreateThreadResponse, IMessage } from '@/types/ai';
 import { User } from 'next-auth';
-import { StreamTeamParams, streamTeam } from '@/services/stream-service';
+import {
+  InterruptTeamParams,
+  StreamTeamParams,
+  interruptTeam,
+  streamTeam,
+} from '@/services/stream-service';
 import { createThread } from '@/services/thread-service';
 import { useThreadStore } from '@/store/thread-store';
-import { IAssistant } from '@/types/assistant';
+import { IAssistant, IMessageInterruptPayload } from '@/types/assistant';
 
 interface ChatStore {
   assistant: IAssistant | null;
@@ -16,6 +21,8 @@ interface ChatStore {
   threadId: string;
   teamId: string;
   isCreatingThread: boolean;
+  isInterrupting: boolean;
+  setIsInterrupting: (isInterrupting: boolean) => void;
   setAssistant: (assistant: IAssistant) => void;
   setMessages: (messages: IMessage[]) => void;
   setInput: (input: string) => void;
@@ -25,6 +32,7 @@ interface ChatStore {
   createThread: (user: User, title: string, assistantId: string) => Promise<ICreateThreadResponse>;
   appendMessage: (message: IMessage) => void;
   handleStreamTeam: (user: User) => Promise<void>;
+  handleInterruptTeam: (user: User, payload: IMessageInterruptPayload) => Promise<void>;
   stopStream: () => void;
   reloadChat: () => void;
 }
@@ -38,13 +46,14 @@ const useChatStore = create<ChatStore>()(
     threadId: '',
     teamId: '',
     isCreatingThread: false,
+    isInterrupting: false,
     setAssistant: (assistant) => set({ assistant }),
     setMessages: (messages) => set({ messages }),
     setInput: (input) => set({ input }),
     setThreadId: (threadId) => set({ threadId }),
     setTeamId: (teamId) => set({ teamId }),
     setStatus: (status) => set({ status }),
-
+    setIsInterrupting: (isInterrupting) => set({ isInterrupting }),
     // Create a new chat thread
     createThread: async (
       user: User,
@@ -140,19 +149,26 @@ const useChatStore = create<ChatStore>()(
                 const jsonString = line.substring(6).trim();
                 const data = JSON.parse(jsonString);
 
-                if (data.content || data.tool_calls) {
+                if (
+                  (data.type === MessageType.AI && data.content) ||
+                  (data.type !== MessageType.AI && data.tool_calls)
+                ) {
+                  if (data.type === MessageType.INTERRUPT && data.tool_calls) {
+                    set({ isInterrupting: true });
+                  }
+
                   set((state) => {
                     const lastIndex = state.messages.length - 1;
-
-                    if (
+                    const isTheSameMessageGroup =
                       lastIndex >= 0 &&
                       state.messages[lastIndex].id === data.id &&
-                      state.messages[lastIndex].name === data.name
-                    ) {
+                      state.messages[lastIndex].name === data.name;
+
+                    if (isTheSameMessageGroup) {
                       state.messages[lastIndex] = {
                         ...state.messages[lastIndex],
                         type: data.type,
-                        content: (state.messages[lastIndex].content || '') + data.content,
+                        content: (state.messages[lastIndex].content || '') + (data.content || ''),
                         name: data.name,
                         imgdata: data.imgdata,
                         tool_calls: data.tool_calls,
@@ -192,6 +208,113 @@ const useChatStore = create<ChatStore>()(
         set({ status: ChatStatus.READY });
       } catch (error) {
         console.error('Error in handleStreamTeam:', error);
+        set({ status: ChatStatus.ERROR });
+        throw error;
+      }
+    },
+
+    handleInterruptTeam: async (user: User, payload: IMessageInterruptPayload) => {
+      set({ status: ChatStatus.SUBMITTED, isInterrupting: false });
+
+      const { threadId, teamId } = get();
+      if (!threadId || !teamId) {
+        throw new Error('Thread ID and Team ID are required for interrupt handling.');
+      }
+
+      try {
+        const interruptParams: InterruptTeamParams = {
+          user,
+          threadId,
+          teamId,
+          payload,
+        };
+        const reader = await interruptTeam(interruptParams);
+        set({ status: ChatStatus.STREAMING });
+
+        const decoder = new TextDecoder();
+        let accumulatedText = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          if (get().status !== ChatStatus.STREAMING) {
+            reader.cancel();
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedText += chunk;
+
+          const lines = accumulatedText.split('\n');
+          accumulatedText = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const jsonString = line.substring(6).trim();
+                const data = JSON.parse(jsonString);
+
+                if (
+                  (data.type === MessageType.AI && data.content) ||
+                  (data.type !== MessageType.AI && data.tool_calls)
+                ) {
+                  if (data.type === MessageType.INTERRUPT && data.tool_calls) {
+                    set({ isInterrupting: true });
+                  }
+
+                  set((state) => {
+                    const lastIndex = state.messages.length - 1;
+                    const isTheSameMessageGroup =
+                      lastIndex >= 0 &&
+                      state.messages[lastIndex].id === data.id &&
+                      state.messages[lastIndex].name === data.name;
+
+                    if (isTheSameMessageGroup) {
+                      state.messages[lastIndex] = {
+                        ...state.messages[lastIndex],
+                        type: data.type,
+                        content: (state.messages[lastIndex].content || '') + (data.content || ''),
+                        name: data.name,
+                        imgdata: data.imgdata,
+                        tool_calls: data.tool_calls,
+                        tool_output: data.tool_output,
+                        documents: data.documents,
+                        next: data.next,
+                      };
+                    } else {
+                      state.messages.push({
+                        id: data.id,
+                        type: data.type,
+                        content: data.content,
+                        name: data.name,
+                        imgdata: data.imgdata,
+                        tool_calls: data.tool_calls,
+                        tool_output: data.tool_output,
+                        documents: data.documents,
+                        next: data.next,
+                      });
+                    }
+
+                    return state;
+                  });
+                }
+              } catch (error) {
+                console.error(
+                  'Error parsing stream data in handleStreamTeam:',
+                  error,
+                  'Raw data:',
+                  line,
+                );
+              }
+            }
+          }
+        }
+
+        // Simulate a successful response
+        set({ status: ChatStatus.READY });
+      } catch (error) {
+        console.error('Error handling interrupt:', error);
         set({ status: ChatStatus.ERROR });
         throw error;
       }

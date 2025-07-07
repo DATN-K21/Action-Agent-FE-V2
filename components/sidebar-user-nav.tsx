@@ -1,9 +1,8 @@
-'use client'
-import { ChevronUp } from 'lucide-react'
-import Image from 'next/image'
-import type { User } from 'next-auth'
-import { signOut } from 'next-auth/react'
-import { useTheme } from 'next-themes'
+'use client';
+import { ChevronUp } from 'lucide-react';
+import type { User } from 'next-auth';
+import { signOut } from 'next-auth/react';
+import { useTheme } from 'next-themes';
 
 import {
   DropdownMenu,
@@ -11,26 +10,22 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar'
-import { logout } from '@/services/auth-service'
+} from '@/components/ui/dropdown-menu';
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { logout } from '@/services/auth-service';
 
 export function SidebarUserNav({ user }: { user: User }) {
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme } = useTheme();
 
   const handleLogOut = async () => {
     try {
-      await logout(user)
+      await logout(user);
     } catch (error: any) {
       console.error(error);
     } finally {
-      await signOut()
+      await signOut();
     }
-  }
+  };
 
   return (
     <SidebarMenu>
@@ -42,15 +37,12 @@ export function SidebarUserNav({ user }: { user: User }) {
               <ChevronUp className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            side="top"
-            className="w-[--radix-popper-anchor-width]"
-          >
+          <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
             <DropdownMenuItem
               className="cursor-pointer"
               onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             >
-              {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
+              {theme === 'light' ? 'Toggle dark mode' : 'Toggle light mode'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -66,5 +58,5 @@ export function SidebarUserNav({ user }: { user: User }) {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

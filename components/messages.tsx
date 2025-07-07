@@ -1,13 +1,15 @@
-import { PreviewMessage, ThinkingMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import { Overview } from './overview';
-import { Fragment, memo, useEffect } from 'react';
-import equal from 'fast-deep-equal';
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
-import { ActionConfirmation } from '@/components/action-confirmation';
-import { User } from 'next-auth';
+import equal from 'fast-deep-equal';
 import { ArrowDown } from 'lucide-react';
+import { User } from 'next-auth';
+import { memo, useEffect } from 'react';
+import { ThinkingMessage } from './message';
+import MessageContainer from './message-container';
+import { Overview } from './overview';
+import { useScrollToBottom } from './use-scroll-to-bottom';
+import useChatStore from '@/store/chat-store';
+import { ActionConfirmation } from './action-confirmation';
 
 interface MessagesProps {
   status: ChatStatus;
@@ -17,37 +19,39 @@ interface MessagesProps {
 
 function PureMessages({ status, messages, user }: MessagesProps) {
   const { containerRef, endRef, isAtBottom, scrollToBottom } = useScrollToBottom<HTMLDivElement>();
+  const isInterrupting = useChatStore((state) => state.isInterrupting);
 
   useEffect(() => {
     scrollToBottom('smooth');
-  }, [messages.length]);
+  }, [messages, scrollToBottom]);
 
   return (
     <div ref={containerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4">
       {messages.length === 0 && <Overview />}
 
       {messages.map((message, index) => (
-        <Fragment key={message.id}>
-          {message.content &&
-            (message.type === MessageType.AI || message.type === MessageType.HUMAN) && (
-              <PreviewMessage
-                message={message}
-                isLoading={status === ChatStatus.STREAMING && index === messages.length - 1}
-              />
-            )}
-
-          {message.type === MessageType.INTERRUPT && (message.tool_calls || message.content) && (
-            <ActionConfirmation message={message} user={user} />
-          )}
-        </Fragment>
+        <div key={message.id}>
+          <MessageContainer
+            status={status}
+            message={message}
+            user={user}
+            isLastMessage={index === messages.length - 1}
+          />
+        </div>
       ))}
 
       {(status === ChatStatus.SUBMITTED ||
-        (messages[messages.length - 1]?.content === '' &&
-          messages[messages.length - 1]?.type === MessageType.AI &&
-          status === ChatStatus.STREAMING)) && <ThinkingMessage />}
+        (!messages[messages.length - 1]?.content && status === ChatStatus.STREAMING)) && (
+        <ThinkingMessage />
+      )}
 
-      <div ref={endRef} className="shrink-0 min-h-[24px]" />
+      {messages[messages.length - 1]?.type === MessageType.INTERRUPT &&
+        (messages[messages.length - 1]?.tool_calls || messages[messages.length - 1]?.content) &&
+        isInterrupting && (
+          <ActionConfirmation message={messages[messages.length - 1]} user={user} />
+        )}
+
+      <div ref={endRef} className="shrink-0 min-h-[4px]" />
 
       {!isAtBottom && (
         <button

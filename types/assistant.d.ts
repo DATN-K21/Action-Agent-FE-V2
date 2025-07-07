@@ -1,6 +1,7 @@
 import { IConnectedExtension } from '@/types/extension';
 import { IMCP } from '@/types/mcp';
 import { AssistantType } from '@/constants/assistant-constants';
+import { InterruptType, InterruptDecisionType } from '@/constants/ai-constant';
 
 export interface ITeamProps {
   id: string;
@@ -35,4 +36,13 @@ export interface UpdateAssistantRequest {
   type?: AssistantType;
   mcpIds?: string[];
   extensionIds?: string[];
+}
+
+export interface IMessageInterruptPayload {
+  messages?: string[];
+  interrupt: {
+    interaction_type: string;
+    decision: string;
+    tool_message?: string;
+  };
 }
