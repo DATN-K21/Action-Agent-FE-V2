@@ -41,9 +41,9 @@ function PureMessages({ status, messages, user }: MessagesProps) {
       ))}
 
       {(status === ChatStatus.SUBMITTED ||
-        (messages[messages.length - 1]?.content === '' &&
-          messages[messages.length - 1]?.type !== MessageType.HUMAN &&
-          status === ChatStatus.STREAMING)) && <ThinkingMessage />}
+        (!messages[messages.length - 1]?.content && status === ChatStatus.STREAMING)) && (
+        <ThinkingMessage />
+      )}
 
       {messages[messages.length - 1]?.type === MessageType.INTERRUPT &&
         (messages[messages.length - 1]?.tool_calls || messages[messages.length - 1]?.content) &&

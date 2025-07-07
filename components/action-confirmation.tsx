@@ -141,7 +141,7 @@ const PureActionConfirmation = ({ message, user }: ActionConfirmationProps) => {
           <AlertDialogContent className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl">
             <AlertDialogHeader className="pb-4 space-y-4">
               <AlertDialogTitle className="text-xl font-[550]">
-                Allow tool from "{firstToolCall.name}"?
+                Allow tool from &quot;{firstToolCall.name}&quot;?
               </AlertDialogTitle>
             </AlertDialogHeader>
             <div className="space-y-6">
@@ -151,7 +151,7 @@ const PureActionConfirmation = ({ message, user }: ActionConfirmationProps) => {
                   {argTextInputElements.map((arg) => (
                     <div key={arg.key} className="space-y-2">
                       <label className="text-sm font-medium block">{arg.label}</label>
-                      <div className="relative rounded-md focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-blue-500 focus-within:ring-opacity-50 transition-shadow duration-200">
+                      <div className="relative rounded-md focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-blue-500 focus-within:ring-opacity/50 transition-shadow duration-200">
                         {arg.component}
                       </div>
                     </div>

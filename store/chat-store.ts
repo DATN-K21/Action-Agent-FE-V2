@@ -214,7 +214,7 @@ const useChatStore = create<ChatStore>()(
     },
 
     handleInterruptTeam: async (user: User, payload: IMessageInterruptPayload) => {
-      set({ status: ChatStatus.SUBMITTED });
+      set({ status: ChatStatus.SUBMITTED, isInterrupting: false });
 
       const { threadId, teamId } = get();
       if (!threadId || !teamId) {
@@ -229,7 +229,7 @@ const useChatStore = create<ChatStore>()(
           payload,
         };
         const reader = await interruptTeam(interruptParams);
-        set({ status: ChatStatus.SUBMITTED });
+        set({ status: ChatStatus.STREAMING });
 
         const decoder = new TextDecoder();
         let accumulatedText = '';
@@ -259,6 +259,10 @@ const useChatStore = create<ChatStore>()(
                   (data.type === MessageType.AI && data.content) ||
                   (data.type !== MessageType.AI && data.tool_calls)
                 ) {
+                  if (data.type === MessageType.INTERRUPT && data.tool_calls) {
+                    set({ isInterrupting: true });
+                  }
+
                   set((state) => {
                     const lastIndex = state.messages.length - 1;
                     const isTheSameMessageGroup =

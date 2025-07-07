@@ -53,16 +53,16 @@ function MessageContainer(props: MessageNameProps) {
 
   return (
     <motion.div
-      data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-4xl group/message rounded-lg"
+      data-testid={`message-${message.type}`}
+      className="w-full mx-auto max-w-4xl group/message"
       initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
+      animate={{ y: 0, opacity: 1 }}
       data-role={message.type}
     >
       {(message.type === MessageType.AI || message.type === MessageType.TOOL) &&
         message.content && (
           <div>
-            <div className="flex justify-between items-center gap-3 w-full rounded-lg cursor-pointer">
+            <div className="flex justify-between items-center gap-3 w-full rounded-lg cursor-pointer mb-2">
               <div className="flex items-center gap-2">
                 <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
                   <div className="translate-y-px">
