@@ -11,10 +11,13 @@ export interface ITeamProps {
 export interface IAssistant {
   id: string;
   name: string;
-  assistantType: AssistantType;
-  workers: (IMCP | IConnectedExtension)[];
-  description: string;
-  teams: ITeamProps[];
+  type: AssistantType;
+  mcpIds?: string[];
+  extensionIds?: string[];
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  teams?: ITeamProps[];
 }
 
 export interface CreateAssistantRequest {
@@ -30,5 +33,6 @@ export interface UpdateAssistantRequest {
   name?: string;
   description?: string;
   type?: AssistantType;
-  workerIds?: string[];
+  mcpIds?: string[];
+  extensionIds?: string[];
 }
