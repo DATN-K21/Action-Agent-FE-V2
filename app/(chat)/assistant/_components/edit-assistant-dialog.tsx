@@ -16,7 +16,6 @@ import { IAssistant } from '@/types/assistant';
 import { updateAssistant } from '@/services/assistant-service';
 import { toast } from '@/components/toast';
 import { MultiSelect } from './multiple-select';
-import { extensions } from '@/constants/data';
 import { IConnectedExtension } from '@/types/extension';
 import { IMCP } from '@/types/mcp';
 import { AssistantType } from '@/constants/assistant-constant';
@@ -42,18 +41,16 @@ export function EditAssistantDialog({
 }: EditAssistantDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [workerIds, setWorkerIds] = useState<string[]>([]);
+  const [mcpIds, setMcpIds] = useState<string[]>([]);
+  const [extensionIds, setExtensionIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (assistant) {
       setName(assistant.name || '');
       setDescription(assistant.description || '');
-      setWorkerIds(
-        assistant.workers?.map((worker) => {
-          return worker.id;
-        }) || [],
-      );
+      setMcpIds(assistant.mcpIds || []);
+      setExtensionIds(assistant.extensionIds || []);
     }
   }, [assistant]);
 
@@ -62,14 +59,10 @@ export function EditAssistantDialog({
       return [];
     }
 
-    return extensions
-      .filter((extension) =>
-        extensionOptions.some((option) => option.extensionName === extension.key),
-      )
-      .map((ext) => ({
-        name: ext.name,
-        key: extensionOptions.find((option) => option.extensionName === ext.key)?.id || '',
-      }));
+    return extensionOptions.map((ext) => ({
+      name: ext.extensionName,
+      key: ext.id,
+    }));
   }, [extensionOptions]);
 
   const mcpChoice = useMemo(() => {
@@ -114,6 +107,9 @@ export function EditAssistantDialog({
       const payload = {
         name,
         description,
+        supportUnits: ['searchbot', 'ragbot'],
+        mcpIds,
+        extensionIds,
       };
 
       await updateAssistant({
@@ -145,6 +141,7 @@ export function EditAssistantDialog({
     }
   };
 
+  console.log('mcpChoice:', mcpChoice.length);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -192,8 +189,8 @@ export function EditAssistantDialog({
               <>
                 <MultiSelect
                   options={extensionsChoice}
-                  values={workerIds}
-                  onChange={setWorkerIds}
+                  values={extensionIds}
+                  onChange={setExtensionIds}
                   className="w-full max-w-sm"
                 />
                 {extensionsChoice.length === 0 && (
@@ -206,8 +203,8 @@ export function EditAssistantDialog({
               <>
                 <MultiSelect
                   options={mcpChoice}
-                  values={workerIds}
-                  onChange={setWorkerIds}
+                  values={mcpIds}
+                  onChange={setMcpIds}
                   className="w-full max-w-sm"
                 />
                 {mcpChoice.length === 0 && (

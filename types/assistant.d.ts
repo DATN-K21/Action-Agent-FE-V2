@@ -10,7 +10,8 @@ export interface IAssistant {
   id: string;
   name: string;
   type: AssistantType;
-  workers: (IMCP | IConnectedExtension)[];
+  mcpIds?: string[];
+  extensionIds?: string[];
   description?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -30,5 +31,6 @@ export interface UpdateAssistantRequest {
   name?: string;
   description?: string;
   type?: AssistantType;
-  workerIds?: string[];
+  mcpIds?: string[];
+  extensionIds?: string[];
 }

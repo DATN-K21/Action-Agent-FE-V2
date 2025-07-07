@@ -88,7 +88,7 @@ export default function MCPServerTable(props: { user: User }) {
   }, [user, pageNumber, maxPerPage, reloadChat, fetchMCPs]);
 
   // Handlers for CRUD operations
-  const handleAddServer = async (server: { mcpName: string; url: string }) => {
+  const handleAddServer = async (server: { mcpName: string; url: string; description: string }) => {
     try {
       setLoading(true);
       const createdMCP = await createMCP({
@@ -96,7 +96,8 @@ export default function MCPServerTable(props: { user: User }) {
         payload: {
           mcpName: server.mcpName,
           url: server.url,
-          connectionType: 'sse',
+          transport: 'sse',
+          description: server.description, // Use description if provided
         },
       });
 
@@ -126,7 +127,8 @@ export default function MCPServerTable(props: { user: User }) {
         payload: {
           mcpName: server.mcpName,
           url: server.url,
-          connectionType: 'sse',
+          transport: 'sse',
+          description: server.description, // Use description if provided
         },
       });
 
@@ -177,26 +179,26 @@ export default function MCPServerTable(props: { user: User }) {
   };
 
   // Add handler for starting a chat
-  const handleStartChat = async () => {
-    try {
-      setLoading(true);
-      const thread = await createThread(user, `New MCP Chat`, ThreadType.MCP);
+  // const handleStartChat = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const thread = await createThread(user, `New MCP Chat`, ThreadType.MCP);
 
-      router.push(`/chat/${thread.id}/mcp`);
-      toast({
-        type: 'success',
-        description: `Started a new chat with MCP`,
-      });
-    } catch (error) {
-      console.error('Error starting chat:', error);
-      toast({
-        type: 'error',
-        description: 'Failed to start chat',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     router.push(`/chat/${thread.id}/mcp`);
+  //     toast({
+  //       type: 'success',
+  //       description: `Started a new chat with MCP`,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error starting chat:', error);
+  //     toast({
+  //       type: 'error',
+  //       description: 'Failed to start chat',
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Define columns with updated action handlers
   const columns: ColumnDef<IMCP>[] = [
@@ -222,6 +224,15 @@ export default function MCPServerTable(props: { user: User }) {
       cell: ({ row }) => (
         <div className="truncate max-w-[180px] sm:max-w-[200px] md:max-w-md lg:max-w-lg text-sm md:text-base">
           {row.getValue('url')}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: 'Description',
+      cell: ({ row }) => (
+        <div className="truncate max-w-[180px] sm:max-w-[200px] md:max-w-sm lg:max-w-lg text-sm md:text-base">
+          {row.getValue('description')}
         </div>
       ),
     },
@@ -304,7 +315,7 @@ export default function MCPServerTable(props: { user: User }) {
         <div className="my-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
           <div className="w-full md:w-auto"></div>
           <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-            <Button
+            {/* <Button
               onClick={handleStartChat}
               disabled={loading || servers.length === 0}
               className="w-full md:w-auto bg-green-600 text-white hover:bg-green-700"
@@ -318,7 +329,7 @@ export default function MCPServerTable(props: { user: User }) {
               ) : (
                 <>Start Chat</>
               )}
-            </Button>
+            </Button> */}
             <Button
               onClick={() => setIsAddDialogOpen(true)}
               disabled={loading}
@@ -345,7 +356,7 @@ export default function MCPServerTable(props: { user: User }) {
         <div className="rounded-md border mt-4 overflow-hidden">
           <div className="overflow-auto max-h-[calc(100vh-300px)] w-full">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-gray-100 dark:bg-gray-800">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {

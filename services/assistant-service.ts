@@ -124,7 +124,7 @@ export const updateAssistant = async (params: UpdateAssistantParams): Promise<IA
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
     const response: IResponse<IAssistant> = await sendRequest({
-      url: `${AI_ENDPOINT_V1}/assistant${params.assistantId}/update-advanced-assistant`,
+      url: `${AI_ENDPOINT_V1}/assistant/${params.assistantId}/update-advanced-assistant`,
       method: HttpMethod.PATCH,
       body: params.payload,
       headers: headers,

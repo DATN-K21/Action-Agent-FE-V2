@@ -3,4 +3,5 @@ export interface IMCP {
   mcpName: string;
   url: string;
   connectionType: 'sse';
+  description?: string; // Optional field for description
 }
