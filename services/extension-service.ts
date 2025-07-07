@@ -4,8 +4,8 @@ import { buildQueryParams, createUserAuthHeaders, sendRequest } from '@/lib/util
 import { IConnectedExtension, IActiveExtensionResponse, IExtension } from '@/types/extension';
 import { User } from 'next-auth';
 
-export interface ICursorFilterProps {
-  cursor?: string | null;
+export interface IPageFilterProps {
+  page?: number | null;
   category?: string | null;
   sortBy?: string | null;
   sortOrder?: 'asc' | 'desc';
@@ -17,7 +17,7 @@ export interface ICursorFilterProps {
 export interface ExtensionParams {
   user: User;
   extension: IExtension | null;
-  filter?: ICursorFilterProps;
+  filter?: IPageFilterProps;
 }
 
 export interface DisconnectExtensionReponse {
@@ -39,7 +39,7 @@ export const getAllExtensions = async (params: ExtensionParams): Promise<Extensi
     // Build the query Url with optional filter parameters
     const queryParams = buildQueryParams({
       limit: params.filter?.limit || 24,
-      cursor: params.filter?.cursor,
+      page: params.filter?.page || 1,
       category: params.filter?.category,
       sortBy: params.filter?.sortBy,
       sortOrder: params.filter?.sortOrder,

@@ -15,7 +15,7 @@ import {
   disconnectExtension,
   ExtensionParams,
   getAllExtensions,
-  ICursorFilterProps,
+  IPageFilterProps,
 } from '@/services/extension-service';
 import { IExtension } from '@/types/extension';
 import {
@@ -38,13 +38,13 @@ export default function ExtensionList(props: ExtensionListProps) {
   const isExtensionListFetchedRef = useRef<boolean>(false);
   const loadingMoreRef = useRef<boolean>(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreExtensionsRef = useRef<() => void>();
 
   const [extensions, setExtensions] = useState<IExtension[]>([]);
   const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
   const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
 
@@ -57,7 +57,8 @@ export default function ExtensionList(props: ExtensionListProps) {
     return extName;
   };
 
-  const [filter, setFilter] = useState<ICursorFilterProps>({
+  const [filter, setFilter] = useState<IPageFilterProps>({
+    page: 1,
     limit: 24,
     category: null,
     sortBy: 'id',
@@ -67,42 +68,49 @@ export default function ExtensionList(props: ExtensionListProps) {
   });
 
   const updateFilter = useCallback((field: string, value: any) => {
-    setFilter((prev) => ({
+    setFilter((prev: IPageFilterProps) => ({
       ...prev,
+      page: 1,
       [field]: value,
     }));
     setExtensions([]);
-    setNextCursor(null);
     setHasMore(true);
     isExtensionListFetchedRef.current = false;
   }, []);
 
   const loadMoreExtensions = useCallback(async () => {
-    if (!user || !nextCursor || !hasMore || loadingMoreRef.current === true) {
+    console.log('Validation condition: ', user, hasMore, loadingMoreRef.current);
+    if (!user || !hasMore || loadingMoreRef.current === true) {
       return;
     }
+    console.log('PASSED');
 
     loadingMoreRef.current = true;
     setLoadingMore(true);
 
     try {
+      const nextPage = filter.page ? filter.page + 1 : 2;
       const extensionParams: ExtensionParams = {
         user,
         filter: {
           ...filter,
-          cursor: nextCursor,
+          page: nextPage,
         },
       } as ExtensionParams;
       const { data, meta } = await getAllExtensions(extensionParams);
-      if (data.length <= 0 || !meta || !meta.nextCursor || meta.hasMore === false) {
+      if (data.length <= 0 || !meta || meta?.page >= meta?.totalPages) {
         setHasMore(false);
       } else {
-        setNextCursor(meta.nextCursor);
-        setExtensions((prev) => [
+        setFilter((prev: IPageFilterProps) => ({
           ...prev,
-          ...data.filter((ext) => !prev.some((e) => e.key === ext.key)),
+          page: nextPage,
+        }));
+
+        setExtensions((prev: IExtension[]) => [
+          ...prev,
+          ...data.filter((ext: IExtension) => !prev.some((e: IExtension) => e.key === ext.key)),
         ]);
-        setHasMore(meta.hasMore);
+        setHasMore(meta?.page < meta?.totalPages);
       }
     } catch (error) {
       console.error('Error loading more extensions: ', error);
@@ -110,14 +118,20 @@ export default function ExtensionList(props: ExtensionListProps) {
       setLoadingMore(false);
       loadingMoreRef.current = false;
     }
-  }, [filter, hasMore, nextCursor, user]);
+  }, [filter, hasMore, user]);
+
+  useEffect(() => {
+    loadMoreExtensionsRef.current = loadMoreExtensions;
+  }, [loadMoreExtensions]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
+        console.log('Have called observer callback');
         const target = entries[0];
         if (target.isIntersecting && hasMore && !loadingMore) {
-          loadMoreExtensions();
+          console.log('Should load more extensions');
+          loadMoreExtensionsRef.current?.();
         }
       },
       { threshold: 1.0, rootMargin: '100px' },
@@ -132,7 +146,7 @@ export default function ExtensionList(props: ExtensionListProps) {
         observer.unobserve(currentObserverRef);
       }
     };
-  }, [hasMore, loadMoreExtensions, loadingMore]);
+  }, [hasMore, loadingMore]);
 
   useEffect(() => {
     if (!user) {
@@ -153,9 +167,9 @@ export default function ExtensionList(props: ExtensionListProps) {
         } as ExtensionParams;
 
         const { data, meta } = await getAllExtensions(extensionParams);
-        setNextCursor(meta?.nextCursor || null);
-        setHasMore(meta?.hasMore || false);
-        console.log('Fetched extensions: ', data);
+        console.log('Meta data: ', meta);
+
+        setHasMore(meta?.page < meta?.totalPages);
         setExtensions(data);
       } catch (error) {
         console.error('Error fetching extension data: ', error);
