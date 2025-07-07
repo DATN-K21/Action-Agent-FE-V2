@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { MultiSelect } from './multiple-select';
+// import { extensions } from '@/constants/data';
 import { createAssistant } from '@/services/assistant-service';
 import { User } from 'next-auth';
 import { toast } from '@/components/toast';
@@ -33,14 +34,26 @@ export function AddAssistantDialog({
   open,
   onOpenChange,
   extensionOptions,
+  type = AssistantType.ADVANCED_ASSISTANT,
   mcpOptions,
   user,
   onAssistantCreated,
 }: AddAssistantDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [workerIds, setWorkerIds] = useState<string[]>([]);
+  // const [workerIds, setWorkerIds] = useState<string[]>([]);
+  const [mcpIds, setMcpIds] = useState<string[]>([]);
+  const [extensionIds, setExtensionIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const extensionsChoice = useMemo(() => {
+    return (
+      extensionOptions?.map((ext) => ({
+        name: ext.extensionName,
+        key: ext.id,
+      })) || []
+    );
+  }, [extensionOptions]);
 
   const mcpChoice = useMemo(() => {
     return (
@@ -79,9 +92,18 @@ export function AddAssistantDialog({
     setIsLoading(true);
 
     try {
-      const payload = { name, description };
+      const payload = {
+        name,
+        description,
+        supportUnits: ['searchbot', 'ragbot'],
+        extensionIds,
+        mcpIds,
+      };
 
-      await createAssistant({ user, payload });
+      await createAssistant({
+        user,
+        payload,
+      });
 
       toast({
         description: 'Assistant created successfully',
@@ -91,7 +113,9 @@ export function AddAssistantDialog({
       // Reset form
       setName('');
       setDescription('');
-      setWorkerIds([]);
+      // setWorkerIds([]);
+      setMcpIds([]);
+      setExtensionIds([]);
 
       // Close dialog
       onOpenChange(false);
@@ -152,20 +176,33 @@ export function AddAssistantDialog({
           {/* Extensions or MCP Servers */}
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label className="pt-1.5">Extensions</Label>
-
-            {/* <MultiSelect
-              options={extensionsChoice}
-              values={workerIds}
-              onChange={setWorkerIds}
-              className="w-full max-w-sm"
-            /> */}
+            <>
+              <MultiSelect
+                options={extensionsChoice}
+                values={extensionIds}
+                onChange={setExtensionIds}
+                className="w-full max-w-sm"
+              />
+              {extensionIds.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  No extensions available. Please connect some extensions first.
+                </p>
+              )}
+            </>
             <Label className="pt-1.5">MCP Servers</Label>
-            <MultiSelect
-              options={mcpChoice}
-              values={workerIds}
-              onChange={setWorkerIds}
-              className="w-full max-w-sm"
-            />
+            <>
+              <MultiSelect
+                options={mcpChoice}
+                values={mcpIds}
+                onChange={setMcpIds}
+                className="w-full max-w-sm"
+              />
+              {mcpChoice.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  No MCP servers available. Please connect some MCP servers first.
+                </p>
+              )}
+            </>
           </div>
         </div>
 
