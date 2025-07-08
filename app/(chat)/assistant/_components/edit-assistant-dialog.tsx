@@ -40,20 +40,29 @@ export function EditAssistantDialog({
 }: EditAssistantDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [workerIds, setWorkerIds] = useState<string[]>([]);
+  const [mcpIds, setMcpIds] = useState<string[]>([]);
+  const [extensionIds, setExtensionIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (assistant) {
       setName(assistant.name || '');
       setDescription(assistant.description || '');
-      setWorkerIds(
-        assistant.workers?.map((worker) => {
-          return worker.id;
-        }) || [],
-      );
+      setMcpIds(assistant.mcpIds || []);
+      setExtensionIds(assistant.extensionIds || []);
     }
   }, [assistant]);
+
+  const extensionsChoice = useMemo(() => {
+    if (!extensionOptions || extensionOptions.length === 0) {
+      return [];
+    }
+
+    return extensionOptions.map((ext) => ({
+      name: ext.extensionName,
+      key: ext.id,
+    }));
+  }, [extensionOptions]);
 
   const mcpChoice = useMemo(() => {
     if (!mcpOptions || mcpOptions.length === 0) {
@@ -97,6 +106,9 @@ export function EditAssistantDialog({
       const payload = {
         name,
         description,
+        supportUnits: ['searchbot', 'ragbot'],
+        mcpIds,
+        extensionIds,
       };
 
       await updateAssistant({
@@ -128,6 +140,7 @@ export function EditAssistantDialog({
     }
   };
 
+  console.log('mcpChoice:', mcpChoice.length);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -175,8 +188,8 @@ export function EditAssistantDialog({
               {/* <>
                 <MultiSelect
                   options={extensionsChoice}
-                  values={workerIds}
-                  onChange={setWorkerIds}
+                  values={extensionIds}
+                  onChange={setExtensionIds}
                   className="w-full max-w-sm"
                 />
                 {extensionsChoice.length === 0 && (
@@ -189,8 +202,8 @@ export function EditAssistantDialog({
               <>
                 <MultiSelect
                   options={mcpChoice}
-                  values={workerIds}
-                  onChange={setWorkerIds}
+                  values={mcpIds}
+                  onChange={setMcpIds}
                   className="w-full max-w-sm"
                 />
                 {mcpChoice.length === 0 && (

@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { IMCP } from '@/types/mcp';
+import { Textarea } from '@/components/ui/textarea';
 
 interface MCPServerDialogProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export function MCPServerDialog({
     id: defaultValues?.id || '',
     mcpName: defaultValues?.mcpName || '',
     url: defaultValues?.url || '',
+    description: defaultValues?.description || '',
   });
 
   const [errors, setErrors] = useState({
@@ -50,20 +52,22 @@ export function MCPServerDialog({
         id: defaultValues.id,
         mcpName: defaultValues.mcpName,
         url: defaultValues.url,
+        description: defaultValues.description || '',
       });
     } else {
       setFormValues({
         id: '',
         mcpName: '',
         url: '',
+        description: '',
       });
     }
     // Reset errors when dialog opens/closes
     setErrors({ mcpName: '', url: '' });
   }, [defaultValues, isOpen]);
 
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle form input and textarea changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormValues((prev) => ({
       ...prev,
@@ -112,6 +116,7 @@ export function MCPServerDialog({
     }
   };
 
+  console.log('Form Values:', formValues);
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] w-[95%] max-w-full mx-auto">
@@ -155,6 +160,21 @@ export function MCPServerDialog({
                   disabled={isSubmitting}
                 />
                 {errors.url && <span className="text-sm text-red-500">{errors.url}</span>}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="description" className="md:text-right">
+                Description
+              </Label>
+              <div className="col-span-1 md:col-span-3 w-full">
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formValues.description}
+                  onChange={handleChange}
+                  placeholder="Enter a brief description of the server"
+                  disabled={isSubmitting}
+                />
               </div>
             </div>
           </div>

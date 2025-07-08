@@ -1,21 +1,41 @@
 'use client';
 
-import cx from 'classnames';
-import { AnimatePresence, motion } from 'framer-motion';
-import { memo } from 'react';
-import { SparklesIcon } from './icons';
-import { Markdown } from './markdown';
+import { MessageActions } from '@/components/ui/message-actions';
+import { MessageType } from '@/constants/ai-constant';
 import { cn } from '@/lib/utils';
 import { IMessage } from '@/types/ai';
-import { MessageType } from '@/constants/ai-constant';
-import { MessageActions } from '@/components/ui/message-actions';
+import cx from 'classnames';
+import { AnimatePresence, motion } from 'framer-motion';
+import { memo, useMemo } from 'react';
+import { SparklesIcon } from './icons';
+import { Markdown } from './markdown';
 
-const PurePreviewMessage = ({ message, isLoading }: { message: IMessage; isLoading: boolean }) => {
+export interface PreviewMessageProps {
+  message: IMessage;
+  isLoading: boolean;
+}
+
+const PurePreviewMessage = ({ message, isLoading }: PreviewMessageProps) => {
+  const displayMessage = useMemo<string>((): string => {
+    try {
+      const parsedContent = JSON.parse(message.content);
+      if (Array.isArray(parsedContent) && parsedContent.length > 0 && parsedContent[0].text) {
+        return parsedContent[0].text;
+      }
+      if (Array.isArray(parsedContent) && parsedContent.length > 0 && parsedContent[0].text) {
+        return parsedContent[0].text;
+      }
+      return String(message.content);
+    } catch (error) {
+      return message.content;
+    }
+  }, [message]);
+
   return (
     <AnimatePresence>
       <motion.div
         data-testid={`message-${message.type}`}
-        className="w-full mx-auto max-w-4xl px-4 group/message"
+        className="w-full mx-auto max-w-4xl group/message"
         initial={{ y: 5, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         data-role={message.type}
@@ -25,29 +45,7 @@ const PurePreviewMessage = ({ message, isLoading }: { message: IMessage; isLoadi
             'flex gap-4 w-full group-data-[role=human]/message:ml-auto group-data-[role=human]/message:max-w-2xl group-data-[role=human]/message:w-fit',
           )}
         >
-          {message.type === MessageType.AI && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px">
-                <SparklesIcon size={14} />
-              </div>
-            </div>
-          )}
-
           <div className="flex flex-col gap-4 w-full">
-            {/* {message.experimental_attachments && (
-              <div
-                data-testid={`message-attachments`}
-                className="flex flex-row justify-end gap-2"
-              >
-                {message.experimental_attachments.map((attachment) => (
-                  <PreviewAttachment
-                    key={attachment.url}
-                    attachment={attachment}
-                  />
-                ))}
-              </div>
-            )} */}
-
             {message.content && (
               <div data-testid="message-content" className="flex flex-row gap-2 items-start">
                 <div
@@ -56,7 +54,7 @@ const PurePreviewMessage = ({ message, isLoading }: { message: IMessage; isLoadi
                       message.type === MessageType.HUMAN,
                   })}
                 >
-                  <Markdown>{message.content as string}</Markdown>
+                  <Markdown>{displayMessage}</Markdown>
                 </div>
               </div>
             )}
@@ -82,7 +80,7 @@ export const ThinkingMessage = () => {
   return (
     <motion.div
       data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-4xl px-4 group/message"
+      className="w-full mx-auto max-w-4xl group/message"
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
       data-role={role}

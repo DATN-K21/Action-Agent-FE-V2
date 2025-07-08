@@ -8,7 +8,8 @@ export interface CreateMCPParams {
   payload: {
     mcpName: string;
     url: string;
-    connectionType: 'sse';
+    transport: 'sse';
+    description?: string; // Optional field for description
   };
 }
 
@@ -18,7 +19,8 @@ export interface UpdateMCPParams {
   payload: {
     mcpName: string;
     url: string;
-    connectionType: 'sse';
+    transport: 'sse';
+    description?: string; // Optional field for description
   };
 }
 
@@ -65,7 +67,7 @@ export const createMCP = async (params: CreateMCPParams): Promise<IMCP> => {
   try {
     if (!params.payload.mcpName) throw new Error('MCP name is required');
     if (!params.payload.url) throw new Error('MCP URL is required');
-    if (!params.payload.connectionType) throw new Error('Connection type is required');
+    if (!params.payload.transport) throw new Error('Connection type is required');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
 
@@ -103,7 +105,7 @@ export const getMCPDetail = async (params: GetMCPDetailParams): Promise<IMCP> =>
 export const updateMCP = async (params: UpdateMCPParams): Promise<IMCP> => {
   if (!params.payload.mcpName) throw new Error('MCP name is required');
   if (!params.payload.url) throw new Error('MCP URL is required');
-  if (!params.payload.connectionType) throw new Error('Connection type is required');
+  if (!params.payload.transport) throw new Error('Connection type is required');
   if (!params.connectedMcpId) throw new Error('Connected MCP ID is required');
 
   try {
