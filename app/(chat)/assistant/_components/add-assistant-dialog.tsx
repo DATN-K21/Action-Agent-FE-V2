@@ -19,6 +19,7 @@ import { toast } from '@/components/toast';
 import { IMCP } from '@/types/mcp';
 import { IConnectedExtension } from '@/types/extension';
 import { AssistantType } from '@/constants/assistant-constant';
+import { useAssistantStore } from '@/store/assistant-store';
 
 type AddAssistantDialogProps = {
   open: boolean;
@@ -41,17 +42,19 @@ export function AddAssistantDialog({
 }: AddAssistantDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  // const [workerIds, setWorkerIds] = useState<string[]>([]);
   const [mcpIds, setMcpIds] = useState<string[]>([]);
   const [extensionIds, setExtensionIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const fetchAssistants = useAssistantStore((state) => state.fetchAssistants);
 
   const extensionsChoice = useMemo(() => {
     return (
-      extensionOptions?.map((ext) => ({
-        name: ext.extensionName,
-        key: ext.id,
-      })) || []
+      extensionOptions
+        ?.filter((ext) => ext.connectionStatus === 'success')
+        .map((ext) => ({
+          name: ext.extensionName.charAt(0).toUpperCase() + ext.extensionName.slice(1),
+          key: ext.id,
+        })) || []
     );
   }, [extensionOptions]);
 
@@ -81,14 +84,6 @@ export function AddAssistantDialog({
       return;
     }
 
-    // if (!workerIds.length) {
-    //   toast({
-    //     description: `Please select at least one ${type === 'extension' ? 'extension' : 'MCP server'}.`,
-    //     type: 'error',
-    //   });
-    //   return;
-    // }
-
     setIsLoading(true);
 
     try {
@@ -100,16 +95,28 @@ export function AddAssistantDialog({
         mcpIds,
       };
 
-      await createAssistant({
-        user,
-        payload,
-      });
+      try {
+        await createAssistant({
+          user,
+          payload,
+        });
 
-      toast({
-        description: 'Assistant created successfully',
-        type: 'success',
-      });
+        toast({
+          description: 'Assistant created successfully',
+          type: 'success',
+        });
 
+        // Fetch updated assistants list
+        await fetchAssistants(user);
+      } catch (error) {
+        console.error('Error preparing assistant payload:', error);
+        toast({
+          description: 'Failed to prepare assistant payload. Please try again.',
+          type: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
       // Reset form
       setName('');
       setDescription('');
@@ -135,8 +142,16 @@ export function AddAssistantDialog({
     }
   };
 
+  const handleClose = () => {
+    setName('');
+    setDescription('');
+    setMcpIds([]);
+    setExtensionIds([]);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="sm:max-w-[425px] w-[95%] max-w-full mx-auto"
         onOpenAutoFocus={(e) => e.preventDefault()}
@@ -183,7 +198,7 @@ export function AddAssistantDialog({
                 onChange={setExtensionIds}
                 className="w-full max-w-sm"
               />
-              {extensionIds.length === 0 && (
+              {extensionsChoice.length === 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
                   No extensions available. Please connect some extensions first.
                 </p>

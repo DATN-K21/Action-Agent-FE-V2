@@ -46,7 +46,16 @@ export function AssistantCard({ user, assistant, onEdit, onDelete }: AssistantCa
   };
 
   return (
-    <li className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer">
+    <li
+      className="rounded-lg border p-4 hover:shadow-md hover:cursor-pointer hover:bg-gray-50 transition-all duration-200 ease-in-out"
+      style={{
+        boxShadow: `
+        inset 0px -3px 0px 0px #D6D6E7,
+        0px 4px 8px -3px #2D23424D,
+        0px 2px 4px 0px #2C234266
+      `,
+      }}
+    >
       <div className="mb-8 flex items-center justify-between">
         <div className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}>
           <Bot />

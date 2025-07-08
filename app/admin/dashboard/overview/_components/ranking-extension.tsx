@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export function RecentSales() {
+export function RankingExtension() {
   return (
     <div className="space-y-8">
       <div className="flex items-center">
@@ -10,9 +10,7 @@ export function RecentSales() {
         </Avatar>
         <div className="ml-4 space-y-1">
           <p className="text-sm font-medium leading-none">Gmail</p>
-          <p className="text-sm text-muted-foreground">
-            
-          </p>
+          <p className="text-sm text-muted-foreground"></p>
         </div>
         <div className="ml-auto font-medium">2500 times</div>
       </div>
