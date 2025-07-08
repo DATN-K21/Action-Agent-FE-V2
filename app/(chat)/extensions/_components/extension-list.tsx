@@ -1,6 +1,7 @@
 'use client';
 
 import { ExtensionCardSkeleton } from '@/components/skeleton/extension-card-skeleton';
+import { toast } from '@/components/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,12 +13,13 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import {
+  activeExtension,
   disconnectExtension,
   ExtensionParams,
   getAllExtensions,
   IPageFilterProps,
 } from '@/services/extension-service';
-import { IExtension } from '@/types/extension';
+import { IActiveExtensionResponse, IExtension } from '@/types/extension';
 import {
   IconAdjustmentsHorizontal,
   IconSortAscendingLetters,
@@ -41,11 +43,11 @@ export default function ExtensionList(props: ExtensionListProps) {
 
   const [extensions, setExtensions] = useState<IExtension[]>([]);
   const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
-  const [extensionType, setExtensionType] = useState<'all' | 'connected' | 'notConnected'>('all');
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalResult, setTotalResult] = useState<number>(0);
 
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
@@ -129,6 +131,7 @@ export default function ExtensionList(props: ExtensionListProps) {
 
         setHasMore(meta?.page < meta?.totalPages);
         setExtensions(data);
+        setTotalResult(meta?.total || data.length);
       } catch (error) {
         console.error('Error fetching extension data: ', error);
       } finally {
@@ -140,17 +143,54 @@ export default function ExtensionList(props: ExtensionListProps) {
     fetchExtensionData();
   }, [filter, user]);
 
-  const handleDisconnectExtension = async () => {
-    if (!selectedExtension || !selectedExtension.connected) {
+  const toggleConnectButton = async (extension: IExtension) => {
+    if (!extension || extension.connected === null) {
       return;
     }
-    await disconnectExtension({ user, extension: selectedExtension });
-    setExtensions((prev) =>
-      prev.map((extension) =>
-        extension.key === selectedExtension.key ? { ...extension, connected: false } : extension,
-      ),
-    );
-    setSelectedExtension(null);
+    if (extension.connected === false) {
+      return await handleClickConnect(extension);
+    }
+    return await handleDisconnectExtension(extension);
+  };
+
+  const handleClickConnect = async (extension: IExtension) => {
+    setLoading(true);
+    try {
+      const response: IActiveExtensionResponse = await activeExtension({ user, extension });
+
+      // Check if the extension is already connected
+      if (response?.isExisted) {
+        toast({ type: 'error', description: 'Extension is already connected' });
+        return;
+      }
+
+      // Redirect to the extension's connection URL
+      toast({ type: 'info', description: 'Redirecting to connect to extension...' });
+      window.location.href = response.redirectUrl;
+    } catch (error) {
+      toast({ type: 'error', description: 'Failed to connect to extension' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisconnectExtension = async (extension: IExtension) => {
+    if (!extension || extension.connected === false) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await disconnectExtension({ user, extension: extension });
+      setExtensions((prev) =>
+        prev.map((ext) => (ext.key === extension.key ? { ...ext, connected: false } : ext)),
+      );
+      setSelectedExtension(null);
+    } catch (error) {
+      console.warn('Error disconnecting extension: ', error);
+    } finally {
+      setLoading(false);
+      toast({ type: 'success', description: 'Extension disconnected successfully' });
+    }
   };
 
   return (
@@ -174,16 +214,21 @@ export default function ExtensionList(props: ExtensionListProps) {
               onChange={(e) => updateFilter('search', e.target.value)}
             />
             <Select
-              value={extensionType}
+              value={
+                filter.connected === null ? 'all' : filter.connected ? 'connected' : 'notConnected'
+              }
               onValueChange={(value) =>
-                setExtensionType(value as 'all' | 'connected' | 'notConnected')
+                updateFilter(
+                  'connected',
+                  value === 'all' ? null : value === 'connected' ? true : false,
+                )
               }
             >
               <SelectTrigger className="w-36">
                 <SelectValue>
-                  {extensionType === 'all'
+                  {filter.connected === null
                     ? 'All Extensions'
-                    : extensionType === 'connected'
+                    : filter.connected === true
                       ? 'Connected Apps'
                       : 'Not Connected Apps'}
                 </SelectValue>
@@ -194,32 +239,73 @@ export default function ExtensionList(props: ExtensionListProps) {
                 <SelectItem value="notConnected">Not Connected</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="flex items-center gap-1 text-sm bg-yellow-100 px-3 rounded-3xl">
+              {loading ? 'Loading ...' : `${totalResult} results.`}
+            </div>
           </div>
 
-          <Select
-            value={filter.sortOrder}
-            onValueChange={(value) => updateFilter('sortOrder', value as 'asc' | 'desc')}
-          >
-            <SelectTrigger className="w-16">
-              <SelectValue>
-                <IconAdjustmentsHorizontal size={18} />
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="asc">
-                <div className="flex items-center gap-4">
-                  <IconSortAscendingLetters size={16} />
-                  <span>Ascending</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="desc">
-                <div className="flex items-center gap-4">
-                  <IconSortDescendingLetters size={16} />
-                  <span>Descending</span>
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select
+              value={filter.sortBy}
+              onValueChange={(value) =>
+                updateFilter('sortBy', value as 'id' | 'name' | 'actionsCount')
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <IconAdjustmentsHorizontal size={18} />
+                    <span>Sort By</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="id">
+                  <div className="flex items-center gap-4">
+                    <span>ID</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="name">
+                  <div className="flex items-center gap-4">
+                    <span>Name</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="actionsCount">
+                  <div className="flex items-center gap-4">
+                    <span>Actions Count</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={filter.sortOrder}
+              onValueChange={(value) => updateFilter('sortOrder', value as 'asc' | 'desc')}
+            >
+              <SelectTrigger className="w-36">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <IconAdjustmentsHorizontal size={18} />
+                    <span>Sort Order</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="asc">
+                  <div className="flex items-center gap-4">
+                    <IconSortAscendingLetters size={16} />
+                    <span>Ascending</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="desc">
+                  <div className="flex items-center gap-4">
+                    <IconSortDescendingLetters size={16} />
+                    <span>Descending</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <Separator className="shadow" />
@@ -310,6 +396,11 @@ export default function ExtensionList(props: ExtensionListProps) {
                             ? 'border border-blue-300 bg-blue-50 hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900'
                             : ''
                         }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedExtension(extension);
+                          toggleConnectButton(extension);
+                        }}
                       >
                         {extension.connected ? 'Connected' : 'Connect'}
                       </Button>
@@ -331,7 +422,7 @@ export default function ExtensionList(props: ExtensionListProps) {
               </ul>
             </InfiniteScroll>
           ) : (
-            <li className="col-span-full text-center py-10 text-gray-500">
+            <li className="col-span-full text-center py-10 text-gray-500 list-none">
               No extensions found matching your criteria
             </li>
           )}
@@ -344,7 +435,6 @@ export default function ExtensionList(props: ExtensionListProps) {
         extension={selectedExtension!}
         isOpen={isOpenDialog}
         onClose={() => setIsOpenDialog(false)}
-        onDisconnect={handleDisconnectExtension}
       />
     </>
   );

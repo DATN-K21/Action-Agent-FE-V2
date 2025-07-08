@@ -7,7 +7,7 @@ import { User } from 'next-auth';
 export interface IPageFilterProps {
   page?: number | null;
   category?: string | null;
-  sortBy?: string | null;
+  sortBy?: string | '';
   sortOrder?: 'asc' | 'desc';
   search?: string | '';
   limit?: number;
@@ -44,6 +44,7 @@ export const getAllExtensions = async (params: ExtensionParams): Promise<Extensi
       sortBy: params.filter?.sortBy,
       sortOrder: params.filter?.sortOrder,
       search: params.filter?.search,
+      connected: params.filter?.connected,
     });
 
     const response: IResponse<IExtension[]> = await sendRequest({
@@ -117,7 +118,7 @@ export const activeExtension = async (
       headers: headers,
       queryParams: {
         user_id: params.user.id,
-        extension_name: params.extension.key,
+        extension_enum: params.extension.key,
       },
     });
 
@@ -143,7 +144,7 @@ export const disconnectExtension = async (
       headers: headers,
       queryParams: {
         user_id: params.user.id,
-        extension_name: params.extension.key,
+        extension_enum: params.extension.key,
       },
     });
 

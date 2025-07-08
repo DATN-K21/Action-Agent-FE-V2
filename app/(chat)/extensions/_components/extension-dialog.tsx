@@ -1,9 +1,7 @@
 'use client';
 
-import { Icons } from '@/components/icon';
 import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
 import { toast } from '@/components/toast';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -14,26 +12,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { IExtensionAction } from '@/constants/data';
-import { activeExtension, getExtensionActions } from '@/services/extension-service';
-import { IActiveExtensionResponse, IExtension } from '@/types/extension';
+import { getExtensionActions } from '@/services/extension-service';
+import { IExtension } from '@/types/extension';
 import { User } from 'next-auth';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface ExtensionDialogProps {
   user: User;
   extension?: IExtension;
   isOpen: boolean;
   onClose: () => void;
-  onDisconnect: () => Promise<void>;
 }
 
-const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
-  user,
-  extension,
-  isOpen,
-  onClose,
-  onDisconnect,
-}) => {
+const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOpen, onClose }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [extensionActions, setExtensionActions] = useState<IExtensionAction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +37,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
       setActionLoading(true);
       try {
         const extensionActions: IExtensionAction[] = await getExtensionActions({ user, extension });
-        console.log('Fetched Extension Actions: ', extensionActions);
         setExtensionActions(extensionActions || []);
       } catch (error) {
         toast({ type: 'error', description: 'Failed to fetch extension actions' });
@@ -58,47 +48,6 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
     setIsConnected(extension.connected || false);
     fetchExtensionActions();
   }, [extension, user]);
-
-  const handleClickConnect = useCallback(async () => {
-    if (isConnected || !extension) return;
-    setIsLoading(true);
-
-    try {
-      const response: IActiveExtensionResponse = await activeExtension({ user, extension });
-
-      // Check if the extension is already connected
-      if (response?.isExisted) {
-        toast({ type: 'error', description: 'Extension is already connected' });
-        return;
-      }
-
-      // Redirect to the extension's connection URL
-      toast({ type: 'info', description: 'Redirecting to connect to extension...' });
-      window.location.href = response.redirectUrl;
-      setIsConnected(true);
-    } catch (error) {
-      toast({ type: 'error', description: 'Failed to connect to extension' });
-    } finally {
-      onClose();
-      setIsLoading(false);
-    }
-  }, [user, extension, isConnected, onClose]);
-
-  const handleClickDisconnect = useCallback(async () => {
-    if (!isConnected) return;
-    setIsLoading(true);
-
-    try {
-      await onDisconnect();
-      toast({ type: 'success', description: 'Extension disconnected successfully' });
-    } catch (error) {
-      toast({ type: 'error', description: 'Failed to disconnect to extension' });
-    } finally {
-      onClose();
-      setIsLoading(false);
-    }
-
-  }, [isConnected, onClose, onDisconnect]);
 
   if (!isOpen || !extension) return null;
 
@@ -139,17 +88,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({
             </CardContent>
           </Card>
         </div>
-        <DialogFooter>
-          {isConnected ? (
-            <Button onClick={handleClickDisconnect} disabled={isLoading}>
-              {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />} Disconnect
-            </Button>
-          ) : (
-            <Button onClick={handleClickConnect} disabled={isLoading}>
-              {isLoading && <Icons.spinner className="mr-2 size-4 animate-spin" />} Connect
-            </Button>
-          )}
-        </DialogFooter>
+        <DialogFooter></DialogFooter>
       </DialogContent>
     </Dialog>
   );
