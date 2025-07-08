@@ -30,6 +30,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SiRetool } from 'react-icons/si';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import ExtensionDialog from './extension-dialog';
+import LoadingDialog from '@/components/loading-dialog';
 
 export type ExtensionListProps = {
   user: User;
@@ -43,7 +44,10 @@ export default function ExtensionList(props: ExtensionListProps) {
 
   const [extensions, setExtensions] = useState<IExtension[]>([]);
   const [selectedExtension, setSelectedExtension] = useState<IExtension | null>(null);
+
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
+  const [isLoadingDialogOpen, setIsLoadingDialogOpen] = useState<boolean>(false);
+
   const [loading, setLoading] = useState<boolean>(true);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -154,7 +158,7 @@ export default function ExtensionList(props: ExtensionListProps) {
   };
 
   const handleClickConnect = async (extension: IExtension) => {
-    setLoading(true);
+    setIsLoadingDialogOpen(true);
     try {
       const response: IActiveExtensionResponse = await activeExtension({ user, extension });
 
@@ -170,7 +174,7 @@ export default function ExtensionList(props: ExtensionListProps) {
     } catch (error) {
       toast({ type: 'error', description: 'Failed to connect to extension' });
     } finally {
-      setLoading(false);
+      setIsLoadingDialogOpen(false);
     }
   };
 
@@ -178,7 +182,7 @@ export default function ExtensionList(props: ExtensionListProps) {
     if (!extension || extension.connected === false) {
       return;
     }
-    setLoading(true);
+    setIsLoadingDialogOpen(true);
     try {
       await disconnectExtension({ user, extension: extension });
       setExtensions((prev) =>
@@ -188,7 +192,7 @@ export default function ExtensionList(props: ExtensionListProps) {
     } catch (error) {
       console.warn('Error disconnecting extension: ', error);
     } finally {
-      setLoading(false);
+      setIsLoadingDialogOpen(false);
       toast({ type: 'success', description: 'Extension disconnected successfully' });
     }
   };
@@ -435,6 +439,14 @@ export default function ExtensionList(props: ExtensionListProps) {
         extension={selectedExtension!}
         isOpen={isOpenDialog}
         onClose={() => setIsOpenDialog(false)}
+      />
+
+      {/* Loading Dialog */}
+      <LoadingDialog
+        isOpen={isLoadingDialogOpen}
+        onClose={() => setIsLoadingDialogOpen(false)}
+        title="🚀 Loading"
+        description="Please wait for a second while we process your request ..."
       />
     </>
   );
