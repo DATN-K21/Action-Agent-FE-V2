@@ -88,23 +88,9 @@ export function EditAssistantDialog({
       return;
     }
 
-    // if (!workerIds || workerIds.length === 0) {
-    //   const hasOptions =
-    //     assistant?.type === AssistantType.EXTENSION
-    //       ? extensionsChoice.length > 0
-    //       : mcpChoice.length > 0;
-
-    //   if (hasOptions) {
-    //     toast({
-    //       description: `Please select at least one ${assistant?.type === 'extension' ? 'extension' : 'MCP server'}.`,
-    //       type: 'error',
-    //     });
-    //     return;
-    //   }
-    // }
+    setIsLoading(true);
 
     try {
-      setIsLoading(true);
       const payload = {
         name,
         description,
@@ -124,9 +110,6 @@ export function EditAssistantDialog({
         type: 'success',
       });
 
-      // Close dialog
-      onOpenChange(false);
-
       // Refresh assistants list
       if (onAssistantUpdated) {
         onAssistantUpdated();
@@ -139,12 +122,20 @@ export function EditAssistantDialog({
       });
     } finally {
       setIsLoading(false);
+      handleClose();
     }
   };
 
-  console.log('mcpChoice:', mcpChoice.length);
+  const handleClose = () => {
+    setName('');
+    setDescription('');
+    setMcpIds([]);
+    setExtensionIds([]);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="sm:max-w-[425px] w-[95%] max-w-full mx-auto"
         onOpenAutoFocus={(e) => e.preventDefault()}

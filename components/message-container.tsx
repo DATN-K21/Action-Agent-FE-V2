@@ -51,6 +51,10 @@ function MessageContainer(props: MessageNameProps) {
     );
   }
 
+  if (!message.content) {
+    return null;
+  }
+
   return (
     <motion.div
       data-testid={`message-${message.type}`}

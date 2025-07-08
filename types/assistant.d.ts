@@ -12,7 +12,7 @@ export interface ITeamProps {
 export interface IAssistant {
   id: string;
   name: string;
-  type: AssistantType;
+  assistantType: AssistantType;
   mcpIds?: string[];
   extensionIds?: string[];
   description?: string;

@@ -55,8 +55,8 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const isAdvancedAssistant = assistant?.assistantType === AssistantType.ADVANCED_ASSISTANT;
 
   const getTeamIdByWorkflowType = (workflowType: TeamType): string => {
-    const team = assistant?.teams.find((team: any) => team.workflow_type === workflowType);
-    return team?.id || assistant?.teams[0].id!;
+    const team = assistant?.teams?.find((team: any) => team.workflow_type === workflowType);
+    return team?.id || assistant?.teams?.[0].id!;
   };
 
   // Auto-generate title when two messages are sent and status is ready and threadId is set
@@ -393,7 +393,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         value={input}
         onChange={handleInput}
         className={cx(
-          'min-h-[24px] max-h-[calc(75dvh)] overflow-y-auto resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+          'min-h-[24px] max-h-[calc(50dvh)] overflow-y-auto resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
           className,
         )}
         rows={2}

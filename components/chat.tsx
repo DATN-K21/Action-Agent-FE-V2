@@ -7,6 +7,7 @@ import useChatStore from '@/store/chat-store';
 import { User } from 'next-auth';
 import { IMessage } from '@/types/ai';
 import { useAssistantStore } from '@/store/assistant-store';
+import { TeamType } from '@/constants/ai-constant';
 
 interface ChatProps {
   id: string;
@@ -39,7 +40,10 @@ export function Chat(props: ChatProps) {
     const assistant = assistants.find((assistant) => assistant.id === assistantId) || assistants[0];
 
     setAssistant(assistant);
-    setTeamId(assistant?.teams?.[0]?.id);
+
+    const teamId =
+      assistant?.teams?.find((team) => team.workflow_type === TeamType.CHATBOT)?.id || '';
+    setTeamId(teamId);
   }, [assistants]);
 
   return (

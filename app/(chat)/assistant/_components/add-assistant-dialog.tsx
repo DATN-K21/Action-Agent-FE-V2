@@ -95,37 +95,24 @@ export function AddAssistantDialog({
         mcpIds,
       };
 
-      try {
-        await createAssistant({
-          user,
-          payload,
-        });
+      await createAssistant({
+        user,
+        payload,
+      });
 
-        toast({
-          description: 'Assistant created successfully',
-          type: 'success',
-        });
+      toast({
+        description: 'Assistant created successfully',
+        type: 'success',
+      });
 
-        // Fetch updated assistants list
-        await fetchAssistants(user);
-      } catch (error) {
-        console.error('Error preparing assistant payload:', error);
-        toast({
-          description: 'Failed to prepare assistant payload. Please try again.',
-          type: 'error',
-        });
-        setIsLoading(false);
-        return;
-      }
+      // Fetch updated assistants list
+      await fetchAssistants(user);
+
       // Reset form
       setName('');
       setDescription('');
-      // setWorkerIds([]);
       setMcpIds([]);
       setExtensionIds([]);
-
-      // Close dialog
-      onOpenChange(false);
 
       // Refresh assistants list
       if (onAssistantCreated) {
@@ -139,6 +126,7 @@ export function AddAssistantDialog({
       });
     } finally {
       setIsLoading(false);
+      handleClose();
     }
   };
 

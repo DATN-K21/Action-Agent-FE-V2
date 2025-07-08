@@ -68,24 +68,14 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
       payload: { threadId: id },
     });
 
-    const initialMessages: IMessage[] = response?.messages?.map((message) => ({
-      id: message.id,
-      name: message.name,
-      type: message.type,
-      content: message.content,
-      imgdata: message.imgdata,
-      tool_calls: message.tool_calls,
-      tool_output: message.tool_output,
-      documents: message.documents,
-      next: message.next,
-    }));
+    const initialMessages: IMessage[] = response?.messages || [];
 
     return (
       <Chat
         id={id}
         assistantId={thread.assistantId}
         user={user}
-        initialMessages={initialMessages || []}
+        initialMessages={initialMessages}
       />
     );
   } catch {

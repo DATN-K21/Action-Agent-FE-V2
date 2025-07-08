@@ -43,6 +43,7 @@ export function MCPServerDialog({
   const [errors, setErrors] = useState({
     mcpName: '',
     url: '',
+    description: '',
   });
 
   // Update form values when defaultValues changes
@@ -63,7 +64,7 @@ export function MCPServerDialog({
       });
     }
     // Reset errors when dialog opens/closes
-    setErrors({ mcpName: '', url: '' });
+    setErrors({ mcpName: '', url: '', description: '' });
   }, [defaultValues, isOpen]);
 
   // Handle form input and textarea changes
@@ -84,7 +85,7 @@ export function MCPServerDialog({
   // Form validation
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { mcpName: '', url: '' };
+    const newErrors = { mcpName: '', url: '', description: '' };
 
     if (!formValues.mcpName.trim()) {
       newErrors.mcpName = 'Server name is required';
@@ -101,6 +102,11 @@ export function MCPServerDialog({
         newErrors.url = 'Please enter a valid URL';
         isValid = false;
       }
+    }
+
+    if (!formValues.description.trim()) {
+      newErrors.description = 'Description is required';
+      isValid = false;
     }
 
     setErrors(newErrors);
@@ -173,8 +179,12 @@ export function MCPServerDialog({
                   value={formValues.description}
                   onChange={handleChange}
                   placeholder="Enter a brief description of the server"
+                  className={errors.description ? 'border-red-500' : ''}
                   disabled={isSubmitting}
                 />
+                {errors.description && (
+                  <span className="text-sm text-red-500">{errors.description}</span>
+                )}
               </div>
             </div>
           </div>

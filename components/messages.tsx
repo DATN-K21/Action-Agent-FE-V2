@@ -1,15 +1,15 @@
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
+import useChatStore from '@/store/chat-store';
 import { IMessage } from '@/types/ai';
 import equal from 'fast-deep-equal';
 import { ArrowDown } from 'lucide-react';
 import { User } from 'next-auth';
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useRef } from 'react';
+import { ActionConfirmation } from './action-confirmation';
 import { ThinkingMessage } from './message';
 import MessageContainer from './message-container';
 import { Overview } from './overview';
 import { useScrollToBottom } from './use-scroll-to-bottom';
-import useChatStore from '@/store/chat-store';
-import { ActionConfirmation } from './action-confirmation';
 
 interface MessagesProps {
   status: ChatStatus;
@@ -20,30 +20,44 @@ interface MessagesProps {
 function PureMessages({ status, messages, user }: MessagesProps) {
   const { containerRef, endRef, isAtBottom, scrollToBottom } = useScrollToBottom<HTMLDivElement>();
   const isInterrupting = useChatStore((state) => state.isInterrupting);
+  const previousMessagesLength = useRef(messages.length);
 
   useEffect(() => {
-    scrollToBottom('smooth');
-  }, [messages, scrollToBottom]);
+    const currentLength = messages.length;
+    const hasNewMessage = currentLength > previousMessagesLength.current;
+    const lastMessage = messages[messages.length - 1];
+
+    const shouldAutoScroll =
+      isAtBottom ||
+      (hasNewMessage && lastMessage?.type === MessageType.AI) ||
+      status === ChatStatus.STREAMING ||
+      status === ChatStatus.SUBMITTED;
+
+    if (shouldAutoScroll) {
+      scrollToBottom('smooth');
+    }
+
+    previousMessagesLength.current = currentLength;
+  }, [messages, scrollToBottom, isAtBottom, status]);
 
   return (
     <div ref={containerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4">
       {messages.length === 0 && <Overview />}
 
       {messages.map((message, index) => (
-        <div key={message.id}>
-          <MessageContainer
-            status={status}
-            message={message}
-            user={user}
-            isLastMessage={index === messages.length - 1}
-          />
-        </div>
+        <MessageContainer
+          key={message.id}
+          status={status}
+          message={message}
+          user={user}
+          isLastMessage={index === messages.length - 1}
+        />
       ))}
 
       {(status === ChatStatus.SUBMITTED ||
-        (!messages[messages.length - 1]?.content && status === ChatStatus.STREAMING)) && (
-        <ThinkingMessage />
-      )}
+        (!messages[messages.length - 1]?.content && status === ChatStatus.STREAMING) ||
+        (messages[messages.length - 1]?.type === MessageType.TOOL &&
+          status === ChatStatus.STREAMING)) && <ThinkingMessage />}
 
       {messages[messages.length - 1]?.type === MessageType.INTERRUPT &&
         (messages[messages.length - 1]?.tool_calls || messages[messages.length - 1]?.content) &&
