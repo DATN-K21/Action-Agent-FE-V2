@@ -27,6 +27,7 @@ export interface IConnectedExtension {
   userId: string;
   extensionName: string;
   connectedAccountId: string;
+  connectionStatus: string;
   authScheme?: string;
   authValue?: string;
   createdAt?: string;

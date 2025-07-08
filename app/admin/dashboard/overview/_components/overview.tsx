@@ -1,12 +1,48 @@
-import { RecentSales } from './recent-sales';
+'use client';
+
+import { RankingUser } from './ranking-user';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getRankingUser, getStatisticOverview } from '@/services/admin-service';
+import { User } from 'next-auth';
+import { useEffect, useState } from 'react';
+import { RankingExtension } from './ranking-extension';
 
-export default function OverViewPage() {
+interface OverViewPageProps {
+  user: User;
+}
+
+export default function OverViewPage(props: OverViewPageProps) {
+  const { user } = props;
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [dataOverview, setDataOverview] = useState<any>(null);
+  const [dataRankingUser, setDataRankingUser] = useState<any>(null);
+
+  const fetchDataOverview = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const response = await getStatisticOverview({ user });
+      const responseRankingUser = await getRankingUser({ user });
+      setDataRankingUser(responseRankingUser);
+      setDataOverview(response);
+    } catch (error) {
+      console.error('Error fetching overview data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch data when the component mounts
+  useEffect(() => {
+    fetchDataOverview();
+  }, [user]);
+
+  console.log('Overview Data:', dataRankingUser);
   return (
     // <PageContainer scrollable>
-    <div className="space-y-2">
+    <div className="space-y-2 p-3">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-2xl font-bold tracking-tight">Hi, Welcome back 👋</h2>
         {/* <div className="hidden items-center space-x-2 md:flex">
@@ -42,8 +78,10 @@ export default function OverViewPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">10.000</div>
-                <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+                <div className="text-2xl font-bold">{dataOverview?.users.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dataOverview?.users.percentageChange} from last month
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -63,8 +101,10 @@ export default function OverViewPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+20</div>
-                <p className="text-xs text-muted-foreground">+18% from last month</p>
+                <div className="text-2xl font-bold">{dataOverview?.connectedExtensions.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dataOverview?.connectedExtensions.percentageChange} from last month
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -85,8 +125,10 @@ export default function OverViewPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+50.000</div>
-                <p className="text-xs text-muted-foreground">+19% from last month</p>
+                <div className="text-2xl font-bold">{dataOverview?.threads.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dataOverview?.threads.percentageChange} from last month
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -106,22 +148,31 @@ export default function OverViewPage() {
                 </svg>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+25</div>
-                <p className="text-xs text-muted-foreground">+10% since last month</p>
+                <div className="text-2xl font-bold">{dataOverview?.assistants.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dataOverview?.assistants.percentageChange} since last month
+                </p>
               </CardContent>
             </Card>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
-            {/* <div className="col-span-4">
-                <BarGraph />
-              </div> */}
-            <Card className="col-span-4 md:col-span-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top 10 User</CardTitle>
+                <CardDescription>The most score of user</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RankingUser data={dataRankingUser} />
+              </CardContent>
+            </Card>
+
+            <Card>
               <CardHeader>
                 <CardTitle>Top 10 Extensions</CardTitle>
                 <CardDescription>Most used extensions in the last 30 days</CardDescription>
               </CardHeader>
               <CardContent>
-                <RecentSales />
+                <RankingExtension />
               </CardContent>
             </Card>
           </div>

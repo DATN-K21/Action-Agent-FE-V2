@@ -58,10 +58,12 @@ export function EditAssistantDialog({
       return [];
     }
 
-    return extensionOptions.map((ext) => ({
-      name: ext.extensionName,
-      key: ext.id,
-    }));
+    return extensionOptions
+      ?.filter((ext) => ext.connectionStatus === 'success')
+      .map((ext) => ({
+        name: ext.extensionName.charAt(0).toUpperCase() + ext.extensionName.slice(1),
+        key: ext.id,
+      }));
   }, [extensionOptions]);
 
   const mcpChoice = useMemo(() => {
@@ -185,7 +187,7 @@ export function EditAssistantDialog({
           {assistant && (
             <div className="grid w-full max-w-sm items-center gap-1.5">
               <Label className="pt-1.5">Extensions</Label>
-              {/* <>
+              <>
                 <MultiSelect
                   options={extensionsChoice}
                   values={extensionIds}
@@ -197,7 +199,7 @@ export function EditAssistantDialog({
                     No extensions available. Please connect some extensions first.
                   </p>
                 )}
-              </> */}
+              </>
               <Label className="pt-1.5">MCP Servers</Label>
               <>
                 <MultiSelect

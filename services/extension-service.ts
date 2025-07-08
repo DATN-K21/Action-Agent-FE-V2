@@ -112,7 +112,7 @@ export const activeExtension = async (
       headers: headers,
       queryParams: {
         user_id: params.user.id,
-        extension_name: params.extension.key,
+        extension_enum: params.extension.key,
       },
     });
 

@@ -18,6 +18,7 @@ import { IConnectedExtension } from '@/types/extension';
 import { Plus } from 'lucide-react';
 import { toast } from '@/components/toast';
 import { AssistantType } from '@/constants/assistant-constant';
+import { useThreadStore } from '@/store/thread-store';
 
 export type AssistantListProps = {
   user: User;
@@ -37,6 +38,7 @@ export default function AssistantsList(props: AssistantListProps) {
   // const [mcpAssistants, setMcpAssistants] = useState<IAssistant[]>([]);
   const [isLoadingAssistants, setIsLoadingAssistants] = useState<boolean>(false);
   const [assistantToUpdate, setAssistantToUpdate] = useState<IAssistant | null>(null);
+  const fetchThreads = useThreadStore((state) => state.fetchThreads);
 
   const fetchAssistants = useCallback(async () => {
     if (!user) return;
@@ -87,7 +89,7 @@ export default function AssistantsList(props: AssistantListProps) {
       setIsLoadingAssistants(true);
       await deleteAssistant({ user, assistantId });
       await fetchAssistants();
-
+      await fetchThreads(user); // Refresh threads after deletion
       toast({
         description: 'Assistant deleted successfully',
         type: 'success',
@@ -108,7 +110,7 @@ export default function AssistantsList(props: AssistantListProps) {
           <CardHeader>
             <div className="flex flex-row items-center justify-between">
               <p className="text-sm md:text-base">
-                {`Here's a list of your assistants using Extensions`}
+                {`Here's a list of your assistants using Extensions and MCPs.`}
               </p>
               <Button
                 className="w-full md:w-auto"
