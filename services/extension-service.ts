@@ -1,7 +1,12 @@
 import { IExtensionAction } from '@/constants/data';
 import { AI_ENDPOINT_V1, EXTENSION_ENDPOINT, HttpMethod } from '@/constants/response-constant';
 import { buildQueryParams, createUserAuthHeaders, sendRequest } from '@/lib/utils';
-import { IConnectedExtension, IActiveExtensionResponse, IExtension } from '@/types/extension';
+import {
+  IConnectedExtension,
+  IActiveExtensionResponse,
+  IExtension,
+  IGetConnectedExtensions,
+} from '@/types/extension';
 import { User } from 'next-auth';
 
 export interface IPageFilterProps {
@@ -59,6 +64,25 @@ export const getAllExtensions = async (params: ExtensionParams): Promise<Extensi
     };
   } catch (error) {
     console.error('Error getting extensions: ', error);
+    throw error;
+  }
+};
+
+export const getConnectedExtensions = async (
+  params: ExtensionParams,
+): Promise<IGetConnectedExtensions> => {
+  try {
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
+
+    const response: IResponse<IGetConnectedExtensions> = await sendRequest({
+      url: `${AI_ENDPOINT_V1}/connected-extension/get-all`,
+      method: HttpMethod.GET,
+      headers: headers,
+    });
+
+    return response.data as IGetConnectedExtensions;
+  } catch (error) {
+    console.error('Error getting connected extensions: ', error);
     throw error;
   }
 };
