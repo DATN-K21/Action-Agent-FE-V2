@@ -2,10 +2,27 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
+# Copy all source files
 COPY . .
+
+# Inject build-time environment variables directly (for CI/CD)
+ARG NEXT_PUBLIC_USER_API__V1_ENDPOINT
+ARG NEXT_PUBLIC_AI_API__V1_ENDPOINT
+ARG NEXT_PUBLIC_AI_API__V2_ENDPOINT
+ARG NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT
+ARG NEXT_PUBLIC_VOICE_API__V1_ENDPOINT
+
+# Write envs to .env for Next.js build
+RUN \
+     echo "NEXT_PUBLIC_USER_API__V1_ENDPOINT=$NEXT_PUBLIC_USER_API__V1_ENDPOINT" > .env \
+  && echo "NEXT_PUBLIC_AI_API__V1_ENDPOINT=$NEXT_PUBLIC_AI_API__V1_ENDPOINT" >> .env \
+  && echo "NEXT_PUBLIC_AI_API__V2_ENDPOINT=$NEXT_PUBLIC_AI_API__V2_ENDPOINT" >> .env \
+  && echo "NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT=$NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT" >> .env \
+  && echo "NEXT_PUBLIC_VOICE_API__V1_ENDPOINT=$NEXT_PUBLIC_VOICE_API__V1_ENDPOINT" >> .env
 
 # Set NEXT_TELEMETRY_DISABLED to 1 to disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1

@@ -4,26 +4,26 @@ description: CI/CD pipeline for Front-end
 on:
   workflow_dispatch:
     inputs:
-      build_and_push_dev:
-        description: 'Run Build & Push for Development'
-        required: false
-        default: false
-        type: boolean
-      deploy_dev:
-        description: 'Run Deploy for Development'
-        required: false
-        default: false
-        type: boolean
-      build_and_push_stg:
-        description: 'Run Build & Push for Staging'
-        required: false
-        default: false
-        type: boolean
-      deploy_stg:
-        description: 'Run Deploy for Staging'
-        required: false
-        default: false
-        type: boolean
+      # build_and_push_dev:
+      #   description: 'Run Build & Push for Development'
+      #   required: false
+      #   default: false
+      #   type: boolean
+      # deploy_dev:
+      #   description: 'Run Deploy for Development'
+      #   required: false
+      #   default: false
+      #   type: boolean
+      # build_and_push_stg:
+      #   description: 'Run Build & Push for Staging'
+      #   required: false
+      #   default: false
+      #   type: boolean
+      # deploy_stg:
+      #   description: 'Run Deploy for Staging'
+      #   required: false
+      #   default: false
+      #   type: boolean
       build_and_push_prod:
         description: 'Run Build & Push for Production'
         required: false
@@ -55,119 +55,131 @@ jobs:
           echo "$COMMIT_INFO" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-  build_and_push_dev:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.build_and_push_dev == 'true' }}
-    needs: setup
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  # build_and_push_dev:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.inputs.build_and_push_dev == 'true' }}
+  #   needs: setup
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: Docker Build & Push for Development
-        uses: ./.github/actions/docker-build-push
-        with:
-          acr_username: ${{ secrets.ACR_USERNAME }}
-          acr_password: ${{ secrets.ACR_PASSWORD }}
-          image_name: 'frontenddev'
-          tag: 'latest'
-          folder: './'
+  #     - name: Docker Build & Push for Development
+  #       uses: ./.github/actions/docker-build-push
+  #       with:
+  #         acr_username: ${{ secrets.ACR_USERNAME }}
+  #         acr_password: ${{ secrets.ACR_PASSWORD }}
+  #         image_name: 'frontenddev'
+  #         tag: 'latest'
+  #         folder: './'
+  #       env:
+  #         NEXT_PUBLIC_USER_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_USER_API__V1_ENDPOINT }}
+  #         NEXT_PUBLIC_AI_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_AI_API__V1_ENDPOINT }}
+  #         NEXT_PUBLIC_AI_API__V2_ENDPOINT: ${{ vars.NEXT_PUBLIC_AI_API__V2_ENDPOINT }}
+  #         NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT }}
+  #         NEXT_PUBLIC_VOICE_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_VOICE_API__V1_ENDPOINT }}
 
-      - name: Send notification to Discord (Build Development)
-        uses: ./.github/actions/notify-discord
-        with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          service: 'frontend'
-          image: 'myaagent.azurecr.io/frontenddev:latest'
-          branch: '${{ github.ref_name }}'
-          commit_message: '${{ needs.setup.outputs.commit_info }}'
-          triggered_by: ${{ github.actor }}
-          time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          action: 'DEV BUILD'
+  #     - name: Send notification to Discord (Build Development)
+  #       uses: ./.github/actions/notify-discord
+  #       with:
+  #         webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  #         service: 'frontend'
+  #         image: 'myaagent.azurecr.io/frontenddev:latest'
+  #         branch: '${{ github.ref_name }}'
+  #         commit_message: '${{ needs.setup.outputs.commit_info }}'
+  #         triggered_by: ${{ github.actor }}
+  #         time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+  #         action: 'DEV BUILD'
 
-  deploy_dev:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.deploy_dev == 'true' }}
-    needs: [setup, build_and_push_dev]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  # deploy_dev:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.inputs.deploy_dev == 'true' }}
+  #   needs: [setup, build_and_push_dev]
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: Deploy Front-End to Development
-        run: |
-          # Setup kubectl with kubeconfig
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
-          cd k8s-helm
-          helm upgrade --install frontend ./ -f ./values.dev.yaml -n dev --set image.tag=latest --set-string podAnnotations.gitCommit="${{ github.sha }}"
+  #     - name: Deploy Front-End to Development
+  #       run: |
+  #         # Setup kubectl with kubeconfig
+  #         mkdir -p ~/.kube
+  #         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
+  #         cd k8s-helm
+  #         helm upgrade --install frontend ./ -f ./values.dev.yaml -n dev --set image.tag=latest --set-string podAnnotations.gitCommit="${{ github.sha }}"
 
-      - name: Send notification to Discord (Deploy Development)
-        uses: ./.github/actions/notify-discord
-        with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          service: 'frontend'
-          image: 'myaagent.azurecr.io/frontenddev:latest'
-          branch: '${{ github.ref_name }}'
-          commit_message: '${{ needs.setup.outputs.commit_info }}'
-          triggered_by: ${{ github.actor }}
-          time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          action: 'DEV DEPLOY'
+  #     - name: Send notification to Discord (Deploy Development)
+  #       uses: ./.github/actions/notify-discord
+  #       with:
+  #         webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  #         service: 'frontend'
+  #         image: 'myaagent.azurecr.io/frontenddev:latest'
+  #         branch: '${{ github.ref_name }}'
+  #         commit_message: '${{ needs.setup.outputs.commit_info }}'
+  #         triggered_by: ${{ github.actor }}
+  #         time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+  #         action: 'DEV DEPLOY'
 
-  build_and_push_stg:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.build_and_push_stg == 'true' }}
-    needs: setup
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  # build_and_push_stg:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.inputs.build_and_push_stg == 'true' }}
+  #   needs: setup
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: Docker Build & Push for Staging
-        uses: ./.github/actions/docker-build-push
-        with:
-          acr_username: ${{ secrets.ACR_USERNAME }}
-          acr_password: ${{ secrets.ACR_PASSWORD }}
-          image_name: 'frontendstg'
-          tag: 'latest'
-          folder: './'
+  #     - name: Docker Build & Push for Staging
+  #       uses: ./.github/actions/docker-build-push
+  #       with:
+  #         acr_username: ${{ secrets.ACR_USERNAME }}
+  #         acr_password: ${{ secrets.ACR_PASSWORD }}
+  #         image_name: 'frontendstg'
+  #         tag: 'latest'
+  #         folder: './'
+  #       env:
+  #         NEXT_PUBLIC_USER_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_USER_API__V1_ENDPOINT }}
+  #         NEXT_PUBLIC_AI_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_AI_API__V1_ENDPOINT }}
+  #         NEXT_PUBLIC_AI_API__V2_ENDPOINT: ${{ vars.NEXT_PUBLIC_AI_API__V2_ENDPOINT }}
+  #         NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT }}
+  #         NEXT_PUBLIC_VOICE_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_VOICE_API__V1_ENDPOINT }}
 
-      - name: Send notification to Discord (Build Staging)
-        uses: ./.github/actions/notify-discord
-        with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          service: 'frontend'
-          image: 'myaagent.azurecr.io/frontendstg:latest'
-          branch: '${{ github.ref_name }}'
-          commit_message: '${{ needs.setup.outputs.commit_info }}'
-          triggered_by: ${{ github.actor }}
-          time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          action: 'STG BUILD'
+  #     - name: Send notification to Discord (Build Staging)
+  #       uses: ./.github/actions/notify-discord
+  #       with:
+  #         webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  #         service: 'frontend'
+  #         image: 'myaagent.azurecr.io/frontendstg:latest'
+  #         branch: '${{ github.ref_name }}'
+  #         commit_message: '${{ needs.setup.outputs.commit_info }}'
+  #         triggered_by: ${{ github.actor }}
+  #         time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+  #         action: 'STG BUILD'
 
-  deploy_stg:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.deploy_stg == 'true' }}
-    needs: [setup, build_and_push_stg]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  # deploy_stg:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.inputs.deploy_stg == 'true' }}
+  #   needs: [setup, build_and_push_stg]
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: Deploy Front-End to Staging
-        run: |
-          # Setup kubectl with kubeconfig
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
-          cd k8s-helm
-          helm upgrade --install frontend ./ -f ./values.stg.yaml -n stg --set image.tag=latest --set-string podAnnotations.gitCommit="${{ github.sha }}"
+  #     - name: Deploy Front-End to Staging
+  #       run: |
+  #         # Setup kubectl with kubeconfig
+  #         mkdir -p ~/.kube
+  #         echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > ~/.kube/config
+  #         cd k8s-helm
+  #         helm upgrade --install frontend ./ -f ./values.stg.yaml -n stg --set image.tag=latest --set-string podAnnotations.gitCommit="${{ github.sha }}"
 
-      - name: Send notification to Discord (Deploy Staging)
-        uses: ./.github/actions/notify-discord
-        with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          service: 'frontend'
-          image: 'myaagent.azurecr.io/frontendstg:latest'
-          branch: '${{ github.ref_name }}'
-          commit_message: '${{ needs.setup.outputs.commit_info }}'
-          triggered_by: ${{ github.actor }}
-          time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
-          action: 'STG DEPLOY'
+  #     - name: Send notification to Discord (Deploy Staging)
+  #       uses: ./.github/actions/notify-discord
+  #       with:
+  #         webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  #         service: 'frontend'
+  #         image: 'myaagent.azurecr.io/frontendstg:latest'
+  #         branch: '${{ github.ref_name }}'
+  #         commit_message: '${{ needs.setup.outputs.commit_info }}'
+  #         triggered_by: ${{ github.actor }}
+  #         time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+  #         action: 'STG DEPLOY'
 
   build_and_push_prod:
     runs-on: ubuntu-latest
@@ -185,6 +197,12 @@ jobs:
           image_name: 'frontendprod'
           tag: 'latest'
           folder: './'
+        env:
+          NEXT_PUBLIC_USER_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_USER_API__V1_ENDPOINT }}
+          NEXT_PUBLIC_AI_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_AI_API__V1_ENDPOINT }}
+          NEXT_PUBLIC_AI_API__V2_ENDPOINT: ${{ vars.NEXT_PUBLIC_AI_API__V2_ENDPOINT }}
+          NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT }}
+          NEXT_PUBLIC_VOICE_API__V1_ENDPOINT: ${{ vars.NEXT_PUBLIC_VOICE_API__V1_ENDPOINT }}
 
       - name: Send notification to Discord (Build Production)
         uses: ./.github/actions/notify-discord
