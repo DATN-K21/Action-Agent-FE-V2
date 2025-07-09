@@ -13,16 +13,16 @@ image:
 # Environment variables
 env:
   # Public endpoints
-  - name: NEXT_PUBLIC_USER_APIV1_ENDPOINT
+  - name: NEXT_PUBLIC_USER_API__V1_ENDPOINT
     value: "https://api.action-agent.software/user/api/v1"
     
-  - name: NEXT_PUBLIC_AI_APIV1_ENDPOINT
+  - name: NEXT_PUBLIC_AI_API__V1_ENDPOINT
     value: "https://api.action-agent.software/ai/api/v1"
 
-  - name: NEXT_PUBLIC_AI_APIV2_ENDPOINT
+  - name: NEXT_PUBLIC_AI_API__V2_ENDPOINT
     value: "https://api.action-agent.software/ai/api/v2"
 
-  - name: NEXT_PUBLIC_EXTENSION_APIV1_ENDPOINT
+  - name: NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT
     value: "https://api.action-agent.software/extension"
   
   # Auth
@@ -51,6 +51,8 @@ env:
     value: "80"
   - name: AUTH_TRUST_HOST
     value: "true"
+  - name: HOST
+    value: "0.0.0.0"
 
 imagePullSecrets: 
   - name: regcred
