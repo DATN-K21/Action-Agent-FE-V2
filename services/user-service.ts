@@ -18,11 +18,11 @@ export interface IUserProfile {
 export const getUserProfile = async (user: User): Promise<IUserProfile> => {
   const headers = createUserAuthHeaders(user);
   const response = await sendRequest<{ data: Partial<IUserProfile> }>({
-    url: `${USER_ENDPOINT}/user/me`,
+    url: `${USER_ENDPOINT}/user/${user.id}`,
     method: HttpMethod.GET,
     headers: {
       ...headers,
-      "Authorization": `Bearer ${user.accessToken}`,
+      Authorization: `Bearer ${user.accessToken}`,
     },
   });
   const profile = response.data || {};
