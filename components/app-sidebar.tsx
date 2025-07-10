@@ -2,6 +2,7 @@
 
 import type { User } from 'next-auth';
 
+import { NavCustom } from '@/components/nav-custom';
 import SidebarHistory from '@/components/sidebar-history';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import {
@@ -12,16 +13,16 @@ import {
   SidebarMenu,
   useSidebar,
 } from '@/components/ui/sidebar';
-import Link from 'next/link';
-import { NavCustom } from '@/components/nav-custom';
-import {
-  HiOutlineViewGrid,
-  HiOutlineChatAlt,
-  HiOutlineServer,
-  HiOutlinePuzzle,
-} from 'react-icons/hi';
 import { useAssistantStore } from '@/store/assistant-store';
+import Link from 'next/link';
 import { useEffect } from 'react';
+import {
+  HiOutlineBookOpen,
+  HiOutlineChatAlt,
+  HiOutlinePuzzle,
+  HiOutlineServer,
+  HiOutlineViewGrid
+} from 'react-icons/hi';
 
 type navCustomItemProps = {
   title: string;
@@ -49,6 +50,11 @@ const navCustomItems: navCustomItemProps[] = [
     title: 'Assistants',
     url: '/assistant',
     icon: HiOutlinePuzzle,
+  },
+  {
+    title: 'Knowledge Base',
+    url: '/knowledge-base',
+    icon: HiOutlineBookOpen,
   },
 ];
 
