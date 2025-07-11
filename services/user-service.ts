@@ -20,7 +20,10 @@ export const getUserProfile = async (user: User): Promise<IUserProfile> => {
   const response = await sendRequest<{ data: Partial<IUserProfile> }>({
     url: `${USER_ENDPOINT}/user/me`,
     method: HttpMethod.GET,
-    headers,
+    headers: {
+      ...headers,
+      "Authorization": `Bearer ${user.accessToken}`,
+    },
   });
   const profile = response.data || {};
   let avatar = profile.avatar;
