@@ -42,7 +42,7 @@ const navCustomItems: navCustomItemProps[] = [
     icon: HiOutlineViewGrid,
   },
   {
-    title: 'MCP Server',
+    title: 'MCP Servers',
     url: '/mcp-server',
     icon: HiOutlineServer,
   },
