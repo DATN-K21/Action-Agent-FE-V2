@@ -52,7 +52,7 @@ const navCustomItems: navCustomItemProps[] = [
     icon: HiOutlinePuzzle,
   },
   {
-    title: 'Knowledge Base',
+    title: 'Knowledge',
     url: '/knowledge-base',
     icon: HiOutlineBookOpen,
   },
