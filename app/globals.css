@@ -6,7 +6,7 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --font-sans: 'Inter', sans-serif;
+  /* Font variable is injected via next/font */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -104,12 +104,6 @@
     @apply bg-background text-foreground;
   }
 
-  @font-face {
-    font-family: 'inter';
-    font-style: normal;
-    font-weight: 100 900;
-    src: url(./fonts/inter.woff2) format('woff2');
-  }
 }
 
 .skeleton {

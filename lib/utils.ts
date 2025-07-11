@@ -50,24 +50,19 @@ export const getThreadIcon = (threadType: string): React.FC<IconProps> => {
 };
 
 export function createUserAuthHeaders(user: User): Record<string, string> {
-  const { id, role, email } = user;
+  const { accessToken, id } = user;
+
+  if (!accessToken || accessToken.trim() === '') {
+    throw new Error("Missing or invalid 'user.accessToken'");
+  }
 
   if (!id || id.trim() === '') {
     throw new Error("Missing or invalid 'user.id'");
   }
 
-  if (!role || role.trim() === '') {
-    throw new Error("Missing or invalid 'user.role'");
-  }
-
-  if (!email || email.trim() === '') {
-    throw new Error("Missing or invalid 'user.email'");
-  }
-
   return {
-    'x-user-id': id,
-    'x-user-role': role,
-    'x-user-email': email,
+    Authorization: `Bearer ${accessToken}`,
+    'x-client-id': id,
   };
 }
 
