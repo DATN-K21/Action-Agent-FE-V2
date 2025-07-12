@@ -34,5 +34,7 @@ runs:
           --build-arg NEXT_PUBLIC_AI_API__V2_ENDPOINT="${{ env.NEXT_PUBLIC_AI_API__V2_ENDPOINT }}" \
           --build-arg NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT="${{ env.NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT }}" \
           --build-arg NEXT_PUBLIC_VOICE_API__V1_ENDPOINT="${{ env.NEXT_PUBLIC_VOICE_API__V1_ENDPOINT }}" \
+          --build-arg NEXT_PUBLIC_PAYMENT_API__V1_ENDPOINT="${{ env.NEXT_PUBLIC_PAYMENT_API__V1_ENDPOINT }}" \
+          --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
           -t myaagent.azurecr.io/${{ inputs.image_name }}:${{ inputs.tag }} ${{ inputs.folder }}
         docker push myaagent.azurecr.io/${{ inputs.image_name }}:${{ inputs.tag }}

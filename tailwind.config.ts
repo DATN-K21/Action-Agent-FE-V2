@@ -8,12 +8,12 @@ const config: Config = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-  	fontFamily: {
-  		sans: [
-  			'Inter',
-  			'sans-serif'
-  		]
-  	},
+        fontFamily: {
+                sans: [
+                        'var(--font-sans)',
+                        'sans-serif'
+                ]
+        },
   	extend: {
   		screens: {
   			'toast-mobile': '600px'

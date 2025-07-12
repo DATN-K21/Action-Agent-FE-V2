@@ -3,6 +3,7 @@ export const AI_ENDPOINT_V1 = process.env.NEXT_PUBLIC_AI_API__V1_ENDPOINT;
 export const AI_ENDPOINT_V2 = process.env.NEXT_PUBLIC_AI_API__V2_ENDPOINT;
 export const VOICE_ENDPOINT = process.env.NEXT_PUBLIC_VOICE_API__V1_ENDPOINT;
 export const EXTENSION_ENDPOINT = process.env.NEXT_PUBLIC_EXTENSION_API__V1_ENDPOINT;
+export const PAYMENT_ENDPOINT = process.env.NEXT_PUBLIC_PAYMENT_API__V1_ENDPOINT;
 
 export enum HttpStatus {
   OK = 200,

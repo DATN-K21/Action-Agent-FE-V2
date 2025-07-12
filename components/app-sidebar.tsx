@@ -2,6 +2,7 @@
 
 import type { User } from 'next-auth';
 
+import { NavCustom } from '@/components/nav-custom';
 import SidebarHistory from '@/components/sidebar-history';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import {
@@ -12,16 +13,16 @@ import {
   SidebarMenu,
   useSidebar,
 } from '@/components/ui/sidebar';
-import Link from 'next/link';
-import { NavCustom } from '@/components/nav-custom';
-import {
-  HiOutlineViewGrid,
-  HiOutlineChatAlt,
-  HiOutlineServer,
-  HiOutlinePuzzle,
-} from 'react-icons/hi';
 import { useAssistantStore } from '@/store/assistant-store';
+import Link from 'next/link';
 import { useEffect } from 'react';
+import {
+  HiOutlineBookOpen,
+  HiOutlineChatAlt,
+  HiOutlinePuzzle,
+  HiOutlineServer,
+  HiOutlineViewGrid
+} from 'react-icons/hi';
 
 type navCustomItemProps = {
   title: string;
@@ -41,7 +42,7 @@ const navCustomItems: navCustomItemProps[] = [
     icon: HiOutlineViewGrid,
   },
   {
-    title: 'MCP Server',
+    title: 'MCP Servers',
     url: '/mcp-server',
     icon: HiOutlineServer,
   },
@@ -49,6 +50,11 @@ const navCustomItems: navCustomItemProps[] = [
     title: 'Assistants',
     url: '/assistant',
     icon: HiOutlinePuzzle,
+  },
+  {
+    title: 'Knowledge',
+    url: '/knowledge-base',
+    icon: HiOutlineBookOpen,
   },
 ];
 
@@ -68,13 +74,16 @@ export function AppSidebar({ user }: { user: User }) {
             <Link
               href="/"
               onClick={() => {
-                setOpenMobile(false);
+              setOpenMobile(false);
               }}
-              className="flex flex-row gap-3 items-center"
+              className="flex flex-row gap-3 items-center justify-start"
             >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
-                Action Agent
-              </span>
+              <img
+              src="/images/logo.png"
+              alt="Action Agent Logo"
+              className="h-14 w-auto px-2 rounded-md cursor-pointer"
+              style={{ maxHeight: '3.5rem' }}
+              />
             </Link>
           </div>
         </SidebarMenu>

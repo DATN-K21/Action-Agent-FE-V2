@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { LogoSpinner } from './logo-spinner';
 import { MultimodalInput } from './multimodal-input';
 import { Messages } from './messages';
 import useChatStore from '@/store/chat-store';
@@ -49,15 +50,9 @@ export function Chat(props: ChatProps) {
   return (
     <>
       {isCreatingThread ? (
-        <>
-          <div className="flex flex-col items-center justify-center h-screen text-center px-4">
-            <h1 className="text-2xl font-bold">Creating thread ...</h1>
-            <p className="text-gray-500 mt-2" role="status" aria-live="polite">
-              Please wait while we create the thread.
-            </p>
-            <div className="loader mt-4" />
-          </div>
-        </>
+        <div className="flex flex-col items-center justify-center h-screen text-center px-4">
+          <LogoSpinner />
+        </div>
       ) : (
         <>
           <Messages status={status} messages={messages} user={user} />
