@@ -132,12 +132,13 @@ export const getThreadHistory = async (
   params: GetThreadHistoryParams,
 ): Promise<IGetThreadHistoryResponse> => {
   try {
+    console.log(`[getThreadHistory] threadId=${params.payload.threadId}`)
     if (!params.payload.threadId) throw new Error("Missing 'threadId'");
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
     const response: IResponse<IGetThreadHistoryResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/${params.payload.threadId}/get-history`,
-      method: HttpMethod.POST,
+      method: HttpMethod.GET,
       headers: headers,
     });
 

@@ -94,6 +94,7 @@ export const sendRequest = async <T>(props: IRequest) => {
     if (res.ok) {
       return res.json() as T;
     } else {
+      console.log(`[sendRequest] Not OK. Response=${res.text()}`)
       return res.json().then(function (json) {
         throw {
           status: json.status || 500,

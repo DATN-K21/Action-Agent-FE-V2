@@ -87,6 +87,7 @@ export const register = async (params: IRegisterParams): Promise<IResponse<IRegi
 
 export const refreshToken = async (params: IRefreshTokenParams): Promise<IResponse<null>> => {
   try {
+    console.log(`[refreshToken] userId=${params.userId}`);
     if (!params.refreshToken) throw new Error("Missing 'refreshToken'");
     if (!params.accessToken) throw new Error("Missing 'accessToken'");
     if (!params.userId) throw new Error("Missing 'userId'");
