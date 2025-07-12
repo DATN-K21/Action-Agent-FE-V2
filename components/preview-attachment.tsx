@@ -1,7 +1,7 @@
-import type { Attachment } from 'ai'
-
 import { LoaderIcon } from './icons'
 import { X } from 'lucide-react'
+import Image from 'next/image';
+import type { Attachment } from 'ai';
 
 export const PreviewAttachment = ({
   attachment,
@@ -12,28 +12,31 @@ export const PreviewAttachment = ({
   isUploading?: boolean
   onRemove?: () => void
 }) => {
-  const { name, url, contentType } = attachment
+  const { name, url, contentType } = attachment;
+  // Filetype icon logic (as in upload-list)
+  const ext = (name?.split('.').pop() || '').toLowerCase();
+  const knownTypes = ['csv','docx','html','json','pdf','ppt','txt','xls'];
+  const iconType = knownTypes.includes(ext) ? ext : 'question';
 
   return (
     <div data-testid="input-attachment-preview" className="flex flex-col gap-2 relative">
       <div className="w-20 h-16 aspect-video bg-muted rounded-md relative flex flex-col items-center justify-center">
-        {contentType ? (
-          contentType.startsWith('image') ? (
-            // NOTE: it is recommended to use next/image for images
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={url}
-              src={url}
-              alt={name ?? 'An image attachment'}
-              className="rounded-md size-full object-cover"
-            />
-          ) : (
-            <div className="" />
-          )
+        {contentType && contentType.startsWith('image') && url ? (
+          <img
+            key={url}
+            src={url}
+            alt={name ?? 'An image attachment'}
+            className="rounded-md size-full object-cover"
+          />
         ) : (
-          <div className="" />
+          <Image
+            src={`/images/filetypes/${iconType}.png`}
+            alt={iconType}
+            width={40}
+            height={40}
+            className="object-contain"
+          />
         )}
-
         {isUploading && (
           <div
             data-testid="input-attachment-loader"
@@ -47,8 +50,8 @@ export const PreviewAttachment = ({
       {onRemove && (
         <button
           onClick={(e) => {
-            e.stopPropagation()
-            onRemove()
+            e.stopPropagation();
+            onRemove();
           }}
           className="absolute top-0 right-0 p-1 bg-blue-500 text-white rounded-full size-5 flex items-center justify-center"
           aria-label="Remove file"
@@ -57,5 +60,5 @@ export const PreviewAttachment = ({
         </button>
       )}
     </div>
-  )
+  );
 }

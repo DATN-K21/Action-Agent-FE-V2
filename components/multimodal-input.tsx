@@ -9,7 +9,8 @@ import { useWindowSize } from 'usehooks-ts';
 import { toast } from '@/components/toast';
 import { ChatStatus, MessageType, TeamType } from '@/constants/ai-constant';
 import { AssistantType } from '@/constants/assistant-constant';
-import { generateTitle, handleUploadFile, recognizeVoice } from '@/services/thread-service';
+import { generateTitle, recognizeVoice } from '@/services/thread-service';
+import { initiateUpload, processUpload, getUploadStatus } from '@/services/upload-service';
 import useChatStore from '@/store/chat-store';
 import { useThreadStore } from '@/store/thread-store';
 import { Brain, Check, Mic, X } from 'lucide-react';
@@ -50,7 +51,12 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const { width } = useWindowSize();
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const [pendingFiles, setPendingFiles] = useState<Array<File>>([]);
+  // Track files being uploaded: { file, status, uploadId }
+  const [uploadingFiles, setUploadingFiles] = useState<Array<{
+    file: File;
+    status: 'Uploading' | 'Ingesting' | 'Completed' | 'Failed';
+    uploadId?: string;
+  }>>([]);
 
   const isAdvancedAssistant = assistant?.assistantType === AssistantType.ADVANCED_ASSISTANT;
 
@@ -98,96 +104,137 @@ function PureMultimodalInput(props: MultimodalInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
+  // New uploadFile logic using Knowledge Base flow
+  // Upload and poll status
   const uploadFile = useCallback(
     async (file: File) => {
+      // Validation (same as Knowledge Base)
+      if (!file) {
+        toast({ type: 'error', description: 'Select a file' });
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        toast({ type: 'error', description: 'File too large (max 50MB)' });
+        return;
+      }
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!ext || !['txt', 'md', 'pdf', 'docx', 'xlsx', 'pptx'].includes(ext)) {
+        toast({ type: 'error', description: 'Invalid file type' });
+        return;
+      }
+
+      // Add to uploadingFiles as Uploading
+      setUploadingFiles((prev) => [
+        ...prev,
+        { file, status: 'Uploading' },
+      ]);
+
+      // Set default fields
+      const name = file.name;
+      const description = `This is ${file.name} that contains useful information for this thread that we should research.`;
+      const chunkSize = 1000;
+      const chunkOverlap = 100;
+      const thread_id = threadId;
+
       try {
-        //Create new thread if on home page
-        if (window.location.pathname === '/') {
-          const thread = await createThread(user, 'New Chat', assistant!.id);
-          setThreadId(thread.id);
-          window.history.replaceState({}, '', `/chat/${thread.id}`);
-        }
-
-        const response = await handleUploadFile({
+        // 1. Initiate upload
+        const initRes = await initiateUpload({
           user,
-          threadId,
-          payload: { file },
+          payload: {
+            filename: file.name,
+            file_size_bytes: file.size,
+            name,
+            description,
+            chunk_size: chunkSize,
+            chunk_overlap: chunkOverlap,
+            thread_id,
+          },
         });
 
-        if (response.isSuccess) {
-          return {
-            url: response.output,
-            name: file.name,
-            contentType: file.type,
-          };
-        } else {
-          toast({
-            type: 'error',
-            description: 'Error uploading file, please try again!',
-          });
-          // Apend error message to chat
-          append({
-            id: 'upload-file-error',
-            type: MessageType.AI,
-            name: '',
-            content: 'Error uploading file, please try again!',
-            documents: null,
-            imgdata: '',
-            tool_calls: [],
-            tool_output: null,
-            next: '',
-          });
-          return undefined;
+        // 2. Create append blob
+        if (!initRes.uploadUrl) {
+          toast({ type: 'error', description: 'Upload URL not provided by server.' });
+          setUploadingFiles((prev) => prev.filter((f) => f.file !== file));
+          return;
         }
+        const res1 = await fetch(initRes.uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'x-ms-blob-type': 'AppendBlob',
+            'Content-Length': '0',
+          },
+        });
+        if (!res1.ok) {
+          toast({ type: 'error', description: 'Failed to create append blob' });
+          setUploadingFiles((prev) => prev.filter((f) => f.file !== file));
+          return;
+        }
+
+        // 3. Append file data
+        const res2 = await fetch(`${initRes.uploadUrl}&comp=appendblock`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/octet-stream' },
+          body: file,
+        });
+        if (!res2.ok) {
+          toast({ type: 'error', description: 'Failed to upload data' });
+          setUploadingFiles((prev) => prev.filter((f) => f.file !== file));
+          return;
+        }
+
+        // 4. Process upload
+        await processUpload({ user, uploadId: initRes.uploadId });
+
+        // 4. Poll for status
+        const pollStatus = async () => {
+          let status: 'Uploading' | 'Ingesting' | 'Completed' | 'Failed' = 'Uploading';
+          for (let i = 0; i < 30; i++) { // poll up to 30 times (about 30s)
+            const res = await getUploadStatus({ user, uploadId: initRes.uploadId });
+            status = res.uploadStatus;
+            if (status === 'Completed' || status === 'Failed') break;
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+          setUploadingFiles((prev) => {
+            if (status === 'Completed') {
+              // Remove from uploading, add to attachments if not already present
+              setAttachments((current) => {
+                if (current.some((a) => a.name === file.name)) return current;
+                return [
+                  ...current,
+                  {
+                    url: '',
+                    name: file.name,
+                    contentType: file.type,
+                    fileType: file.name.split('.').pop() || '',
+                  },
+                ];
+              });
+              return prev.filter((f) => f.file !== file);
+            } else {
+              // Remove failed
+              toast({ type: 'error', description: `Upload failed for ${file.name}` });
+              return prev.filter((f) => f.file !== file);
+            }
+          });
+        };
+        pollStatus();
       } catch (error) {
-        toast({
-          type: 'error',
-          description: 'Error uploading file, please try again!',
-        });
-        // Apend error message to chat
-        append({
-          id: 'error',
-          type: MessageType.AI,
-          name: '',
-          content: 'Error uploading file, please try again!',
-          documents: null,
-          imgdata: '',
-          tool_calls: [],
-          tool_output: null,
-          next: '',
-        });
+        toast({ type: 'error', description: 'Error uploading file, please try again!' });
+        setUploadingFiles((prev) => prev.filter((f) => f.file !== file));
       }
     },
-    [append, assistant, createThread, setThreadId, threadId, user],
+    [threadId, user]
   );
 
   const submitForm = useCallback(async () => {
     setStatus(ChatStatus.SUBMITTED);
     resetHeight();
 
+    // Clear attachments immediately after clicking Send
+    setAttachments([]);
+
     try {
-      //Upload files before sending message
-      if (pendingFiles.length > 0) {
-        setUploadQueue(pendingFiles.map((file) => file.name));
-
-        const uploadPromises = pendingFiles.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined,
-        );
-
-        // Set attachments after uploading
-        setAttachments((currentAttachments) => [
-          ...currentAttachments,
-          ...successfullyUploadedAttachments,
-        ]);
-
-        //Delete Queue
-        setPendingFiles([]);
-        setUploadQueue([]);
-      }
-
+      // No upload logic here, just send message as before
       // Check if is a home page, create a new thread
       if (window.location.pathname === '/') {
         const thread = await createThread(user, 'New Chat', assistant!.id);
@@ -225,29 +272,25 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     assistant,
     createThread,
     handleStreamTeam,
-    pendingFiles,
     setInput,
     setStatus,
     setThreadId,
-    uploadFile,
     user,
     width,
   ]);
 
   const handleFileChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-
-    setPendingFiles((prev) => [...prev, ...files]);
-    setUploadQueue((prev) => [...prev, ...files.map((file) => file.name)]);
-
+    for (const file of files) {
+      uploadFile(file);
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, []);
+  }, [uploadFile]);
 
   function handleRemoveFile(filename: string): void {
-    setPendingFiles((prev) => prev.filter((file) => file.name !== filename));
-    setUploadQueue((prev) => prev.filter((file) => file !== filename));
+    setUploadingFiles((prev) => prev.filter((f) => f.file.name !== filename));
     setAttachments((prev) => prev.filter((attachment) => attachment.name !== filename));
   }
 
@@ -362,27 +405,31 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         accept=".txt, .pdf"
       />
 
-      {(attachments.length > 0 || uploadQueue.length > 0) && (
+      {(attachments.length > 0 || uploadingFiles.length > 0) && (
         <div
           data-testid="attachments-preview"
           className="flex flex-row gap-2 overflow-x-scroll items-end"
         >
           {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
-          ))}
-
-          {uploadQueue.map((filename) => (
             <PreviewAttachment
-              key={filename}
-              attachment={{
-                url: '',
-                name: filename,
-                contentType: '',
-              }}
-              isUploading={false}
-              onRemove={() => handleRemoveFile(filename)}
+              key={attachment.name}
+              attachment={attachment}
             />
           ))}
+          {uploadingFiles
+            .filter((f) => !attachments.some((a) => a.name === f.file.name))
+            .map((f) => (
+              <PreviewAttachment
+                key={f.file.name}
+                attachment={{
+                  url: '',
+                  name: f.file.name,
+                  contentType: f.file.type,
+                }}
+                isUploading={f.status !== 'Completed'}
+                onRemove={() => handleRemoveFile(f.file.name)}
+              />
+            ))}
         </div>
       )}
 
@@ -416,7 +463,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       />
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+        <AttachmentsButton fileInputRef={fileInputRef} status={status} threadId={threadId} />
         {isAdvancedAssistant && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -544,7 +591,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
           (status === ChatStatus.STREAMING || status == ChatStatus.SUBMITTED ? (
             <StopButton stop={stop} />
           ) : (
-            <SendButton input={input} submitForm={submitForm} uploadQueue={uploadQueue} />
+            <SendButton input={input} submitForm={submitForm} uploadQueue={[]} disabled={uploadingFiles.some(f => f.status !== 'Completed')} />
           ))}
       </div>
     </div>
@@ -560,27 +607,33 @@ export const MultimodalInput = memo(PureMultimodalInput, (prevProps, nextProps) 
 function PureAttachmentsButton({
   fileInputRef,
   status,
+  threadId,
 }: {
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
   status: ChatStatus;
+  threadId?: string | null;
 }) {
+  const disabled = status !== ChatStatus.READY || !threadId;
+  const tooltipText = !threadId ? 'Chat something before attaching file' : 'Attach a file';
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button
-          data-testid="attachments-button"
-          className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
-          onClick={(event) => {
-            event.preventDefault();
-            fileInputRef.current?.click();
-          }}
-          disabled={status !== ChatStatus.READY}
-          variant="ghost"
-        >
-          <PaperclipIcon size={14} />
-        </Button>
+        <span tabIndex={-1} style={{ display: 'inline-flex' }}>
+          <Button
+            data-testid="attachments-button"
+            className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+            onClick={(event) => {
+              event.preventDefault();
+              if (!disabled) fileInputRef.current?.click();
+            }}
+            disabled={disabled}
+            variant="ghost"
+          >
+            <PaperclipIcon size={14} />
+          </Button>
+        </span>
       </TooltipTrigger>
-      <TooltipContent>Attach a file</TooltipContent>
+      <TooltipContent>{tooltipText}</TooltipContent>
     </Tooltip>
   );
 }
@@ -608,10 +661,12 @@ function PureSendButton({
   submitForm,
   input,
   uploadQueue,
+  disabled,
 }: {
   submitForm: () => void;
   input: string;
   uploadQueue: Array<string>;
+  disabled?: boolean;
 }) {
   return (
     <Button
@@ -621,7 +676,7 @@ function PureSendButton({
         event.preventDefault();
         submitForm();
       }}
-      disabled={input.length === 0 && uploadQueue.length === 0}
+      disabled={disabled || (input.length === 0 && uploadQueue.length === 0)}
     >
       <ArrowUpIcon size={14} />
     </Button>
@@ -631,5 +686,6 @@ function PureSendButton({
 const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length) return false;
   if (prevProps.input !== nextProps.input) return false;
+  if (prevProps.disabled !== nextProps.disabled) return false;
   return true;
 });

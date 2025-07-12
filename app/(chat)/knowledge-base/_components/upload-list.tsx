@@ -110,7 +110,6 @@ export default function UploadList({ user }: { user: User }) {
 
       // Step 3: process upload
       await processUpload({ user, uploadId: initRes.uploadId });
-      toast({ type: 'success', description: 'File uploaded' });
       fetchUploads();
       pollUploadStatus(initRes.uploadId);
     } catch (error) {
@@ -152,7 +151,6 @@ export default function UploadList({ user }: { user: User }) {
         });
         if (!r2.ok) throw new Error('Failed to upload data');
         await processUpload({ user, uploadId: up.id });
-        toast({ type: 'success', description: 'File uploaded' });
         fetchUploads();
         pollUploadStatus(up.id);
       } catch (err) {
