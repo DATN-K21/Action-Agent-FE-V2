@@ -1,6 +1,6 @@
 import { AI_ENDPOINT_V1, HttpMethod } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
-import { IUpload, IUploadInitiateResponse } from '@/types/upload';
+import { IUpload, IUploadInitiateResponse, IUploadStatusResponse } from '@/types/upload';
 import { User } from 'next-auth';
 
 export interface UploadServiceParams {
@@ -83,3 +83,15 @@ export const deleteUpload = async (
     headers,
   });
 };
+
+export const getUploadStatus = async (
+  params: ProcessParams,
+): Promise<IUploadStatusResponse> => {
+  const headers = createUserAuthHeaders(params.user);
+  const response: any = await sendRequest({
+    url: `${AI_ENDPOINT_V1}/uploads/${params.uploadId}/status`,
+    method: HttpMethod.GET,
+    headers,
+  });
+  return response.data as IUploadStatusResponse;
+}

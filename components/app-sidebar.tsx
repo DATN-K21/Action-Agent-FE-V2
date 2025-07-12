@@ -74,13 +74,16 @@ export function AppSidebar({ user }: { user: User }) {
             <Link
               href="/"
               onClick={() => {
-                setOpenMobile(false);
+              setOpenMobile(false);
               }}
-              className="flex flex-row gap-3 items-center"
+              className="flex flex-row gap-3 items-center justify-start"
             >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer">
-                Action Agent
-              </span>
+              <img
+              src="/images/logo.png"
+              alt="Action Agent Logo"
+              className="h-14 w-auto px-2 rounded-md cursor-pointer"
+              style={{ maxHeight: '3.5rem' }}
+              />
             </Link>
           </div>
         </SidebarMenu>

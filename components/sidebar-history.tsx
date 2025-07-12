@@ -138,8 +138,8 @@ function SidebarHistory({ user }: { user: User }) {
     return (
       <SidebarGroup>
         <SidebarGroupContent>
-          <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Your conversations will appear here once you start chatting!
+          <div className="px-1 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-1 max-w-[200px]">
+            Your conversations will appear here once you chat!
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -151,7 +151,7 @@ function SidebarHistory({ user }: { user: User }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            <div ref={scrollContainerRef} className="overflow-y-auto pr-1">
+            <div ref={scrollContainerRef} className="overflow-y-auto pr-0.5 max-w-[220px]">
               {threads &&
                 (() => {
                   const groupedThreads = groupThreadsByDate();
@@ -160,7 +160,7 @@ function SidebarHistory({ user }: { user: User }) {
                     <>
                       {groupedThreads.today.length > 0 && (
                         <>
-                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50">Today</div>
+                          <div className="px-1 py-1 text-xs text-sidebar-foreground/50">Today</div>
                           {groupedThreads.today.map((thread) => (
                             <ThreadItem
                               key={thread.id}
@@ -179,7 +179,7 @@ function SidebarHistory({ user }: { user: User }) {
 
                       {groupedThreads.yesterday.length > 0 && (
                         <>
-                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                          <div className="px-1 py-1 text-xs text-sidebar-foreground/50 mt-6">
                             Yesterday
                           </div>
                           {groupedThreads.yesterday.map((thread) => (

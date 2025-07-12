@@ -18,3 +18,11 @@ export interface IUploadInitiateResponse {
   uploadId: string;
   uploadUrl: string;
 }
+
+export interface IUploadStatusResponse {
+  uploadId: string;
+  uploadStatus: UploadStatus;
+  blobExists: boolean;
+  uploadComplete: boolean;
+  createdAt: string;
+}

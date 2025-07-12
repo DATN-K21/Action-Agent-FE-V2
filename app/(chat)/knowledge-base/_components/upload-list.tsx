@@ -3,12 +3,14 @@
 import { AttachmentIcon, BoxIcon, GlobeIcon } from '@/components/icons';
 import { toast } from '@/components/toast';
 import { Button } from '@/components/ui/button';
+import { UploadListSkeleton } from '@/components/skeleton/upload-list-skeleton';
 import {
   deleteUpload,
   getUploads,
   initiateUpload,
   processUpload,
   reInitiateUpload,
+  getUploadStatus,
 } from '@/services/upload-service';
 import { IUpload } from '@/types/upload';
 import { Plus, RotateCcw, Trash } from 'lucide-react';
@@ -38,7 +40,32 @@ export default function UploadList({ user }: { user: User }) {
     fetchUploads();
   }, [fetchUploads]);
 
-  const handleUpload = async (file: File, name: string, description: string) => {
+  const pollUploadStatus = async (uploadId: string) => {
+    let polling = true;
+    while (polling) {
+      try {
+        const statusRes = await getUploadStatus({ user, uploadId });
+        if (statusRes.uploadStatus === 'Completed' || statusRes.uploadStatus === 'Failed') {
+          polling = false;
+          fetchUploads();
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+      } catch (err) {
+        console.error('Polling upload status failed:', err);
+        polling = false;
+        fetchUploads();
+      }
+    }
+  };
+
+  const handleUpload = async (
+    file: File,
+    name: string,
+    description: string,
+    is_global: boolean,
+    thread_id?: string | null
+  ) => {
     try {
       const initRes = await initiateUpload({
         user,
@@ -47,6 +74,7 @@ export default function UploadList({ user }: { user: User }) {
           file_size_bytes: file.size,
           name,
           description,
+          thread_id: is_global ? null : thread_id,
         },
       });
 
@@ -74,6 +102,7 @@ export default function UploadList({ user }: { user: User }) {
       await processUpload({ user, uploadId: initRes.uploadId });
       toast({ type: 'success', description: 'File uploaded' });
       fetchUploads();
+      pollUploadStatus(initRes.uploadId);
     } catch (error) {
       console.error('Upload error:', error);
       toast({ type: 'error', description: 'Upload failed' });
@@ -115,6 +144,7 @@ export default function UploadList({ user }: { user: User }) {
         await processUpload({ user, uploadId: up.id });
         toast({ type: 'success', description: 'File uploaded' });
         fetchUploads();
+        pollUploadStatus(up.id);
       } catch (err) {
         console.error('Re-upload failed:', err);
         toast({ type: 'error', description: 'Re-upload failed' });
@@ -139,15 +169,15 @@ export default function UploadList({ user }: { user: User }) {
       <div className="flex items-center justify-between mt-2">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight">Knowledge Base</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Your uploaded files</p>
+          <p className="text-sm md:text-base text-muted-foreground">Manage your uploaded files to chat with Action Agent.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        <Button className="w-full md:w-auto" size="sm" onClick={() => setOpen(true)}>
           <Plus className="mr-2 size-4" /> New
         </Button>
       </div>
       <div className="mt-4">
         {loading ? (
-          <p className="text-sm">Loading...</p>
+          <UploadListSkeleton />
         ) : uploads.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10 text-sm text-muted-foreground">
             <BoxIcon size={32} />
@@ -183,20 +213,29 @@ export default function UploadList({ user }: { user: User }) {
                   ) : null}
                 </div>
                 <p className="text-sm text-muted-foreground truncate">{up.description}</p>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Status:</span>
-                {up.status === 'Uploading' && (
-                  <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-medium text-xs animate-pulse">Uploading</span>
-                )}
-                {up.status === 'Ingesting' && (
-                  <span className="px-2 py-0.5 rounded-md bg-yellow-100 text-yellow-800 font-medium text-xs animate-pulse">Ingesting</span>
-                )}
-                {up.status === 'Completed' && (
-                  <span className="px-2 py-0.5 rounded-md bg-green-100 text-green-800 font-medium text-xs">Completed</span>
-                )}
-                {up.status === 'Failed' && (
-                  <span className="px-2 py-0.5 rounded-md bg-red-100 text-red-800 font-medium text-xs">Failed</span>
-                )}
+                <span
+                  className={
+                    `inline-block w-3 h-3 rounded-full border border-gray-300 ` +
+                    (up.status === 'Uploading'
+                      ? 'bg-yellow-300 animate-pulse'
+                      : up.status === 'Ingesting'
+                      ? 'bg-orange-400 animate-pulse'
+                      : up.status === 'Completed'
+                      ? 'bg-green-500'
+                      : up.status === 'Failed'
+                      ? 'bg-red-500'
+                      : 'bg-gray-200')
+                  }
+                  title={up.status}
+                />
+                <span className="text-xs">
+                  {up.status === 'Uploading' && 'Uploading'}
+                  {up.status === 'Ingesting' && 'Ingesting'}
+                  {up.status === 'Completed' && 'Completed'}
+                  {up.status === 'Failed' && 'Failed'}
+                </span>
               </div>
               </li>
             ))}
@@ -207,6 +246,7 @@ export default function UploadList({ user }: { user: User }) {
         open={open}
         onOpenChange={setOpen}
         onUpload={handleUpload}
+        user={user}
       />
     </div>
   );
