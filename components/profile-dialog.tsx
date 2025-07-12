@@ -213,26 +213,26 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
             {profile?.avatar && (
               <div className="flex items-center mb-2">
                 <label htmlFor="avatar-upload" className="cursor-pointer group relative">
-                  <Image
-                    src={profile.avatar}
-                    alt="Avatar"
-                    width={56}
-                    height={56}
-                    className="size-14 rounded-full border border-blue-200 shadow-sm object-cover group-hover:brightness-90 transition"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  <img
+                  src={profile.avatar}
+                  alt="Avatar"
+                  width={56}
+                  height={56}
+                  className="size-14 rounded-full border border-blue-200 shadow-sm object-cover group-hover:brightness-90 transition"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const url = URL.createObjectURL(file);
-                        setProfile(profile ? { ...profile, avatar: url } : null);
-                      }
-                    }}
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                    const url = URL.createObjectURL(file);
+                    setProfile(profile ? { ...profile, avatar: url } : null);
+                    }
+                  }}
                   />
                   <span className="absolute bottom-0 inset-x-0 text-xs text-center text-white bg-black/40 rounded-b opacity-0 group-hover:opacity-100 transition">Change</span>
                 </label>
