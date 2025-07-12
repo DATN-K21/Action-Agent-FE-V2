@@ -141,10 +141,12 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
             <Label htmlFor="global-upload" className="flex items-center gap-1">
               Global
               <span className="group relative inline-flex">
-          <InfoIcon size={11} className="text-muted-foreground cursor-pointer" />
-          <span className="absolute left-1/2 z-10 mt-2 hidden w-[260px] -translate-x-1/2 rounded bg-black px-2 py-1 text-xs text-white opacity-0 group-hover:block group-hover:opacity-100 transition-opacity pointer-events-none">
-            This file could be accessed by all threads
-          </span>
+                <span className="text-muted-foreground cursor-pointer">
+                  <InfoIcon size={11} />
+                </span>
+                <span className="absolute left-1/2 z-10 mt-2 hidden w-[260px] -translate-x-1/2 rounded bg-black px-2 py-1 text-xs text-white opacity-0 group-hover:block group-hover:opacity-100 transition-opacity pointer-events-none">
+                  This file could be accessed by all threads
+                </span>
               </span>
             </Label>
             <Switch id="global-upload" checked={isGlobal} onCheckedChange={setIsGlobal} />
