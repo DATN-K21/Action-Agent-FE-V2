@@ -73,7 +73,6 @@ export const getConnectedExtensions = async (
 ): Promise<IGetConnectedExtensions> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IGetConnectedExtensions> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/connected-extension/get-all`,
       method: HttpMethod.GET,
@@ -92,7 +91,6 @@ export const getDetailExtension = async (params: ExtensionParams): Promise<IConn
     if (!params.extension) throw new Error('Extension is required');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IConnectedExtension> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/connected-extension/${params.user.id!}/${params.extension.key}/get-detail`,
       method: HttpMethod.GET,
@@ -114,10 +112,10 @@ export const getExtensionActions = async (params: ExtensionParams): Promise<IExt
     if (!params.extension) throw new Error('Extension is required');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IExtensionAction[]> = await sendRequest({
       url: `${EXTENSION_ENDPOINT}/actions?appKey=${params.extension.key}`,
       method: HttpMethod.GET,
+      headers: headers
     });
 
     return response.data as IExtensionAction[];
@@ -135,7 +133,6 @@ export const activeExtension = async (
     if (params.extension.connected) throw new Error('Extension is already connected');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IActiveExtensionResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/extension/active`,
       method: HttpMethod.POST,
@@ -161,7 +158,6 @@ export const disconnectExtension = async (
     if (!params.extension.connected) throw new Error('Extension is not connected');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<DisconnectExtensionReponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/extension/disconnect`,
       method: HttpMethod.POST,

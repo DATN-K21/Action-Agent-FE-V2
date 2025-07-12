@@ -198,7 +198,7 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
         <Accordion.Root type="single" collapsible className="w-full">
           <Accordion.Item value="advanced" className="border rounded">
             <Accordion.Header>
-              <Accordion.Trigger className="w-full flex items-center justify-between px-2 py-2 font-medium text-left">
+              <Accordion.Trigger className="w-full flex items-center justify-between p-2 font-medium text-left">
                 Advanced settings
                 <span className="ml-2">▼</span>
               </Accordion.Trigger>

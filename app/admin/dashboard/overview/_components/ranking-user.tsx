@@ -11,7 +11,7 @@ export function RankingUser(props: RankingUserProps) {
     <div className="space-y-8">
       {data?.map((user, index) => (
         <div className="flex items-center" key={user.id}>
-          <Avatar className="h-9 w-9">
+          <Avatar className="size-9">
             <AvatarImage src="/avatars/01.png" alt="Avatar" />
             <AvatarFallback>{user.rank}</AvatarFallback>
           </Avatar>

@@ -22,11 +22,15 @@ export const PreviewAttachment = ({
     <div data-testid="input-attachment-preview" className="flex flex-col gap-2 relative">
       <div className="w-20 h-16 aspect-video bg-muted rounded-md relative flex flex-col items-center justify-center">
         {contentType && contentType.startsWith('image') && url ? (
-          <img
+          <Image
             key={url}
             src={url}
             alt={name ?? 'An image attachment'}
-            className="rounded-md size-full object-cover"
+            fill
+            className="rounded-md object-cover"
+            style={{ objectFit: 'cover' }}
+            sizes="80px"
+            priority
           />
         ) : (
           <Image

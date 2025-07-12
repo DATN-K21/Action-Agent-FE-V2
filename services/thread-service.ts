@@ -69,13 +69,13 @@ export interface GenerateTitleParams {
 }
 
 export interface RecognizeVoiceParams {
+  user: User;
   formData: FormData;
 }
 
 export const getThreads = async (params: GetThreadsParams): Promise<IGetThreadsResponse> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IGetThreadsResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/get-all`,
       method: HttpMethod.GET,
@@ -96,7 +96,6 @@ export const createThread = async (params: CreateThreadParams): Promise<ICreateT
     if (!params.payload.assistantId) throw new Error("Missing 'assistantId'");
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<ICreateThreadResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/create`,
       method: HttpMethod.POST,
@@ -136,7 +135,6 @@ export const getThreadHistory = async (
     if (!params.payload.threadId) throw new Error("Missing 'threadId'");
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IGetThreadHistoryResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/${params.payload.threadId}/get-history`,
       method: HttpMethod.POST,
@@ -156,7 +154,6 @@ export const updateThread = async (params: UpdateThreadParams): Promise<IUpdateT
     if (!params.payload.title) throw new Error("Missing 'title'");
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IUpdateThreadResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/${params.payload.threadId}/update`,
       method: HttpMethod.PATCH,
@@ -176,7 +173,6 @@ export const deleteThread = async (params: DeleteThreadParams): Promise<void> =>
     if (!params.payload.threadId) throw new Error("Missing 'threadId'");
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/${params.payload.threadId}/delete`,
       method: HttpMethod.DELETE,
@@ -196,7 +192,6 @@ export const handleUploadFile = async (params: UploadFileParams): Promise<Upload
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
     const formData = new FormData();
     formData.append('file', params.payload.file);
-
     const response: IResponse<UploadFileResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/${params.user.id}/${params.threadId}/upload`,
       method: HttpMethod.POST,
@@ -216,7 +211,6 @@ export const generateTitle = async (params: GenerateTitleParams): Promise<IThrea
     if (!params.threadId) throw new Error("Missing 'threadId'");
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IThread> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/thread/${params.threadId}/generate-title`,
       method: HttpMethod.POST,
@@ -232,10 +226,7 @@ export const generateTitle = async (params: GenerateTitleParams): Promise<IThrea
 
 export const recognizeVoice = async (params: RecognizeVoiceParams): Promise<object> => {
   try {
-    const headers: Record<string, string> = {
-      accept: 'application/json',
-    };
-
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
     const response: IResponse<object> = await sendRequest({
       url: `${VOICE_ENDPOINT}/recognize`,
       method: HttpMethod.POST,

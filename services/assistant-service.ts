@@ -44,7 +44,6 @@ export interface DeleteAssistantParams {
 export const getAllAssistants = async (params: GetAssistantsParams): Promise<IAssistant[]> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<{ assistants: IAssistant[] }> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/assistant/get-all`,
       method: HttpMethod.GET,
@@ -63,7 +62,6 @@ export const getAdvancedAssistants = async (
 ): Promise<IAssistant[]> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<{ assistants: IAssistant[] }> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/assistant/get-all`,
       method: HttpMethod.GET,
@@ -87,7 +85,6 @@ export const createAssistant = async (params: CreateAssistantParams): Promise<IA
     if (!params.payload.name) throw new Error('Assistant name is required');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IAssistant> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/assistant/create`,
       method: HttpMethod.POST,
@@ -105,7 +102,6 @@ export const createAssistant = async (params: CreateAssistantParams): Promise<IA
 export const getAssistantDetail = async (params: GetAssistantDetailParams): Promise<IAssistant> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IAssistant> = await sendRequest({
       url: `${AI_ENDPOINT_V2}/assistant/${params.user.id}/${params.assistantId}/get-detail`,
       method: HttpMethod.GET,
@@ -122,7 +118,6 @@ export const getAssistantDetail = async (params: GetAssistantDetailParams): Prom
 export const updateAssistant = async (params: UpdateAssistantParams): Promise<IAssistant> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IAssistant> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/assistant/${params.assistantId}/update-advanced-assistant`,
       method: HttpMethod.PATCH,
@@ -142,7 +137,6 @@ export const deleteAssistant = async (
 ): Promise<{ deleted: boolean }> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<{ deleted: boolean }> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/assistant/${params.user.id}/${params.assistantId}/hard-delete-advanced-assistant`,
       method: HttpMethod.DELETE,

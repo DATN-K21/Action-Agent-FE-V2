@@ -45,7 +45,6 @@ export interface GetMCPDetailParams {
 export const getConnectedMCPs = async (params: GetMCPsParams): Promise<IMCP[]> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<{ connectedMcps: IMCP[] }> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/mcp/get-all`,
       method: HttpMethod.GET,
@@ -70,7 +69,6 @@ export const createMCP = async (params: CreateMCPParams): Promise<IMCP> => {
     if (!params.payload.transport) throw new Error('Connection type is required');
 
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IMCP> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/mcp/create`,
       method: HttpMethod.POST,
@@ -88,7 +86,6 @@ export const createMCP = async (params: CreateMCPParams): Promise<IMCP> => {
 export const getMCPDetail = async (params: GetMCPDetailParams): Promise<IMCP> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IMCP> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/mcp/${params.connectedMcpId}/get-detail`,
       method: HttpMethod.GET,
@@ -110,7 +107,6 @@ export const updateMCP = async (params: UpdateMCPParams): Promise<IMCP> => {
 
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<IMCP> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/mcp/${params.connectedMcpId}/update`,
       method: HttpMethod.PATCH,
@@ -128,7 +124,6 @@ export const updateMCP = async (params: UpdateMCPParams): Promise<IMCP> => {
 export const deleteMCP = async (params: DeleteMCPParams): Promise<void> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     await sendRequest({
       url: `${AI_ENDPOINT_V1}/mcp/${params.connectedMcpId}/delete`,
       method: HttpMethod.DELETE,

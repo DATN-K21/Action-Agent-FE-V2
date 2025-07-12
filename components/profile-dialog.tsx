@@ -3,6 +3,7 @@
 import { getUserProfile, IUserProfile } from '@/services/user-service'
 import type { User } from 'next-auth'
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { createPaymentIntent } from '@/services/payment-service';
@@ -212,10 +213,12 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
             {profile?.avatar && (
               <div className="flex items-center mb-2">
                 <label htmlFor="avatar-upload" className="cursor-pointer group relative">
-                  <img
+                  <Image
                     src={profile.avatar}
                     alt="Avatar"
-                    className="w-14 h-14 rounded-full border border-blue-200 shadow-sm object-cover group-hover:brightness-90 transition"
+                    width={56}
+                    height={56}
+                    className="size-14 rounded-full border border-blue-200 shadow-sm object-cover group-hover:brightness-90 transition"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <input
@@ -231,7 +234,7 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
                       }
                     }}
                   />
-                  <span className="absolute bottom-0 left-0 right-0 text-xs text-center text-white bg-black bg-opacity-40 rounded-b opacity-0 group-hover:opacity-100 transition">Change</span>
+                  <span className="absolute bottom-0 inset-x-0 text-xs text-center text-white bg-black/40 rounded-b opacity-0 group-hover:opacity-100 transition">Change</span>
                 </label>
               </div>
             )}
@@ -241,7 +244,7 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
             <div>
               <div className="flex items-center justify-between gap-2 bg-gray-50 rounded px-3 py-2 border border-gray-200">
                 <span className="flex items-center gap-2 text-base">
-                  <img src="/images/profile/atm.png" alt="ATM Icon" className="w-5 h-5 inline-block" />
+                  <Image src="/images/profile/atm.png" alt="ATM Icon" width={20} height={20} className="size-5 inline-block" />
                   <span className={
                     profile?.balance != null && Math.round(profile.balance) < 0
                       ? 'text-red-600 font-semibold'
@@ -257,7 +260,7 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
                   )}
                 </span>
                 <Button size="sm" variant="outline" className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-medium" type="button" onClick={handleDeposit}>
-                  <img src="/images/profile/atm.png" alt="ATM Icon" className="w-4 h-4" />
+                  <Image src="/images/profile/atm.png" alt="ATM Icon" width={16} height={16} className="size-4" />
                   Deposit
                 </Button>
               </div>

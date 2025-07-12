@@ -35,7 +35,7 @@ export function Chat(props: ChatProps) {
     reloadChat();
     setThreadId(id);
     setMessages(initialMessages);
-  }, [assistants, assistantId]);
+  }, [assistants, assistantId, id, initialMessages, reloadChat, setMessages, setThreadId]);
 
   useEffect(() => {
     const assistant = assistants.find((assistant) => assistant.id === assistantId) || assistants[0];
@@ -45,7 +45,7 @@ export function Chat(props: ChatProps) {
     const teamId =
       assistant?.teams?.find((team) => team.workflow_type === TeamType.CHATBOT)?.id || '';
     setTeamId(teamId);
-  }, [assistants]);
+  }, [assistants, assistantId, setAssistant, setTeamId]);
 
   return (
     <>

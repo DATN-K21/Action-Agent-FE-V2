@@ -1,6 +1,6 @@
 import { USER_ENDPOINT, HttpMethod } from '@/constants/response-constant';
 import { ILoginReponse, IRegisterReponse } from '@/types/auth';
-import { sendRequest } from '@/lib/utils';
+import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import { User } from 'next-auth';
 
 export interface ILoginParams {
@@ -41,6 +41,7 @@ export const login = async (params: ILoginParams): Promise<IResponse<ILoginRepon
     if (!params.email) throw new Error("Missing 'email'");
     if (!params.password) throw new Error("Missing 'password'");
 
+    // No user object available for login, so no auth headers
     const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${USER_ENDPOINT}/access/login`,
       method: HttpMethod.POST,
@@ -64,6 +65,7 @@ export const register = async (params: IRegisterParams): Promise<IResponse<IRegi
     if (!params.firstName) throw new Error("Missing 'firstName'");
     if (!params.lastName) throw new Error("Missing 'lastName'");
 
+    // No user object available for register, so no auth headers
     const response: IResponse<IRegisterReponse> = await sendRequest({
       url: `${USER_ENDPOINT}/access/signup`,
       method: HttpMethod.POST,
@@ -91,7 +93,6 @@ export const refreshToken = async (params: IRefreshTokenParams): Promise<IRespon
 
     const headers: Record<string, string> = {
       Authorization: `Bearer ${params.accessToken}`,
-      'x-client-id': params.userId,
     };
 
     const response: IResponse<null> = await sendRequest({
@@ -114,6 +115,7 @@ export const sendAccountActivationEmail = async (email: string): Promise<IRespon
   try {
     if (!email) throw new Error("Missing 'email'");
 
+    // No user object available for activation email, so no auth headers
     const response: IResponse<null> = await sendRequest({
       url: `${USER_ENDPOINT}/access/activate/send-link`,
       method: HttpMethod.POST,
@@ -133,6 +135,7 @@ export const activateAccount = async (token: string): Promise<any> => {
   try {
     if (!token) throw new Error("Missing 'token'");
 
+    // No user object available for activation, so no auth headers
     const response: IResponse<null> = await sendRequest({
       url: `${USER_ENDPOINT}/access/activate/confirm`,
       method: HttpMethod.POST,
@@ -156,6 +159,7 @@ export const sendResetPasswordOTP = async (email: string): Promise<IResponse<nul
   try {
     if (!email) throw new Error("Missing 'email'");
 
+    // No user object available for reset password OTP, so no auth headers
     const response: IResponse<null> = await sendRequest({
       url: `${USER_ENDPOINT}/access/reset-password/send-otp`,
       method: HttpMethod.POST,
@@ -179,6 +183,7 @@ export const confirmResetPasswordOTP = async (
     if (!email) throw new Error("Missing 'email'");
     if (!otp) throw new Error("Missing 'otp'");
 
+    // No user object available for confirm OTP, so no auth headers
     const response: IResponse<IConfirmResetPasswordOTPResponse> = await sendRequest({
       url: `${USER_ENDPOINT}/access/reset-password/confirm-otp`,
       method: HttpMethod.POST,
@@ -230,6 +235,7 @@ export const loginWithGoogle = async (id_token: string): Promise<IResponse<ILogi
   try {
     if (!id_token) throw new Error("Missing 'id_token'");
 
+    // No user object available for Google login, so no auth headers
     const response: IResponse<ILoginReponse> = await sendRequest({
       url: `${USER_ENDPOINT}/access/google/auth`,
       method: HttpMethod.POST,
@@ -250,11 +256,7 @@ export const logout = async (user: User): Promise<IResponse<null>> => {
     if (!user.accessToken) throw new Error("Missing 'accessToken'");
     if (!user.id) throw new Error("Missing 'userId'");
 
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${user.accessToken}`,
-      'x-client-id': user.id,
-    };
-
+    const headers: Record<string, string> = createUserAuthHeaders(user);
     const response: IResponse<null> = await sendRequest({
       url: `${USER_ENDPOINT}/access/logout`,
       method: HttpMethod.POST,

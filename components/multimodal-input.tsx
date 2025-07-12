@@ -348,7 +348,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       formData.append('audioFile', blob, 'voice.webm');
 
       try {
-        const response = await recognizeVoice({ formData });
+        const response = await recognizeVoice({ user, formData });
 
         if ((response as any)?.status === 200) {
           setInput((response as any).data as string);

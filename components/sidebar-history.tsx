@@ -160,7 +160,7 @@ function SidebarHistory({ user }: { user: User }) {
                     <>
                       {groupedThreads.today.length > 0 && (
                         <>
-                          <div className="px-1 py-1 text-xs text-sidebar-foreground/50">Today</div>
+                          <div className="p-1 text-xs text-sidebar-foreground/50">Today</div>
                           {groupedThreads.today.map((thread) => (
                             <ThreadItem
                               key={thread.id}
@@ -179,7 +179,7 @@ function SidebarHistory({ user }: { user: User }) {
 
                       {groupedThreads.yesterday.length > 0 && (
                         <>
-                          <div className="px-1 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                          <div className="p-1 text-xs text-sidebar-foreground/50 mt-6">
                             Yesterday
                           </div>
                           {groupedThreads.yesterday.map((thread) => (
@@ -200,7 +200,7 @@ function SidebarHistory({ user }: { user: User }) {
 
                       {groupedThreads.lastWeek.length > 0 && (
                         <>
-                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                          <div className="p-1 text-xs text-sidebar-foreground/50 mt-6">
                             Last 7 days
                           </div>
                           {groupedThreads.lastWeek.map((thread) => (
@@ -221,7 +221,7 @@ function SidebarHistory({ user }: { user: User }) {
 
                       {groupedThreads.lastMonth.length > 0 && (
                         <>
-                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                          <div className="p-1 text-xs text-sidebar-foreground/50 mt-6">
                             Last 30 days
                           </div>
                           {groupedThreads.lastMonth.map((thread) => (
@@ -242,7 +242,7 @@ function SidebarHistory({ user }: { user: User }) {
 
                       {groupedThreads.older.length > 0 && (
                         <>
-                          <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-6">
+                          <div className="p-1 text-xs text-sidebar-foreground/50 mt-6">
                             Older
                           </div>
                           {groupedThreads.older.map((thread) => (

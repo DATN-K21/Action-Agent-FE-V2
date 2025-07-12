@@ -78,11 +78,14 @@ export function AppSidebar({ user }: { user: User }) {
               }}
               className="flex flex-row gap-3 items-center justify-start"
             >
-              <img
-              src="/images/logo.png"
-              alt="Action Agent Logo"
-              className="h-14 w-auto px-2 rounded-md cursor-pointer"
-              style={{ maxHeight: '3.5rem' }}
+              <Image
+                  src="/images/logo.png"
+                  alt="Action Agent Logo"
+                  width={112} // 28*4 = 112px, roughly h-14
+                  height={56} // arbitrary, adjust as needed
+                  className="h-14 w-auto px-2 rounded-md cursor-pointer"
+                  style={{ maxHeight: '3.5rem' }}
+                  priority
               />
             </Link>
           </div>
@@ -96,3 +99,4 @@ export function AppSidebar({ user }: { user: User }) {
     </Sidebar>
   );
 }
+import Image from 'next/image';

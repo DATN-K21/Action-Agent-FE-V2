@@ -26,7 +26,6 @@ export interface IRankingUser {
 export const getStatisticOverview = async (params: GetStatisticOverviewParams) => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response = (await sendRequest({
       url: `${AI_ENDPOINT_V1}/statistics/overview`,
       method: HttpMethod.GET,
@@ -45,7 +44,6 @@ export const getRankingUser = async (
 ): Promise<IRankingUser[]> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-
     const response: IResponse<{
       users: { data: IRankingUser[] } | null;
     }> = await sendRequest({
