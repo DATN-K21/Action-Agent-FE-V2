@@ -50,24 +50,14 @@ export const getThreadIcon = (threadType: string): React.FC<IconProps> => {
 };
 
 export function createUserAuthHeaders(user: User): Record<string, string> {
-  const { id, role, email } = user;
+  const { accessToken } = user;
 
-  if (!id || id.trim() === '') {
-    throw new Error("Missing or invalid 'user.id'");
-  }
-
-  if (!role || role.trim() === '') {
-    throw new Error("Missing or invalid 'user.role'");
-  }
-
-  if (!email || email.trim() === '') {
-    throw new Error("Missing or invalid 'user.email'");
+  if (!accessToken || accessToken.trim() === '') {
+    throw new Error("Missing or invalid 'user.accessToken'");
   }
 
   return {
-    'x-user-id': id,
-    'x-user-role': role,
-    'x-user-email': email,
+    Authorization: `Bearer ${accessToken}`,
   };
 }
 
@@ -82,9 +72,9 @@ export const sendRequest = async <T>(props: IRequest) => {
     nextOption = {},
   } = props;
 
+  // The Authorization header should be provided by the caller using createUserAuthHeaders(user)
   const options: any = {
     method: method,
-    // by default setting the content-type to be json type
     headers: new Headers(headers),
     body: body instanceof FormData ? body : body ? JSON.stringify(body) : null,
     ...nextOption,
