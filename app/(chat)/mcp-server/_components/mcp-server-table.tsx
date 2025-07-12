@@ -88,7 +88,12 @@ export default function MCPServerTable(props: { user: User }) {
   }, [user, pageNumber, maxPerPage, reloadChat, fetchMCPs]);
 
   // Handlers for CRUD operations
-  const handleAddServer = async (server: { mcpName: string; url: string; description: string }) => {
+  const handleAddServer = async (server: {
+    mcpName: string;
+    url: string;
+    description: string;
+    transport: string;
+  }) => {
     try {
       setLoading(true);
       const createdMCP = await createMCP({
@@ -96,7 +101,7 @@ export default function MCPServerTable(props: { user: User }) {
         payload: {
           mcpName: server.mcpName,
           url: server.url,
-          transport: 'sse',
+          transport: server.transport || 'sse', // Default to 'sse' if not provided
           description: server.description, // Use description if provided
         },
       });
@@ -222,7 +227,7 @@ export default function MCPServerTable(props: { user: User }) {
       accessorKey: 'url',
       header: 'URL',
       cell: ({ row }) => (
-        <div className="truncate max-w-[180px] sm:max-w-[200px] md:max-w-md lg:max-w-lg text-sm md:text-base">
+        <div className="truncate max-w-[100px] sm:max-w-[100px] text-sm md:text-base">
           {row.getValue('url')}
         </div>
       ),
@@ -231,7 +236,7 @@ export default function MCPServerTable(props: { user: User }) {
       accessorKey: 'description',
       header: 'Description',
       cell: ({ row }) => (
-        <div className="truncate max-w-[180px] sm:max-w-[200px] md:max-w-sm lg:max-w-lg text-sm md:text-base">
+        <div className="truncate max-w-[100px] sm:max-w-[400px] text-sm md:text-base">
           {row.getValue('description')}
         </div>
       ),

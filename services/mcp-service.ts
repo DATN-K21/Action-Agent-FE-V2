@@ -8,8 +8,8 @@ export interface CreateMCPParams {
   payload: {
     mcpName: string;
     url: string;
-    transport: 'sse';
     description?: string; // Optional field for description
+    transport?: string; // Transport type, e.g., 'streamable_http', 'sse'
   };
 }
 
