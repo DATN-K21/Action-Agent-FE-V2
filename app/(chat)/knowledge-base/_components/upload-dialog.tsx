@@ -1,7 +1,4 @@
 'use client';
-
-import { toast } from '@/components/toast';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,17 +11,28 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { InfoIcon } from '@/components/icons';
 import { useState, useEffect } from 'react';
+import {toast} from '@/components/toast';
+import * as Accordion from '@radix-ui/react-accordion';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { useThreadStore } from '@/store/thread-store';
 
 interface UploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpload: (file: File, name: string, description: string, is_global: boolean, thread_id?: string | null) => void;
+  onUpload: (
+    file: File,
+    name: string,
+    description: string,
+    is_global: boolean,
+    thread_id?: string | null,
+    chunkSize?: number,
+    chunkOverlap?: number
+  ) => void;
   user?: any;
 }
 
-export default function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialogProps) {
+export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [descError, setDescError] = useState<string | null>(null);
@@ -32,6 +40,9 @@ export default function UploadDialog({ open, onOpenChange, onUpload, user }: Upl
   const [isGlobal, setIsGlobal] = useState(true);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [threadError, setThreadError] = useState<string | null>(null);
+  const [chunkSize, setChunkSize] = useState<number>(1000);
+  const [chunkOverlap, setChunkOverlap] = useState<number>(100);
+  const [advancedError, setAdvancedError] = useState<string | null>(null);
   const threads = useThreadStore((state) => state.threads);
   const fetchThreads = useThreadStore((state) => state.fetchThreads);
 
@@ -46,6 +57,7 @@ export default function UploadDialog({ open, onOpenChange, onUpload, user }: Upl
   const handleSubmit = async () => {
     setDescError(null);
     setThreadError(null);
+    setAdvancedError(null);
     if (!file) {
       toast({ type: 'error', description: 'Select a file' });
       return;
@@ -77,13 +89,36 @@ export default function UploadDialog({ open, onOpenChange, onUpload, user }: Upl
       setThreadError('Please select a thread');
       return;
     }
+    // Advanced settings validation
+    if (chunkSize <= 0) {
+      setAdvancedError('Chunk size must be greater than 0');
+      return;
+    }
+    if (chunkOverlap < 0) {
+      setAdvancedError('Chunk overlap must be 0 or greater');
+      return;
+    }
+    if (chunkOverlap >= chunkSize) {
+      setAdvancedError('Chunk overlap must be less than chunk size');
+      return;
+    }
     setLoading(true);
     try {
-      await onUpload(file, file.name, description, isGlobal, isGlobal ? null : threadId);
+      await onUpload(
+        file,
+        file.name,
+        description,
+        isGlobal,
+        isGlobal ? null : threadId,
+        chunkSize,
+        chunkOverlap
+      );
       setFile(null);
       setDescription('');
       setIsGlobal(true);
       setThreadId(null);
+      setChunkSize(1000);
+      setChunkOverlap(100);
       onOpenChange(false);
     } finally {
       setLoading(false);
@@ -158,6 +193,39 @@ export default function UploadDialog({ open, onOpenChange, onUpload, user }: Upl
             {descError && <span className="text-xs text-red-500">{descError}</span>}
           </div>
         </div>
+        <Accordion.Root type="single" collapsible className="w-full">
+          <Accordion.Item value="advanced" className="border rounded">
+            <Accordion.Header>
+              <Accordion.Trigger className="w-full flex items-center justify-between px-2 py-2 font-medium text-left">
+                Advanced settings
+                <span className="ml-2">▼</span>
+              </Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Content className="px-2 pb-2 flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="chunk-size">Chunk size</Label>
+                <Input
+                  id="chunk-size"
+                  type="number"
+                  min={1}
+                  value={chunkSize}
+                  onChange={e => setChunkSize(Number(e.target.value))}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="chunk-overlap">Chunk overlap</Label>
+                <Input
+                  id="chunk-overlap"
+                  type="number"
+                  min={0}
+                  value={chunkOverlap}
+                  onChange={e => setChunkOverlap(Number(e.target.value))}
+                />
+              </div>
+              {advancedError && <span className="text-xs text-red-500 mt-1">{advancedError}</span>}
+            </Accordion.Content>
+          </Accordion.Item>
+        </Accordion.Root>
         <DialogFooter>
           <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Uploading...' : 'Upload'}</Button>
         </DialogFooter>

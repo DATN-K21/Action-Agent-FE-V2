@@ -1,6 +1,7 @@
 'use client';
 
 import { AttachmentIcon, BoxIcon, GlobeIcon } from '@/components/icons';
+import Image from 'next/image';
 import { toast } from '@/components/toast';
 import { Button } from '@/components/ui/button';
 import { UploadListSkeleton } from '@/components/skeleton/upload-list-skeleton';
@@ -14,14 +15,17 @@ import {
 } from '@/services/upload-service';
 import { IUpload } from '@/types/upload';
 import { Plus, RotateCcw, Trash } from 'lucide-react';
+import Link from 'next/link';
 import { User } from 'next-auth';
 import { useCallback, useEffect, useState } from 'react';
-import UploadDialog from './upload-dialog';
+import { UploadDialog } from './upload-dialog';
 
 export default function UploadList({ user }: { user: User }) {
   const [uploads, setUploads] = useState<IUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [pollingIds, setPollingIds] = useState<string[]>([]);
 
   const fetchUploads = useCallback(async () => {
     setLoading(true);
@@ -41,6 +45,7 @@ export default function UploadList({ user }: { user: User }) {
   }, [fetchUploads]);
 
   const pollUploadStatus = async (uploadId: string) => {
+    setPollingIds((prev) => [...prev, uploadId]);
     let polling = true;
     while (polling) {
       try {
@@ -57,6 +62,7 @@ export default function UploadList({ user }: { user: User }) {
         fetchUploads();
       }
     }
+    setPollingIds((prev) => prev.filter((id) => id !== uploadId));
   };
 
   const handleUpload = async (
@@ -64,7 +70,9 @@ export default function UploadList({ user }: { user: User }) {
     name: string,
     description: string,
     is_global: boolean,
-    thread_id?: string | null
+    thread_id?: string | null,
+    chunkSize: number = 1000,
+    chunkOverlap: number = 100
   ) => {
     try {
       const initRes = await initiateUpload({
@@ -75,6 +83,8 @@ export default function UploadList({ user }: { user: User }) {
           name,
           description,
           thread_id: is_global ? null : thread_id,
+          chunk_size: chunkSize,
+          chunk_overlap: chunkOverlap,
         },
       });
 
@@ -154,14 +164,20 @@ export default function UploadList({ user }: { user: User }) {
   };
 
   const handleDelete = async (up: IUpload) => {
-    try {
-      await deleteUpload({ user, uploadId: up.id });
-      toast({ type: 'success', description: 'File deleted' });
-      fetchUploads();
-    } catch (err) {
-      console.error('Delete failed:', err);
-      toast({ type: 'error', description: 'Delete failed' });
-    }
+    setDeletingIds((prev) => [...prev, up.id]);
+    // Wait for fade-out animation (300ms)
+    setTimeout(async () => {
+      try {
+        await deleteUpload({ user, uploadId: up.id });
+        toast({ type: 'success', description: 'File deleted' });
+        fetchUploads();
+      } catch (err) {
+        console.error('Delete failed:', err);
+        toast({ type: 'error', description: 'Delete failed' });
+      } finally {
+        setDeletingIds((prev) => prev.filter((id) => id !== up.id));
+      }
+    }, 300);
   };
 
   return (
@@ -185,12 +201,38 @@ export default function UploadList({ user }: { user: User }) {
           </div>
         ) : (
           <ul className="grid gap-4 pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
-            {uploads.map((up) => (
-              <li key={up.id} className="rounded-lg border p-4 flex flex-col gap-2">
+            {[...uploads]
+              .sort((a, b) => {
+                const tA = a.lastModified ? new Date(a.lastModified).getTime() : 0;
+                const tB = b.lastModified ? new Date(b.lastModified).getTime() : 0;
+                return tB - tA;
+              })
+              .map((up) => (
+                <li
+                  key={up.id}
+                  className={`rounded-lg border p-4 flex flex-col gap-2 transition-opacity duration-300 ${deletingIds.includes(up.id) ? 'opacity-0' : 'opacity-100'}`}
+                >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-semibold">
-                    {up.threadId ? <AttachmentIcon /> : <GlobeIcon />}
+                    <Image
+                      src={`/images/filetypes/${['csv','docx','html','json','pdf','ppt','txt','xls'].includes(up.fileType?.toLowerCase()) ? up.fileType.toLowerCase() : 'question'}.png`}
+                      alt={up.fileType || 'file'}
+                      width={24}
+                      height={24}
+                      className="mr-1"
+                    />
                     <span className="truncate">{up.name}</span>
+                    {up.threadId ? (
+                      <Link
+                        href={`/chat/${up.threadId}`}
+                        className="ml-2 px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-xs font-medium hover:underline cursor-pointer"
+                        title="Go to thread"
+                      >
+                        Private
+                      </Link>
+                    ) : (
+                      <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-800 text-xs font-medium">Global</span>
+                    )}
                   </div>
                   {up.status === 'Uploading' ? (
                     <Button
@@ -212,7 +254,24 @@ export default function UploadList({ user }: { user: User }) {
                     </Button>
                   ) : null}
                 </div>
-                <p className="text-sm text-muted-foreground truncate">{up.description}</p>
+                <p
+                  className="text-sm text-muted-foreground line-clamp-2 break-words"
+                  title={up.description}
+                  style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                >
+                  {up.description}
+                </p>
+                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
+                  <span>
+                    <span className="font-medium">Time (UTC):</span> {up.lastModified ? new Date(up.lastModified).toLocaleString('en-US', { hour12: false }) : '-'}
+                  </span>
+                  <span>
+                    <span className="font-medium">Chunk size:</span> {up.chunkSize}
+                  </span>
+                  <span>
+                    <span className="font-medium">Chunk overlap:</span> {up.chunkOverlap}
+                  </span>
+                </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Status:</span>
                 <span
@@ -231,10 +290,19 @@ export default function UploadList({ user }: { user: User }) {
                   title={up.status}
                 />
                 <span className="text-xs">
-                  {up.status === 'Uploading' && 'Uploading'}
-                  {up.status === 'Ingesting' && 'Ingesting'}
-                  {up.status === 'Completed' && 'Completed'}
-                  {up.status === 'Failed' && 'Failed'}
+                  {pollingIds.includes(up.id) ? (
+                    <svg className="inline w-4 h-4 animate-spin text-blue-500 ml-1" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                  ) : (
+                    <>
+                      {up.status === 'Uploading' && 'Uploading'}
+                      {up.status === 'Ingesting' && 'Ingesting'}
+                      {up.status === 'Completed' && 'Completed'}
+                      {up.status === 'Failed' && 'Failed'}
+                    </>
+                  )}
                 </span>
               </div>
               </li>
