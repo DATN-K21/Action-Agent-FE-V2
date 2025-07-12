@@ -2,7 +2,7 @@
 
 import { getUserProfile, IUserProfile } from '@/services/user-service'
 import type { User } from 'next-auth'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { createPaymentIntent } from '@/services/payment-service';
@@ -37,6 +37,38 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
   const [depositAmount, setDepositAmount] = useState('10');
   const [depositLoading, setDepositLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // Polling for credits after payment
+  const [polling, setPolling] = useState(false);
+  const [pollAttempts, setPollAttempts] = useState(0);
+  const maxPollAttempts = 10;
+  const pollInterval = 2000; // 5 seconds
+  const [initialBalance, setInitialBalance] = useState<number | null>(null);
+  const pollAttemptsRef = React.useRef(0);
+  useEffect(() => { pollAttemptsRef.current = pollAttempts }, [pollAttempts]);
+
+  // Polling effect in parent (must not be nested)
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (polling && pollAttempts < maxPollAttempts) {
+      interval = setInterval(async () => {
+        const currentAttempt = pollAttemptsRef.current + 1;
+        console.log('[Polling] Fetching user profile for credits update, attempt:', currentAttempt);
+        const updated = await getUserProfile(user);
+        if (initialBalance !== null && updated.balance !== initialBalance) {
+          setPolling(false);
+          setPollAttempts(maxPollAttempts); // stop polling
+          setProfile(updated);
+          toast({ type: 'success', description: 'Payment succeeded' });
+        } else {
+          setPollAttempts((prev) => prev + 1);
+          if (currentAttempt >= maxPollAttempts) {
+            setPolling(false);
+          }
+        }
+      }, pollInterval);
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [polling, pollAttempts, initialBalance, user]);
 
   useEffect(() => {
     if (!open) return;
@@ -94,32 +126,6 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
     const [processing, setProcessing] = useState(false);
     const [isFormReady, setIsFormReady] = useState(false);
 
-    // For polling credits after payment
-    const [polling, setPolling] = useState(false);
-    const [pollAttempts, setPollAttempts] = useState(0);
-    const maxPollAttempts = 10;
-    const pollInterval = 2000;
-    const [initialBalance, setInitialBalance] = useState<number | null>(null);
-
-    useEffect(() => {
-      let interval: NodeJS.Timeout | null = null;
-      if (polling && pollAttempts < maxPollAttempts) {
-        interval = setInterval(async () => {
-          setPollAttempts((prev) => prev + 1);
-          const updated = await getUserProfile(user);
-          if (initialBalance !== null && updated.balance !== initialBalance) {
-            setPolling(false);
-            setPollAttempts(maxPollAttempts); // stop polling
-            setProfile(updated);
-            toast({ type: 'success', description: 'Credits updated!' });
-          }
-          if (pollAttempts + 1 >= maxPollAttempts) {
-            setPolling(false);
-          }
-        }, pollInterval);
-      }
-      return () => { if (interval) clearInterval(interval); };
-    }, [polling, pollAttempts, initialBalance, user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -133,13 +139,14 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
       if (error) {
         toast({ type: 'error', description: error.message || 'Payment failed' });
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        toast({ type: 'success', description: 'Payment successful!' });
+        toast({ type: 'success', description: 'Waiting for payment!' });
         setDepositDialogOpen(false);
         setClientSecret(null);
-        // Start polling for credits update
+        // Start polling for credits update in parent
         setInitialBalance(profile?.balance ?? null);
         setPollAttempts(0);
-        setPolling(true);
+        pollAttemptsRef.current = 0;
+        setTimeout(() => setPolling(true), 500); // ensure polling starts after dialog closes
       }
       setProcessing(false);
     };
@@ -242,6 +249,12 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
                   }>
                     {profile?.balance != null ? Math.round(profile.balance) : '0'}
                   </span>
+                  {polling && (
+                    <span className="ml-2">
+                      {/* @ts-ignore */}
+                      {require('./icon').Icons.spinner({ className: 'inline-block animate-spin w-4 h-4 text-pink-500' })}
+                    </span>
+                  )}
                 </span>
                 <Button size="sm" variant="outline" className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-medium" type="button" onClick={handleDeposit}>
                   <img src="/images/profile/atm.png" alt="ATM Icon" className="w-4 h-4" />
@@ -249,7 +262,7 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
                 </Button>
               </div>
               <div className="text-xs text-gray-500 mt-1 text-right">
-                1,000,000 credits = 4.99$
+                1,000,000 credits = 1.00$
               </div>
             </div>
           </div>
