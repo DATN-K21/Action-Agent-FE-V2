@@ -18,6 +18,7 @@ import { toast } from '@/components/toast';
 import { MultiSelect } from './multiple-select';
 import { IConnectedExtension } from '@/types/extension';
 import { IMCP } from '@/types/mcp';
+import { cn } from '@/lib/utils';
 
 type EditAssistantDialogProps = {
   open: boolean;
@@ -27,6 +28,11 @@ type EditAssistantDialogProps = {
   extensionOptions?: IConnectedExtension[];
   mcpOptions?: IMCP[];
   onAssistantUpdated?: () => void;
+};
+
+type ValidationErrors = {
+  name?: string;
+  description?: string;
 };
 
 export function EditAssistantDialog({
@@ -43,6 +49,7 @@ export function EditAssistantDialog({
   const [mcpIds, setMcpIds] = useState<string[]>([]);
   const [extensionIds, setExtensionIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     if (assistant) {
@@ -77,14 +84,45 @@ export function EditAssistantDialog({
     }));
   }, [mcpOptions]);
 
+  const validateForm = (): boolean => {
+    const newErrors: ValidationErrors = {};
+
+    if (!name.trim()) {
+      newErrors.name = 'Assistant name is required';
+    } else if (name.trim().length < 3) {
+      newErrors.name = 'Assistant name must be at least 3 characters';
+    }
+
+    if (!description.trim()) {
+      newErrors.description = 'Description is required';
+    } else if (description.trim().length < 3) {
+      newErrors.description = 'Description must be at least 3 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNameChange = (value: string) => {
+    setName(value);
+    // Clear name error when user starts typing
+    if (errors.name) {
+      setErrors((prev) => ({ ...prev, name: undefined }));
+    }
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+    // Clear description error when user starts typing
+    if (errors.description) {
+      setErrors((prev) => ({ ...prev, description: undefined }));
+    }
+  };
+
   const handleSave = async () => {
     if (!assistant) return;
 
-    if (!name) {
-      toast({
-        description: 'Please provide a name for your assistant.',
-        type: 'error',
-      });
+    if (!validateForm()) {
       return;
     }
 
@@ -92,8 +130,8 @@ export function EditAssistantDialog({
 
     try {
       const payload = {
-        name,
-        description,
+        name: name.trim(),
+        description: description.trim(),
         supportUnits: ['searchbot', 'ragbot'],
         mcpIds,
         extensionIds,
@@ -131,6 +169,7 @@ export function EditAssistantDialog({
     setDescription('');
     setMcpIds([]);
     setExtensionIds([]);
+    setErrors({});
     onOpenChange(false);
   };
 
@@ -154,10 +193,14 @@ export function EditAssistantDialog({
             <Input
               id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="col-span-3"
+              onChange={(e) => handleNameChange(e.target.value)}
+              className={cn(
+                'col-span-3',
+                errors.name && 'border-red-500 focus-visible:ring-red-500',
+              )}
               placeholder="Assistant name"
             />
+            {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
           </div>
 
           {/* Description */}
@@ -168,10 +211,16 @@ export function EditAssistantDialog({
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="col-span-3"
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              className={cn(
+                'col-span-3',
+                errors.description && 'border-red-500 focus-visible:ring-red-500',
+              )}
               placeholder="What does this assistant do?"
             />
+            {errors.description && (
+              <p className="text-sm text-red-500 mt-1">{errors.description}</p>
+            )}
           </div>
 
           {/* Extensions or MCP Servers */}

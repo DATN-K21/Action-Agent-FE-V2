@@ -151,7 +151,6 @@ export function MCPServerDialog({
     }
   };
 
-  console.log('Form Values:', formValues);
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] w-[95%] max-w-full mx-auto">
