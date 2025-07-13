@@ -1,4 +1,4 @@
-import { HttpMethod, USER_ENDPOINT } from '@/constants/response-constant';
+import { HttpMethod, USER_ENDPOINT, AI_ENDPOINT_V1 } from '@/constants/response-constant';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import { User } from 'next-auth';
 
@@ -8,7 +8,10 @@ export interface IUserProfile {
   username: string;
   avatar: string;
   fullname: string;
-  balance: number;
+}
+
+export interface IUserCredits {
+  credits: number;
 }
 
 /**
@@ -33,6 +36,18 @@ export const getUserProfile = async (user: User): Promise<IUserProfile> => {
     username: profile.username || '',
     avatar,
     fullname: profile.fullname || '',
-    balance: typeof profile.balance === 'number' ? profile.balance : 0,
   };
+};
+
+/**
+ * Fetch user balance (credits) by userId.
+ */
+export const getUserCredits = async (user: User): Promise<number> => {
+  const headers = createUserAuthHeaders(user);
+  const response = await sendRequest<{ data: IUserCredits }>({
+    url: `${AI_ENDPOINT_V1}/user/${user.id}/credits`,
+    method: HttpMethod.GET,
+    headers,
+  });
+  return response.data?.credits ?? 0;
 };

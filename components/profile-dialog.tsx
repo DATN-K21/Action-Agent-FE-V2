@@ -38,27 +38,29 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
   const [depositAmount, setDepositAmount] = useState('10');
   const [depositLoading, setDepositLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // Credits state
+  const [credits, setCredits] = useState<number>(0);
   // Polling for credits after payment
   const [polling, setPolling] = useState(false);
   const [pollAttempts, setPollAttempts] = useState(0);
   const maxPollAttempts = 10;
-  const pollInterval = 2000; // 5 seconds
-  const [initialBalance, setInitialBalance] = useState<number | null>(null);
+  const pollInterval = 2000; // 2 seconds
+  const [initialCredits, setInitialCredits] = useState<number | null>(null);
   const pollAttemptsRef = React.useRef(0);
   useEffect(() => { pollAttemptsRef.current = pollAttempts }, [pollAttempts]);
 
-  // Polling effect in parent (must not be nested)
+  // Polling effect for credits after payment
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (polling && pollAttempts < maxPollAttempts) {
       interval = setInterval(async () => {
         const currentAttempt = pollAttemptsRef.current + 1;
-        console.log('[Polling] Fetching user profile for credits update, attempt:', currentAttempt);
-        const updated = await getUserProfile(user);
-        if (initialBalance !== null && updated.balance !== initialBalance) {
+        console.log('[Polling] Fetching user credits for update, attempt:', currentAttempt);
+        const updatedCredits = await require('@/services/user-service').getUserCredits(user);
+        if (initialCredits !== null && updatedCredits !== initialCredits) {
           setPolling(false);
           setPollAttempts(maxPollAttempts); // stop polling
-          setProfile(updated);
+          setCredits(updatedCredits);
           toast({ type: 'success', description: 'Payment succeeded' });
         } else {
           setPollAttempts((prev) => prev + 1);
@@ -69,7 +71,7 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
       }, pollInterval);
     }
     return () => { if (interval) clearInterval(interval); };
-  }, [polling, pollAttempts, initialBalance, user]);
+  }, [polling, pollAttempts, initialCredits, user]);
 
   useEffect(() => {
     if (!open) return;
@@ -78,13 +80,17 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
       return;
     }
     setLoading(true);
-    getUserProfile(user)
-      .then((data) => {
+    Promise.all([
+      getUserProfile(user),
+      require('@/services/user-service').getUserCredits(user)
+    ])
+      .then(([data, creditsValue]) => {
         setProfile(data);
         setName(data.username || '');
+        setCredits(creditsValue);
       })
       .catch(() => {
-        toast({ type: 'error', description: 'Failed to fetch profile' });
+        toast({ type: 'error', description: 'Failed to fetch profile or credits' });
       })
       .finally(() => setLoading(false));
   }, [user, open]);
@@ -144,7 +150,7 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
         setDepositDialogOpen(false);
         setClientSecret(null);
         // Start polling for credits update in parent
-        setInitialBalance(profile?.balance ?? null);
+        setInitialCredits(credits ?? null);
         setPollAttempts(0);
         pollAttemptsRef.current = 0;
         setTimeout(() => setPolling(true), 500); // ensure polling starts after dialog closes
@@ -246,11 +252,11 @@ export function ProfileDialog({ user, open, onOpenChange }: ProfileDialogProps) 
                 <span className="flex items-center gap-2 text-base">
                   <Image src="/images/profile/atm.png" alt="ATM Icon" width={20} height={20} className="size-5 inline-block" />
                   <span className={
-                    profile?.balance != null && Math.round(profile.balance) < 0
+                    credits < 0
                       ? 'text-red-600 font-semibold'
                       : 'text-green-700 font-semibold'
                   }>
-                    {profile?.balance != null ? Math.round(profile.balance) : '0'}
+                    {Math.round(credits)}
                   </span>
                   {polling && (
                     <span className="ml-2">
