@@ -45,7 +45,7 @@ export function Chat(props: ChatProps) {
     const teamId =
       assistant?.teams?.find((team) => team.workflow_type === TeamType.CHATBOT)?.id || '';
     setTeamId(teamId);
-  }, [assistants, assistantId, setAssistant, setTeamId]);
+  }, [id, assistants, assistantId, setAssistant, setTeamId]);
 
   return (
     <>

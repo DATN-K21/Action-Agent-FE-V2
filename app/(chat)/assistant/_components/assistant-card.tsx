@@ -14,6 +14,7 @@ import { ThreadType } from '@/constants/extension-constant';
 import { toast } from '@/components/toast';
 import { Icons } from '@/components/icon';
 import { User } from 'next-auth';
+import { BotIcon } from '@/components/icons';
 
 type AssistantCardProps = {
   user: User;
@@ -58,8 +59,7 @@ export function AssistantCard({ user, assistant, onEdit, onDelete }: AssistantCa
     >
       <div className="mb-8 flex items-center justify-between">
         <div className={`flex size-10 items-center justify-center rounded-lg bg-muted p-2`}>
-          {/* <Bot /> */}
-          🤖
+          <BotIcon size={24} />
         </div>
 
         <div className={`flex size-10 items-center justify-center rounded-lg p-2`}>

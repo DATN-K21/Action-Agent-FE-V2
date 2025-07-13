@@ -2,20 +2,6 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import queryString from 'query-string';
 import { User } from 'next-auth';
-import { ThreadType } from '@/constants/extension-constant';
-import {
-  IconBrandNotion,
-  IconBrandSlack,
-  IconBrandGmail,
-  IconBrandYoutube,
-  IconBrandGoogleMaps,
-  IconCalendarEvent,
-  IconVideoPlus,
-  IconProps,
-  IconMessages,
-  IconServer,
-  IconRobotFace,
-} from '@tabler/icons-react';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -32,22 +18,6 @@ export function getLocalStorage(key: string) {
   }
   return [];
 }
-
-const threadIconMap: Record<string, React.FC<IconProps>> = {
-  [ThreadType.GMAIL]: IconBrandGmail,
-  [ThreadType.GOOGLE_CALENDAR]: IconCalendarEvent,
-  [ThreadType.GOOGLE_MAP]: IconBrandGoogleMaps,
-  [ThreadType.GOOGLE_MEET]: IconVideoPlus,
-  [ThreadType.NOTION]: IconBrandNotion,
-  [ThreadType.SLACK]: IconBrandSlack,
-  [ThreadType.YOUTUBE]: IconBrandYoutube,
-  [ThreadType.MCP]: IconServer,
-  [ThreadType.ASSISTANT]: IconRobotFace,
-};
-
-export const getThreadIcon = (threadType: string): React.FC<IconProps> => {
-  return threadIconMap[threadType] || IconMessages;
-};
 
 export function createUserAuthHeaders(user: User): Record<string, string> {
   const { accessToken } = user;
@@ -94,7 +64,7 @@ export const sendRequest = async <T>(props: IRequest) => {
     if (res.ok) {
       return res.json() as T;
     } else {
-      console.log(`[sendRequest] Not OK. Response=${res.statusText}`)
+      console.log(`[sendRequest] Not OK. Response=${res.statusText}`);
       return res.json().then(function (json) {
         throw {
           status: json.status || 500,

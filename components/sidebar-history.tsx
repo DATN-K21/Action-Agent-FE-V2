@@ -36,11 +36,9 @@ import { IThread } from '@/types/ai';
 import { EditIcon } from 'lucide-react';
 import { toast } from '@/components/toast';
 import { useThreadStore } from '@/store/thread-store';
-import { ThreadType } from '@/constants/extension-constant';
 import useChatStore from '@/store/chat-store';
 import { ThreadListSkeleton } from '@/components/skeleton/thread-list-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getThreadIcon } from '@/lib/utils';
 
 function SidebarHistory({ user }: { user: User }) {
   const threads = useThreadStore((state) => state.threads);
@@ -151,7 +149,7 @@ function SidebarHistory({ user }: { user: User }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            <div ref={scrollContainerRef} className="overflow-y-auto pr-0.5 max-w-[220px]">
+            <div ref={scrollContainerRef} className="overflow-y-auto">
               {threads &&
                 (() => {
                   const groupedThreads = groupThreadsByDate();
@@ -242,9 +240,7 @@ function SidebarHistory({ user }: { user: User }) {
 
                       {groupedThreads.older.length > 0 && (
                         <>
-                          <div className="p-1 text-xs text-sidebar-foreground/50 mt-6">
-                            Older
-                          </div>
+                          <div className="p-1 text-xs text-sidebar-foreground/50 mt-6">Older</div>
                           {groupedThreads.older.map((thread) => (
                             <ThreadItem
                               key={thread.id}

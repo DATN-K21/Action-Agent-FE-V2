@@ -17,7 +17,7 @@ function MessageContainer(props: MessageNameProps) {
   const { status, message, isLastMessage } = props;
 
   const title = useMemo<string>((): string => {
-    let name = message?.name || 'Unknown';
+    let name = message?.name || 'Assistant';
 
     // Remove UUID patterns from the name
     const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;

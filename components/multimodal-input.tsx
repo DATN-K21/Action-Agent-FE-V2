@@ -52,11 +52,13 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   // Track files being uploaded: { file, status, uploadId }
-  const [uploadingFiles, setUploadingFiles] = useState<Array<{
-    file: File;
-    status: 'Uploading' | 'Ingesting' | 'Completed' | 'Failed';
-    uploadId?: string;
-  }>>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<
+    Array<{
+      file: File;
+      status: 'Uploading' | 'Ingesting' | 'Completed' | 'Failed';
+      uploadId?: string;
+    }>
+  >([]);
 
   const isAdvancedAssistant = assistant?.assistantType === AssistantType.ADVANCED_ASSISTANT;
 
@@ -124,10 +126,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       }
 
       // Add to uploadingFiles as Uploading
-      setUploadingFiles((prev) => [
-        ...prev,
-        { file, status: 'Uploading' },
-      ]);
+      setUploadingFiles((prev) => [...prev, { file, status: 'Uploading' }]);
 
       // Set default fields
       const name = file.name;
@@ -188,7 +187,8 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         // 4. Poll for status
         const pollStatus = async () => {
           let status: 'Uploading' | 'Ingesting' | 'Completed' | 'Failed' = 'Uploading';
-          for (let i = 0; i < 30; i++) { // poll up to 30 times (about 30s)
+          for (let i = 0; i < 30; i++) {
+            // poll up to 30 times (about 30s)
             const res = await getUploadStatus({ user, uploadId: initRes.uploadId });
             status = res.uploadStatus;
             if (status === 'Completed' || status === 'Failed') break;
@@ -223,7 +223,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         setUploadingFiles((prev) => prev.filter((f) => f.file !== file));
       }
     },
-    [threadId, user]
+    [threadId, user],
   );
 
   const submitForm = useCallback(async () => {
@@ -250,6 +250,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     } catch (error) {
       console.error('Error in stream:', error);
       setInput('');
+      setStatus(ChatStatus.ERROR);
       toast({
         type: 'error',
         description: 'Error sending message, please try again!',
@@ -279,15 +280,18 @@ function PureMultimodalInput(props: MultimodalInputProps) {
     width,
   ]);
 
-  const handleFileChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    for (const file of files) {
-      uploadFile(file);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [uploadFile]);
+  const handleFileChange = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
+      for (const file of files) {
+        uploadFile(file);
+      }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    },
+    [uploadFile],
+  );
 
   function handleRemoveFile(filename: string): void {
     setUploadingFiles((prev) => prev.filter((f) => f.file.name !== filename));
@@ -411,10 +415,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
           className="flex flex-row gap-2 overflow-x-scroll items-end"
         >
           {attachments.map((attachment) => (
-            <PreviewAttachment
-              key={attachment.name}
-              attachment={attachment}
-            />
+            <PreviewAttachment key={attachment.name} attachment={attachment} />
           ))}
           {uploadingFiles
             .filter((f) => !attachments.some((a) => a.name === f.file.name))
@@ -591,7 +592,12 @@ function PureMultimodalInput(props: MultimodalInputProps) {
           (status === ChatStatus.STREAMING || status == ChatStatus.SUBMITTED ? (
             <StopButton stop={stop} />
           ) : (
-            <SendButton input={input} submitForm={submitForm} uploadQueue={[]} disabled={uploadingFiles.some(f => f.status !== 'Completed')} />
+            <SendButton
+              input={input}
+              submitForm={submitForm}
+              uploadQueue={[]}
+              disabled={uploadingFiles.some((f) => f.status !== 'Completed')}
+            />
           ))}
       </div>
     </div>

@@ -209,7 +209,7 @@ const useChatStore = create<ChatStore>()(
       } catch (error) {
         console.error('Error in handleStreamTeam:', error);
         set({ status: ChatStatus.ERROR });
-        throw error;
+        throw new Error('Error in handleStreamTeam');
       }
     },
 
@@ -316,7 +316,7 @@ const useChatStore = create<ChatStore>()(
       } catch (error) {
         console.error('Error handling interrupt:', error);
         set({ status: ChatStatus.ERROR });
-        throw error;
+        throw new Error('Error in handleInterruptTeam');
       }
     },
 
@@ -328,7 +328,6 @@ const useChatStore = create<ChatStore>()(
     // Reload chat
     reloadChat: () => {
       set({
-        assistant: null,
         messages: [],
         status: ChatStatus.READY,
         threadId: '',
