@@ -9,6 +9,7 @@ export enum MessageType {
   HUMAN = 'human',
   TOOL = 'tool',
   INTERRUPT = 'interrupt',
+  ERROR = 'error',
 }
 
 export enum ChatStatus {

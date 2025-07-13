@@ -1,7 +1,7 @@
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
 import { motion } from 'framer-motion';
-import { SparklesIcon } from 'lucide-react';
+import { SparklesIcon, AlertTriangleIcon } from 'lucide-react';
 import { User } from 'next-auth';
 import { useMemo } from 'react';
 import { PreviewMessage } from './message';
@@ -42,6 +42,7 @@ function MessageContainer(props: MessageNameProps) {
       .join(' ');
   }, [message?.name]);
 
+  // Handle human messages
   if (message.type === MessageType.HUMAN) {
     return (
       <PreviewMessage
@@ -51,10 +52,75 @@ function MessageContainer(props: MessageNameProps) {
     );
   }
 
+  // Handle specific tool calls like KnowledgeBase
+  if (message.type === MessageType.TOOL 
+  && message.name === 'KnowledgeBase') {
+    const retrievedMessage = message.tool_output ?? "";
+    return (
+      <motion.div
+        data-testid={`message-${message.type}`}
+        className="w-full mx-auto max-w-4xl group/message"
+        initial={{ y: 5, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        data-role={message.type}
+      >
+        <div className="flex justify-between items-center gap-3 w-full rounded-lg cursor-pointer mb-2">
+          <div className="flex items-center gap-2">
+            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
+              <div className="translate-y-px">
+                <SparklesIcon size={14} />
+              </div>
+            </div>
+            <span className="font-semibold text-base">{title}</span>
+          </div>
+        </div>
+        <div>
+          <PreviewMessage
+            message={{ ...message, content: retrievedMessage }}
+            isLoading={status === ChatStatus.STREAMING && isLastMessage}
+          />
+        </div>
+      </motion.div>
+    )
+  }
+
+  // Handle error messages
+  if (message.type === MessageType.ERROR) {
+    const errorMessage = message.content || 'An error occurred';
+    return (
+      <motion.div
+        data-testid={`message-${message.type}`}
+        className="w-full mx-auto max-w-4xl group/message"
+        initial={{ y: 5, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        data-role={message.type}
+      >
+        <div className="flex justify-between items-center gap-3 w-full rounded-lg cursor-pointer mb-2">
+          <div className="flex items-center gap-2">
+            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
+              <div className="translate-y-px">
+                <AlertTriangleIcon size={14} />
+              </div>
+            </div>
+            <span className="font-semibold text-base">{title}</span>
+          </div>
+        </div>
+        <div className="text-red-500">
+          <PreviewMessage
+            message={{ ...message, content: errorMessage }}
+            isLoading={status === ChatStatus.STREAMING && isLastMessage}
+          />
+        </div>
+      </motion.div>
+    );
+  }
+
+  // If the message has no content, return null to avoid rendering empty messages
   if (!message.content) {
     return null;
   }
 
+  // Render the message
   return (
     <motion.div
       data-testid={`message-${message.type}`}
