@@ -132,8 +132,8 @@ export default function MCPServerTable(props: { user: User }) {
         payload: {
           mcpName: server.mcpName,
           url: server.url,
-          transport: 'sse',
           description: server.description, // Use description if provided
+          transport: server.transport || 'streamable_http',
         },
       });
 
@@ -227,7 +227,7 @@ export default function MCPServerTable(props: { user: User }) {
       accessorKey: 'url',
       header: 'URL',
       cell: ({ row }) => (
-        <div className="truncate max-w-[100px] sm:max-w-[100px] text-sm md:text-base">
+        <div className="truncate max-w-[100px] sm:max-w-[200px] text-sm md:text-base">
           {row.getValue('url')}
         </div>
       ),

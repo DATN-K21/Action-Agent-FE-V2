@@ -19,7 +19,7 @@ export interface UpdateMCPParams {
   payload: {
     mcpName: string;
     url: string;
-    transport: 'sse';
+    transport: string; // Transport type, e.g., 'streamable_http', 'sse'
     description?: string; // Optional field for description
   };
 }

@@ -141,7 +141,7 @@ export function AddAssistantDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="sm:max-w-[425px] w-[95%] max-w-full mx-auto"
+        className="sm:max-w-[600px] w-[95%] max-w-full mx-auto"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -151,7 +151,7 @@ export function AddAssistantDialog({
 
         <div className="flex flex-col justify-center items-center gap-4 px-6">
           {/* Name */}
-          <div className="grid w-full max-w-sm items-center gap-1.5">
+          <div className="grid w-full max-w-md items-center gap-1.5">
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
@@ -163,7 +163,7 @@ export function AddAssistantDialog({
           </div>
 
           {/* Description */}
-          <div className="grid w-full max-w-sm items-center gap-1.5">
+          <div className="grid w-full max-w-md items-center gap-1.5">
             <Label htmlFor="description" className="pt-1.5">
               Description
             </Label>
@@ -177,14 +177,14 @@ export function AddAssistantDialog({
           </div>
 
           {/* Extensions or MCP Servers */}
-          <div className="grid w-full max-w-sm items-center gap-1.5">
+          <div className="grid w-full max-w-md items-center gap-1.5">
             <Label className="pt-1.5">Extensions</Label>
             <>
               <MultiSelect
                 options={extensionsChoice}
                 values={extensionIds}
                 onChange={setExtensionIds}
-                className="w-full max-w-sm"
+                className="w-full max-w-md"
               />
               {extensionsChoice.length === 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
@@ -198,7 +198,7 @@ export function AddAssistantDialog({
                 options={mcpChoice}
                 values={mcpIds}
                 onChange={setMcpIds}
-                className="w-full max-w-sm"
+                className="w-full max-w-md"
               />
               {mcpChoice.length === 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
