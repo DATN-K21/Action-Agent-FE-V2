@@ -19,6 +19,8 @@ export interface IAssistant {
   createdAt?: string;
   updatedAt?: string;
   teams?: ITeamProps[];
+  interrupt?: boolean;
+  askHuman?: boolean;
 }
 
 export interface CreateAssistantRequest {
@@ -28,6 +30,8 @@ export interface CreateAssistantRequest {
   mcpIds?: string[];
   exensionIds?: string[];
   supportUnits?: string[];
+  askHuman?: boolean;
+  interrupt?: boolean;
 }
 
 export interface UpdateAssistantRequest {
@@ -36,6 +40,8 @@ export interface UpdateAssistantRequest {
   type?: AssistantType;
   mcpIds?: string[];
   extensionIds?: string[];
+  askHuman?: boolean;
+  interrupt?: boolean;
 }
 
 export interface IMessageInterruptPayload {

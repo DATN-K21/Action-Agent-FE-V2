@@ -20,6 +20,11 @@ import { IMCP } from '@/types/mcp';
 import { IConnectedExtension } from '@/types/extension';
 import { AssistantType } from '@/constants/assistant-constant';
 import { useAssistantStore } from '@/store/assistant-store';
+import * as Accordion from '@radix-ui/react-accordion';
+import { Switch } from '@/components/ui/switch';
+import { Info } from 'lucide-react';
+import { Tooltip, TooltipContent } from '@/components/ui/tooltip';
+import { TooltipTrigger } from '@radix-ui/react-tooltip';
 
 type AddAssistantDialogProps = {
   open: boolean;
@@ -44,6 +49,8 @@ export function AddAssistantDialog({
   const [description, setDescription] = useState('');
   const [mcpIds, setMcpIds] = useState<string[]>([]);
   const [extensionIds, setExtensionIds] = useState<string[]>([]);
+  const [isInterrupt, setIsInterrupt] = useState(true);
+  const [isAskHuman, setIsAskHuman] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const fetchAssistants = useAssistantStore((state) => state.fetchAssistants);
 
@@ -93,6 +100,8 @@ export function AddAssistantDialog({
         supportUnits: ['searchbot', 'ragbot'],
         extensionIds,
         mcpIds,
+        interrupt: isInterrupt,
+        askHuman: isAskHuman,
       };
 
       await createAssistant({
@@ -207,6 +216,68 @@ export function AddAssistantDialog({
               )}
             </>
           </div>
+
+          {/* Advanced Settings */}
+          <Accordion.Root type="single" collapsible className="w-full max-w-md">
+            <Accordion.Item value="advanced" className="border rounded">
+              <Accordion.Header>
+                <Accordion.Trigger className="w-full flex items-center justify-between p-2 text-left text-sm">
+                  Advanced settings
+                  <span className="ml-2">▼</span>
+                </Accordion.Trigger>
+              </Accordion.Header>
+              <Accordion.Content className="px-2 pb-2 flex flex-row gap-2 justify-evenly">
+                <div className="flex flex-row gap-2">
+                  <Label htmlFor="chunk-size" className="flex justify-center items-center">
+                    Interrupt
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={15} />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p>
+                        Allow the assistant to interrupt its own response if new user input arrives.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Switch
+                    id="interrupt"
+                    checked={isInterrupt} // Replace with actual state if needed
+                    onCheckedChange={(checked) => {
+                      setIsInterrupt(checked);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-row gap-2">
+                  <Label htmlFor="chunk-overlap" className="flex justify-center items-center">
+                    Ask human
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info size={15} />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p>
+                        Enable this to let the assistant ask for human help when it cannot answer a
+                        question.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Switch
+                    id="ask-human"
+                    checked={isAskHuman} // Replace with actual state if needed
+                    onCheckedChange={(checked) => {
+                      setIsAskHuman(checked);
+                    }}
+                  />
+                </div>
+                {/* {advancedError && (
+                  <span className="text-xs text-red-500 mt-1">{advancedError}</span>
+                )} */}
+              </Accordion.Content>
+            </Accordion.Item>
+          </Accordion.Root>
         </div>
 
         <DialogFooter>
