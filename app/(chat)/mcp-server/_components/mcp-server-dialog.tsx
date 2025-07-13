@@ -15,6 +15,13 @@ import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { IMCP } from '@/types/mcp';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 
 interface MCPServerDialogProps {
   isOpen: boolean;
@@ -24,6 +31,17 @@ interface MCPServerDialogProps {
   defaultValues?: IMCP;
   isSubmitting?: boolean;
 }
+
+const optionTransport = [
+  {
+    value: 'streamable_http',
+    label: 'HTTP Streamable',
+  },
+  {
+    value: 'sse',
+    label: 'Server-Sent Events (SSE)',
+  },
+];
 
 export function MCPServerDialog({
   isOpen,
@@ -38,12 +56,14 @@ export function MCPServerDialog({
     mcpName: defaultValues?.mcpName || '',
     url: defaultValues?.url || '',
     description: defaultValues?.description || '',
+    transport: defaultValues?.transport || optionTransport[0].value,
   });
 
   const [errors, setErrors] = useState({
     mcpName: '',
     url: '',
     description: '',
+    transport: '',
   });
 
   // Update form values when defaultValues changes
@@ -54,6 +74,7 @@ export function MCPServerDialog({
         mcpName: defaultValues.mcpName,
         url: defaultValues.url,
         description: defaultValues.description || '',
+        transport: defaultValues.transport || optionTransport[0].value,
       });
     } else {
       setFormValues({
@@ -61,14 +82,17 @@ export function MCPServerDialog({
         mcpName: '',
         url: '',
         description: '',
+        transport: optionTransport[0].value,
       });
     }
     // Reset errors when dialog opens/closes
-    setErrors({ mcpName: '', url: '', description: '' });
+    setErrors({ mcpName: '', url: '', description: '', transport: '' });
   }, [defaultValues, isOpen]);
 
   // Handle form input and textarea changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormValues((prev) => ({
       ...prev,
@@ -85,7 +109,7 @@ export function MCPServerDialog({
   // Form validation
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { mcpName: '', url: '', description: '' };
+    const newErrors = { mcpName: '', url: '', description: '', transport: '' };
 
     if (!formValues.mcpName.trim()) {
       newErrors.mcpName = 'Server name is required';
@@ -109,6 +133,11 @@ export function MCPServerDialog({
       isValid = false;
     }
 
+    if (!formValues.transport) {
+      newErrors.transport = 'Transport is required';
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
@@ -125,7 +154,7 @@ export function MCPServerDialog({
   console.log('Form Values:', formValues);
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] w-[95%] max-w-full mx-auto">
+      <DialogContent className="sm:max-w-[600px] w-[95%] max-w-full mx-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-xl">{title}</DialogTitle>
@@ -150,7 +179,6 @@ export function MCPServerDialog({
                 {errors.mcpName && <span className="text-sm text-red-500">{errors.mcpName}</span>}
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
               <Label htmlFor="url" className="md:text-right">
                 URL
@@ -184,6 +212,41 @@ export function MCPServerDialog({
                 />
                 {errors.description && (
                   <span className="text-sm text-red-500">{errors.description}</span>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="transport" className="md:text-right">
+                Transport
+              </Label>
+              <div className="col-span-1 md:col-span-3 w-full">
+                <Select
+                  value={formValues.transport}
+                  onValueChange={(value) => {
+                    setFormValues((prev) => ({
+                      ...prev,
+                      transport: value,
+                    }));
+                    setErrors((prev) => ({
+                      ...prev,
+                      transport: '',
+                    }));
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger className={`w-full ${errors.transport ? 'border-red-500' : ''}`}>
+                    <SelectValue placeholder="Select transport" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {optionTransport.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.transport && (
+                  <span className="text-sm text-red-500">{errors.transport}</span>
                 )}
               </div>
             </div>
