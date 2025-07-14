@@ -5,6 +5,7 @@ import { SparklesIcon, AlertTriangleIcon } from 'lucide-react';
 import { User } from 'next-auth';
 import { useMemo } from 'react';
 import { PreviewMessage } from './message';
+import { toast } from '@/components/toast';
 
 export interface MessageNameProps {
   status: ChatStatus;
@@ -85,8 +86,12 @@ function MessageContainer(props: MessageNameProps) {
   }
 
   // Handle error messages
-  if (message.type === MessageType.ERROR) {
+  if (message.type == MessageType.ERROR) {
     const errorMessage = message.content || 'An error occurred';
+    toast({
+      type: 'error',
+      description: errorMessage,
+    });
     return (
       <motion.div
         data-testid={`message-${message.type}`}
