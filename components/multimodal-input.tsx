@@ -211,13 +211,12 @@ function PureMultimodalInput(props: MultimodalInputProps) {
               },
             ];
           });
-          
+
           toast({ type: 'success', description: `Upload ${file.name} completed` });
         } else {
           toast({ type: 'error', description: `Upload failed for ${file.name}` });
         }
         setIsProcessingUpload(false);
-
       } catch (error) {
         toast({ type: 'error', description: 'Error uploading file, please try again!' });
         setUploadingFiles((prev) => prev.filter((f) => f.file !== file));
@@ -609,6 +608,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
               submitForm={submitForm}
               uploadQueue={[]}
               disabled={
+                input.trim() === '' ||
                 uploadingFiles.some((f) => f.status !== 'Completed') ||
                 isProcessingUpload
               }
