@@ -1,11 +1,13 @@
+import { toast } from '@/components/toast';
 import { ChatStatus, MessageType } from '@/constants/ai-constant';
 import { IMessage } from '@/types/ai';
 import { motion } from 'framer-motion';
-import { SparklesIcon, AlertTriangleIcon } from 'lucide-react';
+import { AlertTriangleIcon, SparklesIcon } from 'lucide-react';
 import { User } from 'next-auth';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { PreviewMessage } from './message';
-import { toast } from '@/components/toast';
+
+const shownToastMessages = new Set<string>();
 
 export interface MessageNameProps {
   status: ChatStatus;
@@ -43,6 +45,19 @@ function MessageContainer(props: MessageNameProps) {
       .join(' ');
   }, [message?.name]);
 
+  // Handle error toast only once per unique error message
+  useEffect(() => {
+    if (message.type === MessageType.ERROR && message.id && !shownToastMessages.has(message.id)) {
+      const errorMessage = message.content || 'An error occurred';
+
+      shownToastMessages.add(message.id);
+      toast({
+        type: 'error',
+        description: errorMessage,
+      });
+    }
+  }, [message.type, message.content, message.id]);
+
   // Handle human messages
   if (message.type === MessageType.HUMAN) {
     return (
@@ -54,9 +69,8 @@ function MessageContainer(props: MessageNameProps) {
   }
 
   // Handle specific tool calls like KnowledgeBase
-  if (message.type === MessageType.TOOL 
-  && message.name === 'KnowledgeBase') {
-    const retrievedMessage = message.tool_output ?? "No information retrieved";
+  if (message.type === MessageType.TOOL && message.name === 'KnowledgeBase') {
+    const retrievedMessage = message.tool_output ?? 'No information retrieved';
     return (
       <motion.div
         data-testid={`message-${message.type}`}
@@ -82,16 +96,12 @@ function MessageContainer(props: MessageNameProps) {
           />
         </div>
       </motion.div>
-    )
+    );
   }
 
   // Handle error messages
   if (message.type == MessageType.ERROR) {
     const errorMessage = message.content || 'An error occurred';
-    toast({
-      type: 'error',
-      description: errorMessage,
-    });
     return (
       <motion.div
         data-testid={`message-${message.type}`}
