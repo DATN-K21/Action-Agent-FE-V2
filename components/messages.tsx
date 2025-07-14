@@ -41,7 +41,10 @@ function PureMessages({ status, messages, user }: MessagesProps) {
   }, [messages, scrollToBottom, isAtBottom, status]);
 
   return (
-    <div ref={containerRef} className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4">
+    <div
+      ref={containerRef}
+      className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4 px-4 md:px-0"
+    >
       {messages.length === 0 && <Overview />}
 
       {messages.map((message, index) => (
