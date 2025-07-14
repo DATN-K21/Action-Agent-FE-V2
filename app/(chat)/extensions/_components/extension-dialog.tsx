@@ -55,7 +55,7 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[350px] md:max-w-[680px] max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>{extension.name}</DialogTitle>
+          <DialogTitle className="uppercase">{extension.name}</DialogTitle>
           <DialogDescription>{`Integrate ${extension.name} into your chat!`}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">

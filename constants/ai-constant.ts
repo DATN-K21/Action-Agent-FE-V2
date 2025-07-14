@@ -35,4 +35,5 @@ export enum InterruptDecisionType {
   APPROVED = 'approved',
   REJECTED = 'rejected',
   UPDATE = 'update',
+  CONTINUE = 'continue',
 }
