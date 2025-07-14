@@ -2,7 +2,6 @@
 import { ChevronUp } from 'lucide-react';
 import type { User } from 'next-auth';
 import { signOut } from 'next-auth/react';
-import { useTheme } from 'next-themes';
 import { useState } from 'react';
 
 import { ProfileDialog } from '@/components/profile-dialog';
@@ -17,7 +16,6 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui
 import { logout } from '@/services/auth-service';
 
 export function SidebarUserNav({ user }: { user: User }) {
-  const { setTheme, theme } = useTheme();
   const [openProfile, setOpenProfile] = useState(false);
 
   const handleLogOut = async () => {
@@ -42,12 +40,6 @@ export function SidebarUserNav({ user }: { user: User }) {
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            >
-              {theme === 'light' ? 'Toggle dark mode' : 'Toggle light mode'}
-            </DropdownMenuItem>
             <DropdownMenuItem className="cursor-pointer" onSelect={() => setOpenProfile(true)}>
               My profile
             </DropdownMenuItem>
