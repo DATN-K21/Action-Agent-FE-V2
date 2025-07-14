@@ -219,7 +219,12 @@ export default function UploadList({ user }: { user: User }) {
                       height={24}
                       className="mr-1"
                     />
-                    <span className="truncate">{up.name}</span>
+                    <span
+                      className="truncate max-w-[10rem] overflow-hidden whitespace-nowrap cursor-pointer"
+                      title={up.name}
+                    >
+                      {up.name}
+                    </span>
                     {up.threadId ? (
                       <Link
                         href={`/chat/${up.threadId}`}

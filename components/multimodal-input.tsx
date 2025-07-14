@@ -21,7 +21,6 @@ import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { LogoSpinner } from './logo-spinner';
 
 interface MultimodalInputProps {
   user: User;
@@ -60,8 +59,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       uploadId?: string;
     }>
   >([]);
-
-  const [isProcessingUpload, setIsProcessingUpload] = useState(false);
 
   const isAdvancedAssistant = assistant?.assistantType === AssistantType.ADVANCED_ASSISTANT;
 
@@ -130,6 +127,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
       // Add to uploadingFiles as Uploading
       setUploadingFiles((prev) => [...prev, { file, status: 'Uploading' }]);
+      toast({ type: 'info', description: `Uploading ${file.name}, please do not refresh the page.` });
 
       // Set default fields
       const name = file.name;
@@ -185,7 +183,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         }
 
         // 4. Process upload and poll status
-        setIsProcessingUpload(true);
         await processUpload({ user, uploadId: initRes.uploadId });
 
         let status: 'Uploading' | 'Ingesting' | 'Completed' | 'Failed' = 'Uploading';
@@ -216,11 +213,9 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         } else {
           toast({ type: 'error', description: `Upload failed for ${file.name}` });
         }
-        setIsProcessingUpload(false);
       } catch (error) {
         toast({ type: 'error', description: 'Error uploading file, please try again!' });
         setUploadingFiles((prev) => prev.filter((f) => f.file !== file));
-        setIsProcessingUpload(false);
       }
     },
     [threadId, user],
@@ -395,11 +390,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
 
   return (
     <div className="relative w-full flex flex-col gap-4">
-      {isProcessingUpload && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
-          <LogoSpinner />
-        </div>
-      )}
       {messages.length === 0 && attachments.length === 0 && uploadQueue.length === 0 && (
         <SuggestedActions onSubmission={submitForm} />
       )}
@@ -451,7 +441,6 @@ function PureMultimodalInput(props: MultimodalInputProps) {
         )}
         rows={2}
         autoFocus
-        disabled={isProcessingUpload}
         onKeyDown={(event) => {
           if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
             event.preventDefault();
@@ -470,12 +459,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
       />
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton
-          fileInputRef={fileInputRef}
-          status={status}
-          threadId={threadId}
-          isProcessing={isProcessingUpload}
-        />
+        <AttachmentsButton fileInputRef={fileInputRef} status={status} threadId={threadId} />
         {isAdvancedAssistant && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -607,11 +591,7 @@ function PureMultimodalInput(props: MultimodalInputProps) {
               input={input}
               submitForm={submitForm}
               uploadQueue={[]}
-              disabled={
-                input.trim() === '' ||
-                uploadingFiles.some((f) => f.status !== 'Completed') ||
-                isProcessingUpload
-              }
+              disabled={uploadingFiles.some((f) => f.status !== 'Completed')}
             />
           ))}
       </div>
@@ -629,14 +609,12 @@ function PureAttachmentsButton({
   fileInputRef,
   status,
   threadId,
-  isProcessing,
 }: {
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
   status: ChatStatus;
   threadId?: string | null;
-  isProcessing?: boolean;
 }) {
-  const disabled = status !== ChatStatus.READY || !threadId || isProcessing;
+  const disabled = status !== ChatStatus.READY || !threadId;
   const tooltipText = !threadId ? 'Chat something before attaching file' : 'Attach a file';
   return (
     <Tooltip>
