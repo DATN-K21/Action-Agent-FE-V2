@@ -209,11 +209,11 @@ export default function ExtensionList(props: ExtensionListProps) {
         </div>
 
         {/* Filters */}
-        <div className="my-4 flex items-end justify-between sm:my-0 sm:items-center">
-          <div className="flex flex-col gap-4 sm:my-4 sm:flex-row">
+        <div className="my-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Input
               placeholder="Filter apps..."
-              className="h-9 w-40 lg:w-[250px]"
+              className="h-9 w-full sm:w-48 lg:w-[250px]"
               value={filter.search}
               onChange={(e) => updateFilter('search', e.target.value)}
             />
@@ -228,7 +228,7 @@ export default function ExtensionList(props: ExtensionListProps) {
                 )
               }
             >
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-full sm:w-40 lg:w-44">
                 <SelectValue>
                   {filter.connected === null
                     ? 'All Extensions'
@@ -243,24 +243,23 @@ export default function ExtensionList(props: ExtensionListProps) {
                 <SelectItem value="notConnected">Not Connected</SelectItem>
               </SelectContent>
             </Select>
-
-            <div className="flex items-center gap-1 text-sm bg-yellow-100 px-3 rounded-3xl">
+            <div className="flex items-center justify-center gap-1 text-xs sm:text-sm bg-yellow-100 px-3 py-1 rounded-3xl whitespace-nowrap">
               {loading ? 'Loading ...' : `${totalResult} results.`}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-2 lg:gap-2">
             <Select
               value={filter.sortBy}
               onValueChange={(value) =>
                 updateFilter('sortBy', value as 'id' | 'name' | 'actionsCount')
               }
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-36 lg:w-40">
                 <SelectValue>
                   <div className="flex items-center gap-2">
-                    <IconAdjustmentsHorizontal size={18} />
-                    <span>Sort By</span>
+                    <IconAdjustmentsHorizontal size={16} className="hidden sm:block" />
+                    <span className="text-sm">Sort By</span>
                   </div>
                 </SelectValue>
               </SelectTrigger>
@@ -286,11 +285,11 @@ export default function ExtensionList(props: ExtensionListProps) {
               value={filter.sortOrder}
               onValueChange={(value) => updateFilter('sortOrder', value as 'asc' | 'desc')}
             >
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-full sm:w-36 lg:w-40">
                 <SelectValue>
                   <div className="flex items-center gap-2">
-                    <IconAdjustmentsHorizontal size={18} />
-                    <span>Sort Order</span>
+                    <IconAdjustmentsHorizontal size={16} className="hidden sm:block" />
+                    <span className="text-sm">Sort Order</span>
                   </div>
                 </SelectValue>
               </SelectTrigger>

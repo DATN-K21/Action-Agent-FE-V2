@@ -2,6 +2,7 @@
 
 import { ActionSkeleton } from '@/components/skeleton/action-skeleton';
 import { toast } from '@/components/toast';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
@@ -53,42 +54,72 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[350px] md:max-w-[680px] max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle className="uppercase">{extension.name}</DialogTitle>
-          <DialogDescription>{`Integrate ${extension.name} into your chat!`}</DialogDescription>
+      <DialogContent className="w-[98vw] sm:w-[95vw] max-w-[450px] md:max-w-[700px] max-h-[80vh] sm:max-h-[75vh] p-3 sm:p-4 md:p-6 flex flex-col">
+        <DialogHeader className="space-y-1 sm:space-y-2 pb-2 shrink-0">
+          <DialogTitle className="uppercase text-sm sm:text-base md:text-lg font-bold text-center sm:text-left">
+            {extension.name}
+          </DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm md:text-base text-center sm:text-left">
+            {`Integrate ${extension.name} into your chat!`}
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-center">
-          <Card className="w-full md:w-[600px] overflow-y-auto h-[50vh]">
-            <CardContent className="grid gap-4 p-4 h-full">
-              {actionLoading ? (
-                Array(4)
+
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {actionLoading ? (
+              <div className="space-y-3 p-2">
+                {Array(4)
                   .fill(0)
-                  .map((_, index) => <ActionSkeleton key={`action-skeleton-${index}`} />)
-              ) : extensionActions.length > 0 ? (
-                extensionActions.map((action) => (
+                  .map((_, index) => (
+                    <ActionSkeleton key={`action-skeleton-${index}`} />
+                  ))}
+              </div>
+            ) : extensionActions.length > 0 ? (
+              <div className="space-y-3 sm:space-y-4 p-2 pb-4">
+                {extensionActions.map((action) => (
                   <div
                     key={action.enum}
-                    className="mb-1 grid grid-cols-[25px_1fr] items-start pb-1 last:mb-0 last:pb-0"
+                    className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                   >
-                    <span className="flex size-2 translate-y-1 rounded-full bg-sky-500" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">
+                    <span className="flex size-2 translate-y-2 rounded-full bg-sky-500 shrink-0" />
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <p className="text-sm sm:text-base font-semibold leading-tight break-words hyphens-auto">
                         {action.name.toUpperCase()}
                       </p>
-                      <p className="text-sm text-muted-foreground">{action.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words hyphens-auto">
+                        {action.description}
+                      </p>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="flex h-full text-center py-4 text-muted-foreground items-center justify-center">
-                  No actions available for this extension
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[180px] sm:h-[200px] text-center p-4">
+                <div className="space-y-2">
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    No actions available for this extension
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    This extension may not have any configured actions yet.
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </div>
         </div>
-        <DialogFooter></DialogFooter>
+
+        <DialogFooter className="pt-3 sm:pt-4 border-t bg-white/80 backdrop-blur-sm shrink-0 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+          <div className="w-full flex justify-center sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="w-full sm:w-auto min-h-[40px]"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
