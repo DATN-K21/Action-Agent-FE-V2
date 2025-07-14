@@ -9,8 +9,24 @@ interface SuggestedActionsProps {
   onSubmission: () => Promise<void>;
 }
 
+function SuggestedActionsSkeleton() {
+  return (
+    <div className="grid sm:grid-cols-2 gap-2 w-full">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div key={`skeleton-${index}`} className={index > 1 ? 'hidden sm:block' : 'block'}>
+          <div className="border rounded-xl px-4 py-3.5 h-auto flex flex-col gap-1 animate-pulse">
+            <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
   const setInput = useChatStore((state) => state.setInput);
+  const assistant = useChatStore((state) => state.assistant);
 
   const suggestedActions = [
     {
@@ -35,6 +51,10 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
     },
   ];
 
+  if (!assistant) {
+    return <SuggestedActionsSkeleton />;
+  }
+
   return (
     <div data-testid="suggested-actions" className="grid sm:grid-cols-2 gap-2 w-full">
       {suggestedActions.map((suggestedAction, index) => (
@@ -50,10 +70,16 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
             variant="ghost"
             onClick={async (event) => {
               event.preventDefault();
+              if (!assistant) {
+                return;
+              }
               setInput(suggestedAction.action);
               await onSubmission();
             }}
-            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+            disabled={!assistant}
+            className={`text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start ${
+              !assistant ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <span className="font-medium">{suggestedAction.title}</span>
             <span className="text-muted-foreground">{suggestedAction.label}</span>
@@ -64,4 +90,6 @@ function PureSuggestedActions({ onSubmission }: SuggestedActionsProps) {
   );
 }
 
-export const SuggestedActions = memo(PureSuggestedActions, () => true);
+export const SuggestedActions = memo(PureSuggestedActions, (prevProps, nextProps) => {
+  return prevProps.onSubmission === nextProps.onSubmission;
+});
