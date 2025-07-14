@@ -503,7 +503,7 @@ export default function MCPServerTable(props: { user: User }) {
                 <li>Paste the link into the URL field when adding an MCP Server here.</li>
               </ol>
               <div className="mt-2 text-xs text-muted-foreground">
-                If you don't have a Composio account, visit{' '}
+                If you don&apos;t have a Composio account, visit{' '}
                 <a
                   href="https://composio.dev"
                   target="_blank"
