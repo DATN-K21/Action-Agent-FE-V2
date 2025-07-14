@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { auth } from '@/auth';
 import { Chat } from '@/components/chat';
 
+export const dynamic = 'force-dynamic';
+
 import { getThread, getThreadHistory } from '@/services/thread-service';
 import { IMessage, IGetThreadHistoryResponse } from '@/types/ai';
 import { User } from 'next-auth';
@@ -72,6 +74,7 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
 
     return (
       <Chat
+        key={id}
         id={id}
         assistantId={thread.assistantId}
         user={user}
