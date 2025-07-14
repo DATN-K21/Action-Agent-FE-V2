@@ -56,7 +56,7 @@ function MessageContainer(props: MessageNameProps) {
   // Handle specific tool calls like KnowledgeBase
   if (message.type === MessageType.TOOL 
   && message.name === 'KnowledgeBase') {
-    const retrievedMessage = message.tool_output ?? "";
+    const retrievedMessage = message.tool_output ?? "No information retrieved";
     return (
       <motion.div
         data-testid={`message-${message.type}`}

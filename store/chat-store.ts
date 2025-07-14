@@ -151,7 +151,8 @@ const useChatStore = create<ChatStore>()(
 
                 if (
                   (data.type === MessageType.AI && data.content) ||
-                  (data.type !== MessageType.AI && data.tool_calls)
+                  (data.type !== MessageType.AI && data.tool_calls) ||
+                  (data.type === MessageType.ERROR)
                 ) {
                   if (data.type === MessageType.INTERRUPT && data.tool_calls) {
                     set({ isInterrupting: true });
