@@ -39,7 +39,15 @@ import { toast } from '@/components/toast';
 import useChatStore from '@/store/chat-store';
 import { IMCP } from '@/types/mcp';
 import { TableSkeleton } from '@/components/skeleton/table-skeleton';
-
+import { Info } from 'lucide-react';
+// Add imports for modal/dialog
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 export default function MCPServerTable(props: { user: User }) {
   const { user } = props;
   const router = useRouter();
@@ -57,6 +65,9 @@ export default function MCPServerTable(props: { user: User }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedServer, setSelectedServer] = useState<IMCP | null>(null);
+
+  // State for Info modal
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   // Table state
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -310,7 +321,18 @@ export default function MCPServerTable(props: { user: User }) {
       <div className="flex flex-col size-full px-2 md:px-4">
         {/* Header */}
         <div className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight mt-2">MCP Server</h1>
+          <div className="flex gap-4 items-center">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight mt-2">MCP Server</h1>
+            {/* Make Info icon clickable */}
+            <button
+              type="button"
+              onClick={() => setIsInfoOpen(true)}
+              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              aria-label="How to get MCP link from Composio"
+            >
+              <Info />
+            </button>
+          </div>
           <p className="text-sm md:text-base text-muted-foreground">
             {`Add your MCP Server to your account to use it with Action Agent.`}
           </p>
@@ -466,6 +488,36 @@ export default function MCPServerTable(props: { user: User }) {
           description={`Are you sure you want to delete ${selectedServer.mcpName}? This action cannot be undone.`}
         />
       )}
+
+      {/* Info Modal for Composio instructions */}
+      <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>How to get MCP Server link from Composio</DialogTitle>
+            <DialogDescription>
+              <ol className="list-decimal ml-4 space-y-2 text-sm">
+                <li>Log in to your Composio account.</li>
+                <li>Go to the MCP Servers section or similar in the dashboard.</li>
+                <li>Create or select an MCP Server you want to use.</li>
+                <li>Copy the URL of that MCP Server.</li>
+                <li>Paste the link into the URL field when adding an MCP Server here.</li>
+              </ol>
+              <div className="mt-2 text-xs text-muted-foreground">
+                If you don't have a Composio account, visit{' '}
+                <a
+                  href="https://composio.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  composio.dev
+                </a>{' '}
+                to sign up.
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
