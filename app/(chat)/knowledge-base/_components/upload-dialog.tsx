@@ -62,8 +62,8 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
       toast({ type: 'error', description: 'Select a file' });
       return;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      toast({ type: 'error', description: 'File too large (max 50MB)' });
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ type: 'error', description: 'File too large (max 5MB)' });
       return;
     }
     const ext = file.name.split('.').pop()?.toLowerCase();
