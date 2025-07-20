@@ -48,6 +48,10 @@ export const getAllAssistants = async (params: GetAssistantsParams): Promise<IAs
       url: `${AI_ENDPOINT_V1}/assistant/get-all`,
       method: HttpMethod.GET,
       headers: headers,
+      queryParams: {
+        pageNumber: params.payload?.pageNumber || 1,
+        maxPerPage: params.payload?.maxPerPage || 10,
+      },
     });
 
     return response.data?.assistants as IAssistant[];

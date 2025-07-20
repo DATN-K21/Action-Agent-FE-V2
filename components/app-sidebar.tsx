@@ -21,7 +21,8 @@ import {
   HiOutlineChatAlt,
   HiOutlinePuzzle,
   HiOutlineServer,
-  HiOutlineViewGrid
+  HiOutlineViewGrid,
+  HiOutlineClock,
 } from 'react-icons/hi';
 
 type navCustomItemProps = {
@@ -52,9 +53,14 @@ const navCustomItems: navCustomItemProps[] = [
     icon: HiOutlinePuzzle,
   },
   {
-    title: 'Knowledge',
+    title: 'Knowledge Base',
     url: '/knowledge-base',
     icon: HiOutlineBookOpen,
+  },
+  {
+    title: 'Scheduler Tasks',
+    url: '/scheduler-tasks',
+    icon: HiOutlineClock,
   },
 ];
 
@@ -74,18 +80,18 @@ export function AppSidebar({ user }: { user: User }) {
             <Link
               href="/"
               onClick={() => {
-              setOpenMobile(false);
+                setOpenMobile(false);
               }}
               className="flex flex-row gap-3 items-center justify-start"
             >
               <Image
-                  src="/images/logo.png"
-                  alt="Action Agent Logo"
-                  width={112} // 28*4 = 112px, roughly h-14
-                  height={56} // arbitrary, adjust as needed
-                  className="h-14 w-auto px-2 rounded-md cursor-pointer"
-                  style={{ maxHeight: '3.5rem' }}
-                  priority
+                src="/images/logo.png"
+                alt="Action Agent Logo"
+                width={112} // 28*4 = 112px, roughly h-14
+                height={56} // arbitrary, adjust as needed
+                className="h-14 w-auto px-2 rounded-md cursor-pointer"
+                style={{ maxHeight: '3.5rem' }}
+                priority
               />
             </Link>
           </div>
