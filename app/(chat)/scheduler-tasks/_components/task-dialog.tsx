@@ -1,4 +1,5 @@
 'use client';
+import { toast } from '@/components/toast';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,10 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { Textarea } from '@/components/ui/textarea';
-import { SchedulerTaskTimePickerTypes, SchedulerTaskTypes } from '@/constants/scheduler-task';
 import {
   Select,
   SelectContent,
@@ -21,11 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import DailyTaskTimePicker from './time-picker/daily';
-import { IAssistant } from '@/types/assistant';
-import { CreateSchedulerTaskParams, createTask } from '@/services/scheduler-service';
-import { User } from 'next-auth';
+import { Textarea } from '@/components/ui/textarea';
+import { SchedulerTaskTimePickerTypes, SchedulerTaskTypes } from '@/constants/scheduler-task';
+import { cn } from '@/lib/utils';
 import { getAllAssistants, GetAssistantsParams } from '@/services/assistant-service';
+import { CreateSchedulerTaskParams, createTask } from '@/services/scheduler-service';
+import { IAssistant, ITeamProps } from '@/types/assistant';
+import { ISchedulerTask } from '@/types/scheduler-task';
+import { User } from 'next-auth';
+import { useCallback, useEffect, useState } from 'react';
+import DailyTaskTimePicker from './time-picker/daily';
 
 export interface SchedulerTaskDialogProps {
   user: User;
@@ -38,6 +40,7 @@ export interface ISchedulerTaskPayload {
   description: string;
   cron_expression: string;
   prompt: string;
+  team_id: string;
   assistant_id: string;
   timezone: string;
   job_type: SchedulerTaskTypes;
@@ -61,11 +64,13 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
   );
   const [assistants, setAssistants] = useState<IAssistant[]>([]); // Assuming you will fetch assistants
   const [selectedAssistant, setSelectedAssistant] = useState<IAssistant | null>(null);
+  const [selectedTeamAssistant, setSelectedTeamAssistant] = useState<ITeamProps | null>(null);
 
   const displayEnum = (value: string): string => {
     // Remove underscores and capitalize each word
     return value
       .replace(/_/g, ' ')
+      .replace(/-/g, ' ')
       .split(' ')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
@@ -79,6 +84,23 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
   }, []);
 
   useEffect(() => {
+    // Reset task data when dialog opens
+    if (open === false) {
+      return;
+    }
+    setTaskData({
+      name: '',
+      description: '',
+      cron_expression: '',
+      prompt: '',
+      team_id: '',
+      assistant_id: '',
+      timezone: userTimezone || 'UTC',
+      job_type: SchedulerTaskTypes.ONE_TIME,
+    });
+    setErrors({});
+    setTimePickerType(SchedulerTaskTimePickerTypes.DAILY);
+
     const fetchAssistants = async () => {
       setLoading(true);
 
@@ -102,25 +124,7 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
       }
     };
     fetchAssistants();
-  }, [user]);
-
-  useEffect(() => {
-    // Reset task data when dialog opens
-    if (open === false) {
-      return;
-    }
-    setTaskData({
-      name: '',
-      description: '',
-      cron_expression: '',
-      prompt: '',
-      assistant_id: '',
-      timezone: userTimezone || 'UTC',
-      job_type: SchedulerTaskTypes.ONE_TIME,
-    });
-    setErrors({});
-    setTimePickerType(SchedulerTaskTimePickerTypes.DAILY);
-  }, [open]);
+  }, [open, user]);
 
   useEffect(() => {
     setTaskData((prev) => ({
@@ -133,13 +137,18 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
   }, [timePickerType]);
 
   useEffect(() => {
-    if (selectedAssistant) {
-      setTaskData((prev) => ({
-        ...prev,
-        assistant_id: selectedAssistant.id,
-      }));
-    }
+    setTaskData((prev) => ({
+      ...prev,
+      assistant_id: selectedAssistant?.id || '',
+    }));
   }, [selectedAssistant]);
+
+  useEffect(() => {
+    setTaskData((prev) => ({
+      ...prev,
+      team_id: selectedTeamAssistant?.id || '',
+    }));
+  }, [selectedTeamAssistant]);
 
   const onHandleUpdateTimePicker = (builtCronExpression: string | null) => {
     if (builtCronExpression) {
@@ -177,12 +186,20 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
     }
     setLoading(true);
 
-    // Simulate API call
+    const payload: CreateSchedulerTaskParams = {
+      user,
+      payload: {
+        ...taskData,
+        timezone: userTimezone || 'UTC',
+      },
+    };
     try {
-      // Here you would typically make an API call to save the task
-      console.log('Saving task: ', taskData);
-      // Reset form after saving
+      await createTask(payload);
       onOpenChange(false);
+      toast({
+        description: 'Scheduler task created successfully',
+        type: 'success',
+      });
     } catch (error) {
       console.error('Error saving task:', error);
     } finally {
@@ -269,6 +286,55 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
                       ))
                     ) : (
                       <span className="text-sm text-muted-foreground">No assistants available</span>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Assistant Team */}
+          <div className="grid w-full max-w-md items-center gap-1.5">
+            <div className="w-full flex flex-col gap-1">
+              <Label htmlFor="team" className="w-full">
+                Tool <span className="text-red-500">*</span>
+              </Label>
+              <div>
+                <Select
+                  value={selectedTeamAssistant?.id || ''}
+                  onValueChange={(value) =>
+                    setSelectedTeamAssistant(
+                      selectedAssistant?.teams?.find((team) => team.id === value) || null,
+                    )
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">
+                          {selectedTeamAssistant?.id
+                            ? displayEnum(selectedTeamAssistant.name.slice(37))
+                            : 'Select Team'}
+                        </span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    {selectedAssistant &&
+                    selectedAssistant.teams &&
+                    selectedAssistant?.teams?.length > 0 ? (
+                      selectedAssistant.teams.map((team) => (
+                        <SelectItem key={team.id} value={team.id}>
+                          <div className="flex items-center gap-4">
+                            {/* Only get the name after first 37 characters */}
+                            <span className="text-sm" title={team.name}>
+                              {displayEnum(team.name.slice(37))}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No teams available</span>
                     )}
                   </SelectContent>
                 </Select>
