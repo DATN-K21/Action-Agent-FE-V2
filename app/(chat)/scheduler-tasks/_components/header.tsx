@@ -1,11 +1,12 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
 
-function SchedulerTasksHeader() {
-  const [isJobDialogOpen, setIsJobDialogOpen] = useState(false);
-
+function SchedulerTasksHeader({
+  onOpenDialog,
+}: {
+  onOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   return (
     <div className="w-full flex row items-between justify-between mt-2">
       <div>
@@ -14,7 +15,7 @@ function SchedulerTasksHeader() {
           Manage your scheduler tasks and get notified when they are triggered with Action Agent.
         </p>
       </div>
-      <Button className="w-full md:w-auto" size="sm" onClick={() => setIsJobDialogOpen(true)}>
+      <Button className="w-full md:w-auto" size="sm" onClick={() => onOpenDialog(true)}>
         <Plus className="mr-2 size-4" /> Add Task
       </Button>
     </div>

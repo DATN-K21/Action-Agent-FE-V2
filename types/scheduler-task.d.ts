@@ -8,3 +8,7 @@ export interface ISchedulerTask {
   userId: string; // ID of the user who created the task
   dueDate?: string; // Optional due date for the task
 }
+
+export interface SchedulerTaskTimePickerProps {
+  onChange: (builtCronExpression: string | null) => void;
+}

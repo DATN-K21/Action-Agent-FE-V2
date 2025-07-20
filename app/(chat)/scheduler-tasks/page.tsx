@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 
 import { User } from 'next-auth';
 import { notFound } from 'next/navigation';
-import SchedulerTasksHeader from './_components/header';
 import SchedulerTasksList from './_components/task-list';
 
 export default async function SchedulerJobsPage() {
@@ -22,7 +21,6 @@ export default async function SchedulerJobsPage() {
 
   return (
     <div className="flex flex-col items-center justify-start p-2 md:px-4 gap-2">
-      <SchedulerTasksHeader />
       <SchedulerTasksList user={user} />
     </div>
   );
