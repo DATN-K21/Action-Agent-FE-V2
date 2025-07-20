@@ -48,6 +48,9 @@ service:
   port: 80
   targetPort: 80
 
+nodeSelector:
+  beta.kubernetes.io/arch: amd64
+
 ingress:
   enabled: true
   className: "nginx"
