@@ -9,6 +9,18 @@ export interface CreateSchedulerTaskParams {
   payload: ISchedulerTaskPayload;
 }
 
+export interface GetAllSchedulerTasksParams {
+  user: User;
+  payload?: {
+    skip?: number;
+    limit?: number;
+    status?: string;
+    job_type?: string;
+    assistant_id?: string;
+    team_id?: string;
+  };
+}
+
 export const createTask = async (params: CreateSchedulerTaskParams): Promise<ISchedulerTask> => {
   try {
     if (!params.payload.name) throw new Error("Missing 'name'");
@@ -29,6 +41,27 @@ export const createTask = async (params: CreateSchedulerTaskParams): Promise<ISc
     return response.data as ISchedulerTask;
   } catch (error) {
     console.error('Error create task: ', error);
+    throw error;
+  }
+};
+
+export const getAllSchedulerTasks = async (
+  params: GetAllSchedulerTasksParams,
+): Promise<ISchedulerTask[]> => {
+  try {
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
+    const response: IResponse<{ jobs: ISchedulerTask[] }> = await sendRequest({
+      url: `${SCHEDULER_ENDPOINT}/job/get-jobs`,
+      method: HttpMethod.GET,
+      headers: headers,
+      queryParams: {
+        ...params.payload,
+      },
+    });
+
+    return response.data?.jobs || [];
+  } catch (error) {
+    console.error('Error getting scheduler tasks: ', error);
     throw error;
   }
 };

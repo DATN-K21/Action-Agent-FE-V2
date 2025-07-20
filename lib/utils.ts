@@ -90,3 +90,13 @@ export const buildQueryParams = (params: Record<string, any>): string => {
   const queryString = searchParams.toString();
   return queryString ? `?${queryString}` : '';
 };
+
+export const displayEnum = (value: string): string => {
+  // Remove underscores and capitalize each word
+  return value
+    .replace(/_/g, ' ')
+    .replace(/-/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};

@@ -23,10 +23,10 @@ function DailyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
     let builtCronExpression = '';
     if (type === 'hour') {
       setSelectedHour(value);
-      builtCronExpression = `0 ${selectedMinute} ${value} * * ?`;
+      builtCronExpression = `${selectedMinute} ${value} * * *`;
     } else if (type === 'minute') {
       setSelectedMinute(value);
-      builtCronExpression = `0 ${value} ${selectedHour} * * ?`;
+      builtCronExpression = `${value} ${selectedHour} * * *`;
     }
     onChange(builtCronExpression);
   };

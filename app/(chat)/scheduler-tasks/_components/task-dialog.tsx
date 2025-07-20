@@ -20,19 +20,20 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { SchedulerTaskTimePickerTypes, SchedulerTaskTypes } from '@/constants/scheduler-task';
-import { cn } from '@/lib/utils';
-import { getAllAssistants, GetAssistantsParams } from '@/services/assistant-service';
+import { cn, displayEnum } from '@/lib/utils';
 import { CreateSchedulerTaskParams, createTask } from '@/services/scheduler-service';
 import { IAssistant, ITeamProps } from '@/types/assistant';
-import { ISchedulerTask } from '@/types/scheduler-task';
 import { User } from 'next-auth';
 import { useCallback, useEffect, useState } from 'react';
 import DailyTaskTimePicker from './time-picker/daily';
+import { ISchedulerTask } from '@/types/scheduler-task';
 
 export interface SchedulerTaskDialogProps {
   user: User;
+  assistants: IAssistant[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreateTaskCallback: (task: ISchedulerTask) => void;
 }
 
 export interface ISchedulerTaskPayload {
@@ -54,7 +55,7 @@ type ValidationErrors = {
 const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
-  const { user, open, onOpenChange } = props;
+  const { user, assistants, open, onOpenChange, onCreateTaskCallback } = props;
   const [loading, setLoading] = useState<boolean>(false);
 
   const [taskData, setTaskData] = useState<ISchedulerTaskPayload>({} as ISchedulerTaskPayload);
@@ -62,19 +63,8 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
   const [timePickerType, setTimePickerType] = useState<SchedulerTaskTimePickerTypes>(
     SchedulerTaskTimePickerTypes.DAILY,
   );
-  const [assistants, setAssistants] = useState<IAssistant[]>([]); // Assuming you will fetch assistants
   const [selectedAssistant, setSelectedAssistant] = useState<IAssistant | null>(null);
   const [selectedTeamAssistant, setSelectedTeamAssistant] = useState<ITeamProps | null>(null);
-
-  const displayEnum = (value: string): string => {
-    // Remove underscores and capitalize each word
-    return value
-      .replace(/_/g, ' ')
-      .replace(/-/g, ' ')
-      .split(' ')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
 
   const handleOnChange = useCallback((field: string, value: any) => {
     setTaskData((prev) => ({
@@ -96,35 +86,11 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
       team_id: '',
       assistant_id: '',
       timezone: userTimezone || 'UTC',
-      job_type: SchedulerTaskTypes.ONE_TIME,
+      job_type: SchedulerTaskTypes.RECURRING,
     });
     setErrors({});
     setTimePickerType(SchedulerTaskTimePickerTypes.DAILY);
-
-    const fetchAssistants = async () => {
-      setLoading(true);
-
-      const payload: GetAssistantsParams = {
-        user: user,
-        payload: {
-          pageNumber: 1,
-          maxPerPage: 100,
-        },
-      };
-      try {
-        const assistantsResponse: IAssistant[] = await getAllAssistants(payload);
-        if (assistantsResponse.length > 0) {
-          setAssistants(assistantsResponse);
-          setSelectedAssistant(assistantsResponse[0]);
-        }
-      } catch (error) {
-        console.error('Error fetching assistants:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAssistants();
-  }, [open, user]);
+  }, [open]);
 
   useEffect(() => {
     setTaskData((prev) => ({
@@ -194,12 +160,13 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
       },
     };
     try {
-      await createTask(payload);
-      onOpenChange(false);
+      console.log('[handleSave] Creating task with payload:', payload);
+      const response: ISchedulerTask = await createTask(payload);
       toast({
         description: 'Scheduler task created successfully',
         type: 'success',
       });
+      onCreateTaskCallback?.(response);
     } catch (error) {
       console.error('Error saving task:', error);
     } finally {
@@ -269,9 +236,11 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue>
+                    <SelectValue placeholder="Select Assistant">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm">{selectedAssistant?.name}</span>
+                        <span className="text-sm">
+                          {selectedAssistant?.name ?? 'Select Assistant'}
+                        </span>
                       </div>
                     </SelectValue>
                   </SelectTrigger>
@@ -309,12 +278,12 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue>
+                    <SelectValue placeholder="Select Tool">
                       <div className="flex items-center gap-2">
                         <span className="text-sm">
                           {selectedTeamAssistant?.id
                             ? displayEnum(selectedTeamAssistant.name.slice(37))
-                            : 'Select Team'}
+                            : 'Select Tool'}
                         </span>
                       </div>
                     </SelectValue>
@@ -326,15 +295,14 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
                       selectedAssistant.teams.map((team) => (
                         <SelectItem key={team.id} value={team.id}>
                           <div className="flex items-center gap-4">
-                            {/* Only get the name after first 37 characters */}
                             <span className="text-sm" title={team.name}>
-                              {displayEnum(team.name.slice(37))}
+                              {displayEnum(team.name.replace(team.id, ''))}
                             </span>
                           </div>
                         </SelectItem>
                       ))
                     ) : (
-                      <span className="text-sm text-muted-foreground">No teams available</span>
+                      <span className="text-sm text-muted-foreground">No tools available</span>
                     )}
                   </SelectContent>
                 </Select>

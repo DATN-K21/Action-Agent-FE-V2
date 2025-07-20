@@ -1,12 +1,28 @@
+import { SchedulerTaskStatus, SchedulerTaskTypes } from '@/constants/scheduler-task';
+
 export interface ISchedulerTask {
   id: string;
   name: string;
+  prompt: string;
+  assistantId: string;
+  teamId: string;
+  cronExpression: string;
+  jobType: SchedulerTaskTypes;
+  status: SchedulerTaskStatus;
+  timezone: string;
+  isActive: boolean;
+  totalRuns: number;
+  successfulRuns: number;
+  failedRuns: number;
+  lastRunAt?: string | null;
+  nextRunAt?: string | null;
   description?: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'failed';
+  maxRetries?: number;
+  timeoutSeconds?: number;
   createdAt: string;
   updatedAt: string;
-  userId: string; // ID of the user who created the task
-  dueDate?: string; // Optional due date for the task
+  userId: string;
+  userRole?: string;
 }
 
 export interface SchedulerTaskTimePickerProps {
