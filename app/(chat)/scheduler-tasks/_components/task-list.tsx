@@ -41,7 +41,11 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
           </div>
         )}
 
-        <SchedulerTaskDialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen} />
+        <SchedulerTaskDialog
+          user={user}
+          open={isTaskDialogOpen}
+          onOpenChange={setIsTaskDialogOpen}
+        />
       </div>
     </>
   );

@@ -10,7 +10,9 @@ import { SchedulerTaskTimePickerProps } from '@/types/scheduler-task';
 import { useState } from 'react';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')) as string[];
-const MINUTES = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')) as string[];
+const MINUTES = Array.from({ length: 12 }, (_, i) =>
+  (i * 5).toString().padStart(2, '0'),
+) as string[];
 
 function DailyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
   const { onChange } = props;
