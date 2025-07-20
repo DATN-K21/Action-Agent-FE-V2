@@ -65,3 +65,21 @@ export const getAllSchedulerTasks = async (
     throw error;
   }
 };
+
+export const deleteSchedulerTask = async (user: User, taskId: string): Promise<boolean> => {
+  try {
+    if (!taskId) throw new Error("Missing 'taskId'");
+
+    const headers: Record<string, string> = createUserAuthHeaders(user);
+    const response: IResponse<{ message: string }> = await sendRequest({
+      url: `${SCHEDULER_ENDPOINT}/job/${taskId}/remove`,
+      method: HttpMethod.DELETE,
+      headers: headers,
+    });
+    console.log('Response from deleteSchedulerTask:', response);
+    return response.status === 200;
+  } catch (error) {
+    console.error('Error deleting scheduler task: ', error);
+    return false;
+  }
+};

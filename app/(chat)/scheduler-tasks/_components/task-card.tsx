@@ -13,12 +13,17 @@ import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
 import { useMemo } from 'react';
 import { SchedulerTaskStatus, SchedulerTaskTypes } from '@/constants/scheduler-task';
 import { displayEnum } from '@/lib/utils';
+import { deleteSchedulerTask } from '@/services/scheduler-service';
+import { User } from 'next-auth';
+import { toast } from '@/components/toast';
 
 export interface SchedulerTasksListProps {
+  user: User;
   task: ISchedulerTask;
+  onDeleteTaskCallback: (taskId: string) => void;
 }
 function SchedulerTaskCard(props: SchedulerTasksListProps) {
-  const { task } = props;
+  const { user, task, onDeleteTaskCallback } = props;
 
   const TaskStatusBadgeComponent = useMemo<React.ReactNode>((): React.ReactNode => {
     let badgeClassName = 'p-2 rounded-lg text-xs font-medium ';
@@ -44,7 +49,25 @@ function SchedulerTaskCard(props: SchedulerTasksListProps) {
 
   const handleOnEdit = (task: ISchedulerTask) => {};
 
-  const handleOnDelete = (taskId: string) => {};
+  const handleOnDelete = async (taskId: string) => {
+    try {
+      const isSuccess: boolean = await deleteSchedulerTask(user, taskId);
+      if (isSuccess) {
+        toast({
+          description: 'Deleted successfully',
+          type: 'success',
+        });
+        return onDeleteTaskCallback(taskId);
+      }
+      throw new Error('Failed to delete task');
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        description: 'Failed to delete task, please try again',
+        type: 'error',
+      });
+    }
+  };
 
   return (
     <li

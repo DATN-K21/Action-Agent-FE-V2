@@ -75,6 +75,10 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
     setIsTaskDialogOpen(false);
   }, []);
 
+  const handleRemoveTaskCallback = useCallback((taskId: string) => {
+    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+  }, []);
+
   return (
     <>
       <SchedulerTasksHeader onOpenDialog={setIsTaskDialogOpen} />
@@ -90,7 +94,11 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
           <ul className="w-full grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
             {tasks.map((task, index) => (
               <div key={index} className="w-full">
-                <SchedulerTaskCard task={task} />
+                <SchedulerTaskCard
+                  user={user}
+                  task={task}
+                  onDeleteTaskCallback={handleRemoveTaskCallback}
+                />
               </div>
             ))}
           </ul>
