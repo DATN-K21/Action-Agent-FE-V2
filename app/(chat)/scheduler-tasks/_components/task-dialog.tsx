@@ -28,6 +28,7 @@ import { useCallback, useEffect, useState } from 'react';
 import DailyTaskTimePicker from './time-picker/daily';
 import { ISchedulerTask } from '@/types/scheduler-task';
 import WeeklyTaskTimePicker from './time-picker/weekly';
+import MonthlyTaskTimePicker from './time-picker/monthly';
 
 export interface SchedulerTaskDialogProps {
   user: User;
@@ -347,6 +348,11 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
                         <span>Weekly</span>
                       </div>
                     </SelectItem>
+                    <SelectItem value={SchedulerTaskTimePickerTypes.MONTHLY}>
+                      <div className="flex items-center gap-4">
+                        <span>Monthly</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -359,6 +365,9 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
               )}
               {timePickerType === SchedulerTaskTimePickerTypes.WEEKLY && (
                 <WeeklyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+              )}
+              {timePickerType === SchedulerTaskTimePickerTypes.MONTHLY && (
+                <MonthlyTaskTimePicker onChange={onHandleUpdateTimePicker} />
               )}
             </div>
           </div>
