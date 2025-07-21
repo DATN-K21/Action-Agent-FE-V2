@@ -2,11 +2,13 @@
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
-function SchedulerTasksHeader({
-  onOpenDialog,
-}: {
+export interface SchedulerTasksHeaderProps {
   onOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
+}
+
+function SchedulerTasksHeader(props: SchedulerTasksHeaderProps) {
+  const { onOpenDialog } = props;
+
   return (
     <div className="w-full flex row items-between justify-between mt-2">
       <div>

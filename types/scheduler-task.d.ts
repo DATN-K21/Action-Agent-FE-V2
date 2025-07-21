@@ -25,6 +25,15 @@ export interface ISchedulerTask {
   userRole?: string;
 }
 
+export type SchedulerTaskTimeDataProps = {
+  hour: string;
+  minute: string;
+  dayOfMonth: string;
+  month: string;
+  dayOfWeek: string;
+};
+
 export interface SchedulerTaskTimePickerProps {
   onChange: (builtCronExpression: string | null) => void;
+  timeData?: SchedulerTaskTimeDataProps | null;
 }

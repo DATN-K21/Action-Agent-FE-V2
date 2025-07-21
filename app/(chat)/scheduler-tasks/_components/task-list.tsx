@@ -23,6 +23,7 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState<boolean>(false);
   const [tasks, setTasks] = useState<ISchedulerTask[]>([]);
   const [assistants, setAssistants] = useState<IAssistant[]>([]);
+  const [editingTask, setEditingTask] = useState<ISchedulerTask | null>(null);
 
   useEffect(() => {
     const fetchSchedulerTasks = async () => {
@@ -70,6 +71,11 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
     fetchSchedulerTasks();
   }, [user]);
 
+  const handleOpenAddNewTaskDialog = useCallback(() => {
+    setIsTaskDialogOpen(true);
+    setEditingTask(null);
+  }, []);
+
   const handleAddTaskCallback = useCallback((newTask: ISchedulerTask) => {
     setTasks((prevTasks) => [...prevTasks, newTask]);
     setIsTaskDialogOpen(false);
@@ -79,9 +85,14 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
   }, []);
 
+  const handleOpenEditTaskDialog = useCallback((task: ISchedulerTask) => {
+    setIsTaskDialogOpen(true);
+    setEditingTask(task);
+  }, []);
+
   return (
     <>
-      <SchedulerTasksHeader onOpenDialog={setIsTaskDialogOpen} />
+      <SchedulerTasksHeader onOpenDialog={handleOpenAddNewTaskDialog} />
       <div className="mt-4">
         {loading ? (
           <UploadListSkeleton />
@@ -97,6 +108,7 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
                 <SchedulerTaskCard
                   user={user}
                   task={task}
+                  onEditTaskCallback={handleOpenEditTaskDialog}
                   onDeleteTaskCallback={handleRemoveTaskCallback}
                 />
               </div>
@@ -108,6 +120,7 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
           user={user}
           assistants={assistants}
           open={isTaskDialogOpen}
+          task={editingTask}
           onOpenChange={setIsTaskDialogOpen}
           onCreateTaskCallback={handleAddTaskCallback}
         />

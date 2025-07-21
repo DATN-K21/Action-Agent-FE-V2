@@ -19,12 +19,12 @@ const MONTHS = Array.from({ length: 12 }, (_, i) =>
 ) as string[];
 
 function AnnuallyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
-  const { onChange } = props;
+  const { onChange, timeData } = props;
 
-  const [selectedMonth, setSelectedMonth] = useState<string>('01');
-  const [selectedDay, setSelectedDay] = useState<string>('01');
-  const [selectedHour, setSelectedHour] = useState<string>('00');
-  const [selectedMinute, setSelectedMinute] = useState<string>('00');
+  const [selectedMonth, setSelectedMonth] = useState<string>(timeData?.month || '01');
+  const [selectedDay, setSelectedDay] = useState<string>(timeData?.dayOfMonth || '01');
+  const [selectedHour, setSelectedHour] = useState<string>(timeData?.hour || '00');
+  const [selectedMinute, setSelectedMinute] = useState<string>(timeData?.minute || '00');
 
   const displayedDays = useMemo(() => {
     const SAMPLE_YEAR = 2023; // Example year to calculate days in month
