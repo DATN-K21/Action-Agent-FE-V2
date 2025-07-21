@@ -42,7 +42,7 @@ function MonthlyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
       <div className="w-full flex justify-stretch gap-2">
         <div className="flex flex-col w-1/2 gap-1">
           <Label htmlFor="weekly-day-picker" className="w-full">
-            Day
+            Day <span className="text-red-500">*</span>
           </Label>
           <Select value={selectedDay} onValueChange={(value) => handleTimeChange('day', value)}>
             <SelectTrigger className="w-full">
@@ -65,7 +65,7 @@ function MonthlyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
         </div>
         <div className="flex flex-col w-1/2 gap-1">
           <Label htmlFor="daily-time-picker" className="w-full">
-            Hour & Minute
+            Hour & Minute <span className="text-red-500">*</span>
           </Label>
           <div className="flex justify-between items-center w-full gap-2">
             <div className="w-1/2">

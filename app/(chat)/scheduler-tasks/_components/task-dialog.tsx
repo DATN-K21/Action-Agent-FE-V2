@@ -30,6 +30,7 @@ import { ISchedulerTask } from '@/types/scheduler-task';
 import WeeklyTaskTimePicker from './time-picker/weekly';
 import MonthlyTaskTimePicker from './time-picker/monthly';
 import AnnuallyTaskTimePicker from './time-picker/annually';
+import OneTimeTaskTimePicker from './time-picker/onetime';
 
 export interface SchedulerTaskDialogProps {
   user: User;
@@ -366,6 +367,9 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
 
             {/* Time Picker */}
             <div className="w-3/4">
+              {timePickerType === SchedulerTaskTimePickerTypes.ONE_TIME && (
+                <OneTimeTaskTimePicker onChange={onHandleUpdateTimePicker} />
+              )}
               {timePickerType === SchedulerTaskTimePickerTypes.DAILY && (
                 <DailyTaskTimePicker onChange={onHandleUpdateTimePicker} />
               )}

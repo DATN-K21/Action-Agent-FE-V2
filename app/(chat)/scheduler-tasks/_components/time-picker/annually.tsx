@@ -61,7 +61,7 @@ function AnnuallyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
       <div className="w-full flex justify-stretch gap-2">
         <div className="flex flex-col w-1/2 gap-1">
           <Label htmlFor="monthly-month-picker" className="w-full">
-            Month & Day
+            Month & Day <span className="text-red-500">*</span>
           </Label>
           <div className="flex justify-between items-center w-full gap-2">
             <div className="w-1/2">
@@ -111,7 +111,7 @@ function AnnuallyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
         </div>
         <div className="flex flex-col w-1/2 gap-1">
           <Label htmlFor="daily-time-picker" className="w-full">
-            Hour & Minute
+            Hour & Minute <span className="text-red-500">*</span>
           </Label>
           <div className="flex justify-between items-center w-full gap-2">
             <div className="w-1/2">
