@@ -24,6 +24,10 @@ export function DateTimePicker(props: DateTimePickerProps) {
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
       setDate(selectedDate);
+      const formattedDate = new Date(selectedDate);
+      formattedDate.setHours(date.getHours());
+      formattedDate.setMinutes(date.getMinutes());
+      onChange?.(formattedDate);
     }
   };
 
@@ -39,6 +43,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
         newDate.setHours(value === 'PM' ? currentHours + 12 : currentHours - 12);
       }
       setDate(newDate);
+      onChange?.(newDate);
     }
   };
 
