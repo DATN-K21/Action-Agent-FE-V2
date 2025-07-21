@@ -21,7 +21,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { SchedulerTaskTimePickerTypes, SchedulerTaskTypes } from '@/constants/scheduler-task';
 import { cn, displayEnum, extractCronExpression } from '@/lib/utils';
-import { CreateSchedulerTaskParams, createTask } from '@/services/scheduler-service';
+import {
+  CreateSchedulerTaskParams,
+  createTask,
+  updateSchedulerTask,
+  UpdateSchedulerTaskParams,
+} from '@/services/scheduler-service';
 import { IAssistant, ITeamProps } from '@/types/assistant';
 import { User } from 'next-auth';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -38,7 +43,7 @@ export interface SchedulerTaskDialogProps {
   open: boolean;
   task: ISchedulerTask | null;
   onOpenChange: (open: boolean) => void;
-  onCreateTaskCallback: (task: ISchedulerTask) => void;
+  onTaskCompletedCallback: (task: ISchedulerTask) => void;
 }
 
 export interface ISchedulerTaskPayload {
@@ -60,7 +65,7 @@ type ValidationErrors = {
 const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
-  const { user, assistants, open, task, onOpenChange, onCreateTaskCallback } = props;
+  const { user, assistants, open, task, onOpenChange, onTaskCompletedCallback } = props;
   const [loading, setLoading] = useState<boolean>(false);
   const status = useMemo(() => (task !== null ? 'edit' : 'create'), [task]);
   const [taskTimeData, setTaskTimeData] = useState<SchedulerTaskTimeDataProps | null>(null);
@@ -175,19 +180,52 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
       },
     };
     try {
-      console.log('[handleSave] Creating task with payload:', payload);
-      const response: ISchedulerTask = await createTask(payload);
-      toast({
-        description: 'Scheduler task created successfully',
-        type: 'success',
-      });
-      onCreateTaskCallback?.(response);
-    } catch (error) {
-      console.error('Error saving task:', error);
+      if (status === 'create') {
+        await handleCreateNewTask(payload);
+      } else {
+        await handleUpdateTask({
+          ...payload,
+          id: task?.id || '',
+        } as UpdateSchedulerTaskParams);
+      }
     } finally {
       setLoading(false);
     }
   };
+  const handleCreateNewTask = useCallback(
+    async (payload: CreateSchedulerTaskParams): Promise<void> => {
+      try {
+        const response: ISchedulerTask = await createTask(payload);
+        toast({
+          description: 'Scheduler task created successfully',
+          type: 'success',
+        });
+        onTaskCompletedCallback?.(response);
+      } catch (error) {
+        console.error('Error saving task:', error);
+      }
+    },
+    [onTaskCompletedCallback],
+  );
+  const handleUpdateTask = useCallback(
+    async (payload: UpdateSchedulerTaskParams): Promise<void> => {
+      try {
+        const response: ISchedulerTask = await updateSchedulerTask(payload);
+        toast({
+          description: 'Scheduler task updated successfully',
+          type: 'success',
+        });
+        onTaskCompletedCallback?.(response);
+      } catch (error) {
+        console.error('Error updating task:', error);
+        toast({
+          description: 'Failed to update task, please try again',
+          type: 'error',
+        });
+      }
+    },
+    [onTaskCompletedCallback],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

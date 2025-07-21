@@ -76,10 +76,18 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
     setEditingTask(null);
   }, []);
 
-  const handleAddTaskCallback = useCallback((newTask: ISchedulerTask) => {
-    setTasks((prevTasks) => [...prevTasks, newTask]);
+  const handleCompleteTaskCallback = (completedTask: ISchedulerTask) => {
+    if (!completedTask) return;
+    if (editingTask && editingTask.id === completedTask.id) {
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => (task.id === completedTask.id ? completedTask : task)),
+      );
+    } else {
+      setTasks((prevTasks) => [...prevTasks, completedTask]);
+    }
     setIsTaskDialogOpen(false);
-  }, []);
+    setEditingTask(null);
+  };
 
   const handleRemoveTaskCallback = useCallback((taskId: string) => {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
@@ -122,7 +130,7 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
           open={isTaskDialogOpen}
           task={editingTask}
           onOpenChange={setIsTaskDialogOpen}
-          onCreateTaskCallback={handleAddTaskCallback}
+          onTaskCompletedCallback={handleCompleteTaskCallback}
         />
       </div>
     </>
