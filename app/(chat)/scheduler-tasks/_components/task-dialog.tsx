@@ -27,6 +27,7 @@ import { User } from 'next-auth';
 import { useCallback, useEffect, useState } from 'react';
 import DailyTaskTimePicker from './time-picker/daily';
 import { ISchedulerTask } from '@/types/scheduler-task';
+import WeeklyTaskTimePicker from './time-picker/weekly';
 
 export interface SchedulerTaskDialogProps {
   user: User;
@@ -312,9 +313,9 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
 
           <div className="flex justify-between items-center w-full max-w-md gap-2">
             {/* Time Picker Type */}
-            <div className="w-full flex flex-col gap-1">
+            <div className="w-1/4 flex flex-col gap-1">
               <Label htmlFor="time-picker-type" className="w-full">
-                When to trigger <span className="text-red-500">*</span>
+                When <span className="text-red-500">*</span>
               </Label>
               <div>
                 <Select
@@ -341,15 +342,25 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
                         <span>Daily</span>
                       </div>
                     </SelectItem>
+                    <SelectItem value={SchedulerTaskTimePickerTypes.WEEKLY}>
+                      <div className="flex items-center gap-4">
+                        <span>Weekly</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             {/* Time Picker */}
-            {timePickerType === SchedulerTaskTimePickerTypes.DAILY && (
-              <DailyTaskTimePicker onChange={onHandleUpdateTimePicker} />
-            )}
+            <div className="w-3/4">
+              {timePickerType === SchedulerTaskTimePickerTypes.DAILY && (
+                <DailyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+              )}
+              {timePickerType === SchedulerTaskTimePickerTypes.WEEKLY && (
+                <WeeklyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+              )}
+            </div>
           </div>
         </div>
 
