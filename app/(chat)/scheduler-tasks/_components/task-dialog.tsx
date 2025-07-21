@@ -29,6 +29,7 @@ import DailyTaskTimePicker from './time-picker/daily';
 import { ISchedulerTask } from '@/types/scheduler-task';
 import WeeklyTaskTimePicker from './time-picker/weekly';
 import MonthlyTaskTimePicker from './time-picker/monthly';
+import AnnuallyTaskTimePicker from './time-picker/annually';
 
 export interface SchedulerTaskDialogProps {
   user: User;
@@ -353,6 +354,11 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
                         <span>Monthly</span>
                       </div>
                     </SelectItem>
+                    <SelectItem value={SchedulerTaskTimePickerTypes.ANNUALLY}>
+                      <div className="flex items-center gap-4">
+                        <span>Annually</span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -368,6 +374,9 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
               )}
               {timePickerType === SchedulerTaskTimePickerTypes.MONTHLY && (
                 <MonthlyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+              )}
+              {timePickerType === SchedulerTaskTimePickerTypes.ANNUALLY && (
+                <AnnuallyTaskTimePicker onChange={onHandleUpdateTimePicker} />
               )}
             </div>
           </div>
