@@ -23,6 +23,7 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState<boolean>(false);
   const [tasks, setTasks] = useState<ISchedulerTask[]>([]);
   const [assistants, setAssistants] = useState<IAssistant[]>([]);
+  const [editingTask, setEditingTask] = useState<ISchedulerTask | null>(null);
 
   useEffect(() => {
     const fetchSchedulerTasks = async () => {
@@ -70,18 +71,36 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
     fetchSchedulerTasks();
   }, [user]);
 
-  const handleAddTaskCallback = useCallback((newTask: ISchedulerTask) => {
-    setTasks((prevTasks) => [...prevTasks, newTask]);
-    setIsTaskDialogOpen(false);
+  const handleOpenAddNewTaskDialog = useCallback(() => {
+    setIsTaskDialogOpen(true);
+    setEditingTask(null);
   }, []);
+
+  const handleCompleteTaskCallback = (completedTask: ISchedulerTask) => {
+    if (!completedTask) return;
+    if (editingTask && editingTask.id === completedTask.id) {
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => (task.id === completedTask.id ? completedTask : task)),
+      );
+    } else {
+      setTasks((prevTasks) => [...prevTasks, completedTask]);
+    }
+    setIsTaskDialogOpen(false);
+    setEditingTask(null);
+  };
 
   const handleRemoveTaskCallback = useCallback((taskId: string) => {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
   }, []);
 
+  const handleOpenEditTaskDialog = useCallback((task: ISchedulerTask) => {
+    setIsTaskDialogOpen(true);
+    setEditingTask(task);
+  }, []);
+
   return (
     <>
-      <SchedulerTasksHeader onOpenDialog={setIsTaskDialogOpen} />
+      <SchedulerTasksHeader onOpenDialog={handleOpenAddNewTaskDialog} />
       <div className="mt-4">
         {loading ? (
           <UploadListSkeleton />
@@ -97,6 +116,7 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
                 <SchedulerTaskCard
                   user={user}
                   task={task}
+                  onEditTaskCallback={handleOpenEditTaskDialog}
                   onDeleteTaskCallback={handleRemoveTaskCallback}
                 />
               </div>
@@ -108,8 +128,9 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
           user={user}
           assistants={assistants}
           open={isTaskDialogOpen}
+          task={editingTask}
           onOpenChange={setIsTaskDialogOpen}
-          onCreateTaskCallback={handleAddTaskCallback}
+          onTaskCompletedCallback={handleCompleteTaskCallback}
         />
       </div>
     </>

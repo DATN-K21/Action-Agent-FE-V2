@@ -20,13 +20,18 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { SchedulerTaskTimePickerTypes, SchedulerTaskTypes } from '@/constants/scheduler-task';
-import { cn, displayEnum } from '@/lib/utils';
-import { CreateSchedulerTaskParams, createTask } from '@/services/scheduler-service';
+import { cn, displayEnum, extractCronExpression } from '@/lib/utils';
+import {
+  CreateSchedulerTaskParams,
+  createTask,
+  updateSchedulerTask,
+  UpdateSchedulerTaskParams,
+} from '@/services/scheduler-service';
 import { IAssistant, ITeamProps } from '@/types/assistant';
 import { User } from 'next-auth';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import DailyTaskTimePicker from './time-picker/daily';
-import { ISchedulerTask } from '@/types/scheduler-task';
+import { ISchedulerTask, SchedulerTaskTimeDataProps } from '@/types/scheduler-task';
 import WeeklyTaskTimePicker from './time-picker/weekly';
 import MonthlyTaskTimePicker from './time-picker/monthly';
 import AnnuallyTaskTimePicker from './time-picker/annually';
@@ -36,8 +41,9 @@ export interface SchedulerTaskDialogProps {
   user: User;
   assistants: IAssistant[];
   open: boolean;
+  task: ISchedulerTask | null;
   onOpenChange: (open: boolean) => void;
-  onCreateTaskCallback: (task: ISchedulerTask) => void;
+  onTaskCompletedCallback: (task: ISchedulerTask) => void;
 }
 
 export interface ISchedulerTaskPayload {
@@ -59,8 +65,10 @@ type ValidationErrors = {
 const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
-  const { user, assistants, open, onOpenChange, onCreateTaskCallback } = props;
+  const { user, assistants, open, task, onOpenChange, onTaskCompletedCallback } = props;
   const [loading, setLoading] = useState<boolean>(false);
+  const status = useMemo(() => (task !== null ? 'edit' : 'create'), [task]);
+  const [taskTimeData, setTaskTimeData] = useState<SchedulerTaskTimeDataProps | null>(null);
 
   const [taskData, setTaskData] = useState<ISchedulerTaskPayload>({} as ISchedulerTaskPayload);
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -83,18 +91,26 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
       return;
     }
     setTaskData({
-      name: '',
-      description: '',
-      cron_expression: '',
-      prompt: '',
-      team_id: '',
-      assistant_id: '',
-      timezone: userTimezone || 'UTC',
-      job_type: SchedulerTaskTypes.RECURRING,
+      name: task?.name || '',
+      description: task?.description || '',
+      cron_expression: task?.cronExpression || '',
+      prompt: task?.prompt || '',
+      team_id: task?.teamId || '',
+      assistant_id: task?.assistantId || '',
+      job_type: task?.jobType || SchedulerTaskTypes.RECURRING,
+      timezone: task?.timezone || userTimezone || 'UTC',
     });
     setErrors({});
-    setTimePickerType(SchedulerTaskTimePickerTypes.DAILY);
-  }, [open]);
+
+    if (!task) {
+      setTimePickerType(SchedulerTaskTimePickerTypes.DAILY);
+      setTaskTimeData(null);
+      return;
+    }
+    const { type, time } = extractCronExpression(task);
+    setTimePickerType(type);
+    setTaskTimeData(time);
+  }, [open, task]);
 
   useEffect(() => {
     setTaskData((prev) => ({
@@ -164,19 +180,52 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
       },
     };
     try {
-      console.log('[handleSave] Creating task with payload:', payload);
-      const response: ISchedulerTask = await createTask(payload);
-      toast({
-        description: 'Scheduler task created successfully',
-        type: 'success',
-      });
-      onCreateTaskCallback?.(response);
-    } catch (error) {
-      console.error('Error saving task:', error);
+      if (status === 'create') {
+        await handleCreateNewTask(payload);
+      } else {
+        await handleUpdateTask({
+          ...payload,
+          id: task?.id || '',
+        } as UpdateSchedulerTaskParams);
+      }
     } finally {
       setLoading(false);
     }
   };
+  const handleCreateNewTask = useCallback(
+    async (payload: CreateSchedulerTaskParams): Promise<void> => {
+      try {
+        const response: ISchedulerTask = await createTask(payload);
+        toast({
+          description: 'Scheduler task created successfully',
+          type: 'success',
+        });
+        onTaskCompletedCallback?.(response);
+      } catch (error) {
+        console.error('Error saving task:', error);
+      }
+    },
+    [onTaskCompletedCallback],
+  );
+  const handleUpdateTask = useCallback(
+    async (payload: UpdateSchedulerTaskParams): Promise<void> => {
+      try {
+        const response: ISchedulerTask = await updateSchedulerTask(payload);
+        toast({
+          description: 'Scheduler task updated successfully',
+          type: 'success',
+        });
+        onTaskCompletedCallback?.(response);
+      } catch (error) {
+        console.error('Error updating task:', error);
+        toast({
+          description: 'Failed to update task, please try again',
+          type: 'error',
+        });
+      }
+    },
+    [onTaskCompletedCallback],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -185,7 +234,9 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Add Scheduler Task</DialogTitle>
+          <DialogTitle>
+            {status === 'create' ? 'Add Scheduler Task' : 'Edit Scheduler Task'}
+          </DialogTitle>
           <DialogDescription>Provide scheduler task details.</DialogDescription>
         </DialogHeader>
 
@@ -368,19 +419,28 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
             {/* Time Picker */}
             <div className="w-3/4">
               {timePickerType === SchedulerTaskTimePickerTypes.ONE_TIME && (
-                <OneTimeTaskTimePicker onChange={onHandleUpdateTimePicker} />
+                <OneTimeTaskTimePicker
+                  onChange={onHandleUpdateTimePicker}
+                  timeData={taskTimeData}
+                />
               )}
               {timePickerType === SchedulerTaskTimePickerTypes.DAILY && (
-                <DailyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+                <DailyTaskTimePicker onChange={onHandleUpdateTimePicker} timeData={taskTimeData} />
               )}
               {timePickerType === SchedulerTaskTimePickerTypes.WEEKLY && (
-                <WeeklyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+                <WeeklyTaskTimePicker onChange={onHandleUpdateTimePicker} timeData={taskTimeData} />
               )}
               {timePickerType === SchedulerTaskTimePickerTypes.MONTHLY && (
-                <MonthlyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+                <MonthlyTaskTimePicker
+                  onChange={onHandleUpdateTimePicker}
+                  timeData={taskTimeData}
+                />
               )}
               {timePickerType === SchedulerTaskTimePickerTypes.ANNUALLY && (
-                <AnnuallyTaskTimePicker onChange={onHandleUpdateTimePicker} />
+                <AnnuallyTaskTimePicker
+                  onChange={onHandleUpdateTimePicker}
+                  timeData={taskTimeData}
+                />
               )}
             </div>
           </div>

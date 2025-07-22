@@ -21,9 +21,18 @@ export function DateTimePicker(props: DateTimePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  React.useEffect(() => {
+    setDate(initialDate || new Date());
+  }, [initialDate]);
+
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
       setDate(selectedDate);
+      const formattedDate = new Date(selectedDate);
+      formattedDate.setHours(date.getHours());
+      formattedDate.setMinutes(date.getMinutes());
+      onChange?.(formattedDate);
     }
   };
 
@@ -39,6 +48,7 @@ export function DateTimePicker(props: DateTimePickerProps) {
         newDate.setHours(value === 'PM' ? currentHours + 12 : currentHours - 12);
       }
       setDate(newDate);
+      onChange?.(newDate);
     }
   };
 

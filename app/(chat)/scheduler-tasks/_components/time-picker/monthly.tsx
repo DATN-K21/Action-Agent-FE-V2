@@ -16,11 +16,11 @@ const MINUTES = Array.from({ length: 12 }, (_, i) =>
 const DAYS = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0')) as string[];
 
 function MonthlyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
-  const { onChange } = props;
+  const { onChange, timeData } = props;
 
-  const [selectedDay, setSelectedDay] = useState<string>('01');
-  const [selectedHour, setSelectedHour] = useState<string>('00');
-  const [selectedMinute, setSelectedMinute] = useState<string>('00');
+  const [selectedDay, setSelectedDay] = useState<string>(timeData?.dayOfMonth || '01');
+  const [selectedHour, setSelectedHour] = useState<string>(timeData?.hour || '00');
+  const [selectedMinute, setSelectedMinute] = useState<string>(timeData?.minute || '00');
 
   const handleTimeChange = (type: 'day' | 'hour' | 'minute', value: string) => {
     let builtCronExpression = '';

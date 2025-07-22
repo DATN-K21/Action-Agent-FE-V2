@@ -16,11 +16,11 @@ const MINUTES = Array.from({ length: 12 }, (_, i) =>
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] as string[];
 
 function WeeklyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
-  const { onChange } = props;
+  const { onChange, timeData } = props;
 
-  const [selectedDay, setSelectedDay] = useState<string>('MON');
-  const [selectedHour, setSelectedHour] = useState<string>('00');
-  const [selectedMinute, setSelectedMinute] = useState<string>('00');
+  const [selectedDay, setSelectedDay] = useState<string>(timeData?.dayOfWeek || 'MON');
+  const [selectedHour, setSelectedHour] = useState<string>(timeData?.hour || '00');
+  const [selectedMinute, setSelectedMinute] = useState<string>(timeData?.minute || '00');
 
   const handleTimeChange = (type: 'day' | 'hour' | 'minute', value: string) => {
     let builtCronExpression = '';

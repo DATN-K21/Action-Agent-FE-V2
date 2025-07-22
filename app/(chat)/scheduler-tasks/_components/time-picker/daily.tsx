@@ -15,9 +15,9 @@ const MINUTES = Array.from({ length: 12 }, (_, i) =>
 ) as string[];
 
 function DailyTaskTimePicker(props: SchedulerTaskTimePickerProps) {
-  const { onChange } = props;
-  const [selectedHour, setSelectedHour] = useState<string>('00');
-  const [selectedMinute, setSelectedMinute] = useState<string>('00');
+  const { onChange, timeData } = props;
+  const [selectedHour, setSelectedHour] = useState<string>(timeData?.hour || '00');
+  const [selectedMinute, setSelectedMinute] = useState<string>(timeData?.minute || '00');
 
   const handleTimeChange = (type: 'hour' | 'minute', value: string) => {
     let builtCronExpression = '';

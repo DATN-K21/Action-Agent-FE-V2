@@ -9,6 +9,10 @@ export interface CreateSchedulerTaskParams {
   payload: ISchedulerTaskPayload;
 }
 
+export interface UpdateSchedulerTaskParams extends CreateSchedulerTaskParams {
+  id: string;
+}
+
 export interface GetAllSchedulerTasksParams {
   user: User;
   payload?: {
@@ -62,6 +66,27 @@ export const getAllSchedulerTasks = async (
     return response.data?.jobs || [];
   } catch (error) {
     console.error('Error getting scheduler tasks: ', error);
+    throw error;
+  }
+};
+
+export const updateSchedulerTask = async (
+  params: UpdateSchedulerTaskParams,
+): Promise<ISchedulerTask> => {
+  try {
+    if (!params.id) throw new Error("Missing 'id'");
+
+    const headers: Record<string, string> = createUserAuthHeaders(params.user);
+    const response: IResponse<ISchedulerTask> = await sendRequest({
+      url: `${SCHEDULER_ENDPOINT}/job/${params.id}/update`,
+      method: HttpMethod.PUT,
+      body: params.payload,
+      headers: headers,
+    });
+
+    return response.data as ISchedulerTask;
+  } catch (error) {
+    console.error('Error updating scheduler task: ', error);
     throw error;
   }
 };

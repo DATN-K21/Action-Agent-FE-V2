@@ -11,7 +11,7 @@ import { ISchedulerTask } from '@/types/scheduler-task';
 import { GoTasklist } from 'react-icons/go';
 import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
 import { useMemo } from 'react';
-import { SchedulerTaskStatus, SchedulerTaskTypes } from '@/constants/scheduler-task';
+import { SchedulerTaskStatus } from '@/constants/scheduler-task';
 import { displayEnum } from '@/lib/utils';
 import { deleteSchedulerTask } from '@/services/scheduler-service';
 import { User } from 'next-auth';
@@ -20,10 +20,11 @@ import { toast } from '@/components/toast';
 export interface SchedulerTasksListProps {
   user: User;
   task: ISchedulerTask;
+  onEditTaskCallback: (task: ISchedulerTask) => void;
   onDeleteTaskCallback: (taskId: string) => void;
 }
 function SchedulerTaskCard(props: SchedulerTasksListProps) {
-  const { user, task, onDeleteTaskCallback } = props;
+  const { user, task, onEditTaskCallback, onDeleteTaskCallback } = props;
 
   const TaskStatusBadgeComponent = useMemo<React.ReactNode>((): React.ReactNode => {
     let badgeClassName = 'p-2 rounded-lg text-xs font-medium ';
@@ -47,7 +48,9 @@ function SchedulerTaskCard(props: SchedulerTasksListProps) {
     return <span className={badgeClassName}>{task.status?.toLowerCase() ?? 'Unknown'}</span>;
   }, [task.status]);
 
-  const handleOnEdit = (task: ISchedulerTask) => {};
+  const handleOnEdit = (task: ISchedulerTask) => {
+    onEditTaskCallback(task);
+  };
 
   const handleOnDelete = async (taskId: string) => {
     try {
