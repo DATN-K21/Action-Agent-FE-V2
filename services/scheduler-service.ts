@@ -1,5 +1,6 @@
 import { ISchedulerTaskPayload } from '@/app/(chat)/scheduler-tasks/_components/task-dialog';
 import { HttpMethod, SCHEDULER_ENDPOINT } from '@/constants/response-constant';
+import { SchedulerTaskStatus, SchedulerTaskTypes } from '@/constants/scheduler-task';
 import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 import { ISchedulerTask } from '@/types/scheduler-task';
 import { User } from 'next-auth';
@@ -13,16 +14,18 @@ export interface UpdateSchedulerTaskParams extends CreateSchedulerTaskParams {
   id: string;
 }
 
+export interface SchedulerTaskFilterProps {
+  skip?: number;
+  limit?: number;
+  status?: SchedulerTaskStatus;
+  job_type?: SchedulerTaskTypes;
+  assistant_id?: string;
+  team_id?: string;
+}
+
 export interface GetAllSchedulerTasksParams {
   user: User;
-  payload?: {
-    skip?: number;
-    limit?: number;
-    status?: string;
-    job_type?: string;
-    assistant_id?: string;
-    team_id?: string;
-  };
+  payload?: SchedulerTaskFilterProps;
 }
 
 export const createTask = async (params: CreateSchedulerTaskParams): Promise<ISchedulerTask> => {

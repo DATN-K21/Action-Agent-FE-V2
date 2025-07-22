@@ -8,9 +8,15 @@ import SchedulerTaskCard from './task-card';
 import SchedulerTaskDialog from './task-dialog';
 import { ISchedulerTask } from '@/types/scheduler-task';
 import SchedulerTasksHeader from './header';
-import { getAllSchedulerTasks, GetAllSchedulerTasksParams } from '@/services/scheduler-service';
+import {
+  getAllSchedulerTasks,
+  GetAllSchedulerTasksParams,
+  SchedulerTaskFilterProps,
+} from '@/services/scheduler-service';
 import { IAssistant } from '@/types/assistant';
 import { getAllAssistants, GetAssistantsParams } from '@/services/assistant-service';
+import { Separator } from '@/components/ui/separator';
+import SchedulerTaskFilter from './task-filter';
 
 export interface SchedulerTasksListProps {
   user: User;
@@ -24,20 +30,21 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
   const [tasks, setTasks] = useState<ISchedulerTask[]>([]);
   const [assistants, setAssistants] = useState<IAssistant[]>([]);
   const [editingTask, setEditingTask] = useState<ISchedulerTask | null>(null);
+  const [filter, setFilter] = useState<SchedulerTaskFilterProps>({
+    skip: 0,
+    limit: 100,
+  });
 
   useEffect(() => {
     const fetchSchedulerTasks = async () => {
       setLoading(true);
       const payload: GetAllSchedulerTasksParams = {
         user,
-        payload: {
-          skip: 0,
-          limit: 10,
-        },
+        payload: filter,
       };
       try {
         const tasksResponse: ISchedulerTask[] = await getAllSchedulerTasks(payload);
-        if (tasksResponse && tasksResponse.length > 0) {
+        if (tasksResponse && Array.isArray(tasksResponse)) {
           setTasks(tasksResponse);
         }
       } catch (error) {
@@ -69,7 +76,11 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
     };
     fetchAssistants();
     fetchSchedulerTasks();
-  }, [user]);
+  }, [filter, user]);
+
+  const updateFilter = useCallback((newFilter: SchedulerTaskFilterProps) => {
+    setFilter((prevFilter) => ({ ...prevFilter, ...newFilter }));
+  }, []);
 
   const handleOpenAddNewTaskDialog = useCallback(() => {
     setIsTaskDialogOpen(true);
@@ -101,7 +112,12 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
   return (
     <>
       <SchedulerTasksHeader onOpenDialog={handleOpenAddNewTaskDialog} />
-      <div className="mt-4">
+
+      <SchedulerTaskFilter assistants={assistants} updateFilter={updateFilter} />
+
+      <Separator className="shadow" />
+
+      <div className="mt-2">
         {loading ? (
           <UploadListSkeleton />
         ) : tasks.length === 0 ? (
