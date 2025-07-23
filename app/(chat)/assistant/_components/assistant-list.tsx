@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AddAssistantDialog } from './add-assistant-dialog';
 import { EditAssistantDialog } from './edit-assistant-dialog';
 import { AssistantCard } from './assistant-card';
@@ -35,7 +34,6 @@ export default function AssistantsList(props: AssistantListProps) {
     AssistantType.ADVANCED_ASSISTANT,
   );
   const [assistants, setAssistants] = useState<IAssistant[]>([]);
-  // const [mcpAssistants, setMcpAssistants] = useState<IAssistant[]>([]);
   const [isLoadingAssistants, setIsLoadingAssistants] = useState<boolean>(false);
   const [assistantToUpdate, setAssistantToUpdate] = useState<IAssistant | null>(null);
   const fetchThreads = useThreadStore((state) => state.fetchThreads);

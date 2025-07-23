@@ -57,6 +57,9 @@ export function AddAssistantDialog({
   const [extensionIds, setExtensionIds] = useState<string[]>([]);
   const [isInterrupt, setIsInterrupt] = useState(true);
   const [isAskHuman, setIsAskHuman] = useState(true);
+  const [isScheduleEnabled, setIsScheduleEnabled] = useState(false);
+  const [isRetrievalInterruptSkipEnabled, setIsRetrievalInterruptSkipEnabled] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const fetchAssistants = useAssistantStore((state) => state.fetchAssistants);
@@ -132,6 +135,8 @@ export function AddAssistantDialog({
         mcpIds,
         interrupt: isInterrupt,
         askHuman: isAskHuman,
+        schedulerEnabled: isScheduleEnabled,
+        retrievalInterruptSkipEnabled: isRetrievalInterruptSkipEnabled,
       };
 
       await createAssistant({
@@ -181,7 +186,7 @@ export function AddAssistantDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="sm:max-w-[600px] w-[95%] max-w-full mx-auto"
+        className="sm:max-w-screen-toast-mobile w-[95%] max-w-full mx-auto"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>
@@ -267,55 +272,107 @@ export function AddAssistantDialog({
                   <span className="ml-2">▼</span>
                 </Accordion.Trigger>
               </Accordion.Header>
-              <Accordion.Content className="px-2 pb-2 flex flex-row gap-2 justify-evenly">
-                <div className="flex flex-row gap-2">
-                  <Label htmlFor="chunk-size" className="flex justify-center items-center">
-                    Interrupt
-                  </Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info size={15} />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm">
-                      <p>
-                        Allow the assistant to interrupt its own response if new user input arrives.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Switch
-                    id="interrupt"
-                    checked={isInterrupt} // Replace with actual state if needed
-                    onCheckedChange={(checked) => {
-                      setIsInterrupt(checked);
-                    }}
-                  />
+              <Accordion.Content className="px-2 pb-2 flex flex-col gap-2 justify-start items-between">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Interrupt */}
+                  <div className="flex flex-row gap-2 justify-start items-center">
+                    <Label htmlFor="chunk-size" className="flex justify-center items-center">
+                      Interrupt
+                    </Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info size={15} />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>
+                          Allow the assistant to interrupt its own response if new user input
+                          arrives.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Switch
+                      id="interrupt"
+                      checked={isInterrupt} // Replace with actual state if needed
+                      onCheckedChange={(checked) => {
+                        setIsInterrupt(checked);
+                      }}
+                    />
+                  </div>
+
+                  {/* Ask Human */}
+                  <div className="flex flex-row gap-2 justify-end items-center">
+                    <Label htmlFor="chunk-overlap" className="flex justify-center items-center">
+                      Ask human
+                    </Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info size={15} />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>
+                          Enable this to let the assistant ask for human help when it cannot answer
+                          a question.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Switch
+                      id="ask-human"
+                      checked={isAskHuman} // Replace with actual state if needed
+                      onCheckedChange={(checked) => {
+                        setIsAskHuman(checked);
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="flex flex-row gap-2">
-                  <Label htmlFor="chunk-overlap" className="flex justify-center items-center">
-                    Ask human
-                  </Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info size={15} />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm">
-                      <p>
-                        Enable this to let the assistant ask for human help when it cannot answer a
-                        question.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Switch
-                    id="ask-human"
-                    checked={isAskHuman} // Replace with actual state if needed
-                    onCheckedChange={(checked) => {
-                      setIsAskHuman(checked);
-                    }}
-                  />
+
+                <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
+                  {/*  Scheduler */}
+                  <div className="flex flex-row gap-2 justify-start items-center col-span-1 md:col-span-3">
+                    <Label htmlFor="scheduler" className="flex justify-center items-center">
+                      Scheduler
+                    </Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info size={15} />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>Enable this to manage scheduled tasks for the assistant.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Switch
+                      id="scheduler"
+                      checked={isScheduleEnabled}
+                      onCheckedChange={(checked) => {
+                        setIsScheduleEnabled(checked);
+                      }}
+                    />
+                  </div>
+
+                  {/* Skip Retrieval Interrupt */}
+                  <div className="flex flex-row gap-2 justify-end items-center col-span-1 md:col-span-4">
+                    <Label htmlFor="retrieval-skip" className="flex justify-center items-center">
+                      Skip Retrieval Interrupt
+                    </Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info size={15} />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm">
+                        <p>
+                          Enable this to skip interrupting the assistant when it is retrieving
+                          information.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Switch
+                      id="retrieval-skip"
+                      checked={isRetrievalInterruptSkipEnabled}
+                      onCheckedChange={(checked) => {
+                        setIsRetrievalInterruptSkipEnabled(checked);
+                      }}
+                    />
+                  </div>
                 </div>
-                {/* {advancedError && (
-                  <span className="text-xs text-red-500 mt-1">{advancedError}</span>
-                )} */}
               </Accordion.Content>
             </Accordion.Item>
           </Accordion.Root>
