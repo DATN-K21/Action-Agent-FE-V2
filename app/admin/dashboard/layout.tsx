@@ -13,15 +13,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Persisting the sidebar state in the cookie.
   const cookieStore = cookies();
   //const defaultOpen = cookieStore.get('sidebar:state')?.value === 'true';
-  return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        {/* <Header /> */}
-        {/* page main content */}
-        {children}
-        {/* page main content ends */}
-      </SidebarInset>
-    </SidebarProvider>
-  );
+  return <div>{children}</div>;
 }

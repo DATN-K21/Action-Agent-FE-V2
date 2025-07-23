@@ -8,8 +8,8 @@ export function RankingUser(props: RankingUserProps) {
   const { data } = props;
 
   return (
-    <div className="space-y-8">
-      {data?.map((user, index) => (
+    <div className="space-y-8 min-h-[600px]">
+      {data?.map((user) => (
         <div className="flex items-center" key={user.id}>
           <Avatar className="size-9">
             <AvatarImage src="/avatars/01.png" alt="Avatar" />

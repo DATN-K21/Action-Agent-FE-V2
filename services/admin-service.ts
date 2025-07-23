@@ -4,11 +4,10 @@ import { createUserAuthHeaders, sendRequest } from '@/lib/utils';
 
 export interface GetStatisticOverviewParams {
   user: User;
+  period?: string; // Optional period for filtering statistics
 }
 
-export interface GetStatisticRankingUserParams {
-  user: User;
-}
+export interface GetStatisticRankingUserParams extends GetStatisticOverviewParams {}
 
 export interface IRankingUser {
   id: string;
@@ -22,6 +21,36 @@ export interface IRankingUser {
     assistant_count: string;
   };
 }
+export interface IRankingConnectedExtension {
+  id: string;
+  score: number;
+  rank: number;
+  displayInfo: {
+    extension_name: string;
+    total_connections: string;
+    skill_count: string;
+    success_rate: string;
+  };
+}
+
+export interface IRankingResponse {
+  users: {
+    data: IRankingUser[];
+    weight: {
+      uploads: number;
+      threads: number;
+      assistants: number;
+    };
+  };
+  connectedExtensions: {
+    data: IRankingConnectedExtension[];
+    weight: {
+      skills: number;
+      success_rate: number;
+      user_adoption: number;
+    };
+  };
+}
 
 export const getStatisticOverview = async (params: GetStatisticOverviewParams) => {
   try {
@@ -30,6 +59,9 @@ export const getStatisticOverview = async (params: GetStatisticOverviewParams) =
       url: `${AI_ENDPOINT_V1}/statistics/overview`,
       method: HttpMethod.GET,
       headers: headers,
+      queryParams: {
+        period: params.period === 'all' ? undefined : params.period,
+      },
     })) as { data: any };
 
     return response.data;
@@ -39,29 +71,33 @@ export const getStatisticOverview = async (params: GetStatisticOverviewParams) =
   }
 };
 
-export const getRankingUser = async (
+export const getStatisticsRanking = async (
   params: GetStatisticOverviewParams,
-): Promise<IRankingUser[]> => {
+): Promise<{
+  users: IRankingUser[];
+  connectedExtensions: IRankingConnectedExtension[];
+}> => {
   try {
     const headers: Record<string, string> = createUserAuthHeaders(params.user);
-    const response: IResponse<{
-      users: { data: IRankingUser[] } | null;
-    }> = await sendRequest({
+    const response: IResponse<IRankingResponse> = await sendRequest({
       url: `${AI_ENDPOINT_V1}/statistics/ranking`,
       method: HttpMethod.GET,
       headers,
+      queryParams: {
+        period: params.period === 'all' ? undefined : params.period,
+      },
     });
+    const result = {
+      users: response.data?.users.data || [],
+      connectedExtensions: response.data?.connectedExtensions.data || [],
+    };
 
-    const users = response.data?.users;
-
-    if (!users || !Array.isArray(users.data)) {
-      console.warn('No user data found in response');
-      return []; // fallback safe
-    }
-
-    return users.data;
+    return result;
   } catch (error) {
     console.error('Error getting ranking users: ', error);
-    return []; // hoặc throw error nếu muốn fail nhanh
+    return {
+      users: [],
+      connectedExtensions: [],
+    };
   }
 };
