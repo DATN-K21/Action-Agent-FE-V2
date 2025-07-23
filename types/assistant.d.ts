@@ -21,6 +21,8 @@ export interface IAssistant {
   teams?: ITeamProps[];
   interrupt?: boolean;
   askHuman?: boolean;
+  schedulerEnabled?: boolean;
+  retrievalInterruptSkipEnabled?: boolean;
 }
 
 export interface CreateAssistantRequest {

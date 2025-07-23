@@ -495,13 +495,13 @@ export default function MCPServerTable(props: { user: User }) {
           <DialogHeader>
             <DialogTitle>How to get MCP Server link from Composio</DialogTitle>
             <DialogDescription>
-              <ol className="list-decimal ml-4 space-y-2 text-sm">
+              <div className="list-decimal ml-4 space-y-2 text-sm">
                 <li>Log in to your Composio account.</li>
                 <li>Go to the MCP Servers section or similar in the dashboard.</li>
                 <li>Create or select an MCP Server you want to use.</li>
                 <li>Copy the URL of that MCP Server.</li>
                 <li>Paste the link into the URL field when adding an MCP Server here.</li>
-              </ol>
+              </div>
               <div className="mt-2 text-xs text-muted-foreground">
                 If you don&apos;t have a Composio account, visit{' '}
                 <a
