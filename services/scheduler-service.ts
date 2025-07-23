@@ -73,6 +73,25 @@ export const getAllSchedulerTasks = async (
   }
 };
 
+export const getSchedulerTaskById = async (
+  user: User,
+  taskId: string,
+): Promise<ISchedulerTask | null> => {
+  try {
+    const headers: Record<string, string> = createUserAuthHeaders(user);
+    const response: IResponse<ISchedulerTask> = await sendRequest({
+      url: `${SCHEDULER_ENDPOINT}/job/${taskId}`,
+      method: HttpMethod.GET,
+      headers: headers,
+    });
+
+    return response.data || null;
+  } catch (error) {
+    console.error('Error getting scheduler task by id: ', error);
+    throw error;
+  }
+};
+
 export const updateSchedulerTask = async (
   params: UpdateSchedulerTaskParams,
 ): Promise<ISchedulerTask> => {
@@ -108,6 +127,27 @@ export const deleteSchedulerTask = async (user: User, taskId: string): Promise<b
     return response.status === 200;
   } catch (error) {
     console.error('Error deleting scheduler task: ', error);
+    return false;
+  }
+};
+
+export const runSchedulerTask = async (user: User, taskId: string): Promise<boolean> => {
+  try {
+    if (!taskId) throw new Error("Missing 'taskId'");
+
+    const headers: Record<string, string> = createUserAuthHeaders(user);
+    const response: IResponse<any> = await sendRequest({
+      url: `${SCHEDULER_ENDPOINT}/job/${taskId}/run`,
+      method: HttpMethod.POST,
+      headers: headers,
+    });
+
+    if (response.status !== 200) {
+      throw new Error('Failed to run task');
+    }
+    return true;
+  } catch (error) {
+    console.error('Error running scheduler task: ', error);
     return false;
   }
 };

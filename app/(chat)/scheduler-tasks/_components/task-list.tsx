@@ -1,21 +1,25 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { User } from 'next-auth';
 import { UploadListSkeleton } from '@/components/skeleton/upload-list-skeleton';
-import { GoTasklist } from 'react-icons/go';
-import SchedulerTaskCard from './task-card';
-import SchedulerTaskDialog from './task-dialog';
-import { ISchedulerTask } from '@/types/scheduler-task';
-import SchedulerTasksHeader from './header';
+import { toast } from '@/components/toast';
+import { Separator } from '@/components/ui/separator';
+import { SchedulerTaskStatus } from '@/constants/scheduler-task';
+import useTaskPolling from '@/hooks/use-task-polling';
+import { getAllAssistants, GetAssistantsParams } from '@/services/assistant-service';
 import {
   getAllSchedulerTasks,
   GetAllSchedulerTasksParams,
+  runSchedulerTask,
   SchedulerTaskFilterProps,
 } from '@/services/scheduler-service';
 import { IAssistant } from '@/types/assistant';
-import { getAllAssistants, GetAssistantsParams } from '@/services/assistant-service';
-import { Separator } from '@/components/ui/separator';
+import { ISchedulerTask } from '@/types/scheduler-task';
+import { User } from 'next-auth';
+import { useCallback, useEffect, useState } from 'react';
+import { GoTasklist } from 'react-icons/go';
+import SchedulerTasksHeader from './header';
+import SchedulerTaskCard from './task-card';
+import SchedulerTaskDialog from './task-dialog';
 import SchedulerTaskFilter from './task-filter';
 
 export interface SchedulerTasksListProps {
@@ -33,6 +37,39 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
   const [filter, setFilter] = useState<SchedulerTaskFilterProps>({
     skip: 0,
     limit: 100,
+  });
+
+  // Initialize multi-task polling hook
+  const taskPolling = useTaskPolling({
+    user,
+    intervalMs: 2000,
+    maxRetries: 30,
+    onStatusChange: (updatedTask: ISchedulerTask) => {
+      // Update the task in the tasks array when status changes
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
+      );
+    },
+    onSuccess: (task: ISchedulerTask) => {
+      toast({
+        description: `Task "${task.name}" completed successfully!`,
+        type: 'success',
+      });
+    },
+    onError: (error: Error, taskId: string) => {
+      const foundTask = tasks.find((t) => t.id === taskId);
+      toast({
+        description: `Task "${foundTask?.name || taskId}" failed: ${error.message}`,
+        type: 'error',
+      });
+    },
+    onMaxRetriesReached: (taskId: string) => {
+      const foundTask = tasks.find((t) => t.id === taskId);
+      toast({
+        description: `Max polling retries reached for task "${foundTask?.name || taskId}"`,
+        type: 'info',
+      });
+    },
   });
 
   useEffect(() => {
@@ -109,6 +146,39 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
     setEditingTask(task);
   }, []);
 
+  const onRunTaskCallback = useCallback(
+    async (task: ISchedulerTask) => {
+      try {
+        // Call the API to run the task
+        const isSuccess = await runSchedulerTask(user, task.id);
+        if (!isSuccess) {
+          throw new Error(`Failed to start task "${task.name}"`);
+        }
+        // Update the task in state with the new status
+        setTasks((prevTasks) =>
+          prevTasks.map((t) =>
+            t.id === task.id ? { ...t, status: SchedulerTaskStatus.RUNNING } : t,
+          ),
+        );
+
+        // Start polling for this task
+        taskPolling.startPolling(task.id);
+
+        toast({
+          description: `Task "${task.name}" started successfully!`,
+          type: 'success',
+        });
+      } catch (error) {
+        console.error('Error running task:', error);
+        toast({
+          description: `Failed to start task "${task.name}"`,
+          type: 'error',
+        });
+      }
+    },
+    [user, taskPolling],
+  );
+
   return (
     <>
       <SchedulerTasksHeader onOpenDialog={handleOpenAddNewTaskDialog} />
@@ -127,16 +197,21 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
           </div>
         ) : (
           <ul className="w-full grid gap-4 overflow-auto pb-16 pt-4 md:grid-cols-2 lg:grid-cols-3">
-            {tasks.map((task, index) => (
-              <div key={index} className="w-full">
-                <SchedulerTaskCard
-                  user={user}
-                  task={task}
-                  onEditTaskCallback={handleOpenEditTaskDialog}
-                  onDeleteTaskCallback={handleRemoveTaskCallback}
-                />
-              </div>
-            ))}
+            {tasks.map((task, index) => {
+              const displayTask = taskPolling.getCurrentTask(task.id) || task;
+
+              return (
+                <div key={index} className="w-full relative">
+                  <SchedulerTaskCard
+                    user={user}
+                    task={displayTask}
+                    onEditTaskCallback={handleOpenEditTaskDialog}
+                    onDeleteTaskCallback={handleRemoveTaskCallback}
+                    onRunTaskCallback={onRunTaskCallback}
+                  />
+                </div>
+              );
+            })}
           </ul>
         )}
 
