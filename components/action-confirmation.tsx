@@ -140,9 +140,9 @@ const PureActionConfirmation = ({ message, user }: ActionConfirmationProps) => {
         data-role={MessageType.AI}
       >
         <AlertDialog defaultOpen>
-          <AlertDialogContent className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl">
+          <AlertDialogContent className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-3xl xl:max-w-4xl">
             <AlertDialogHeader className="pb-4 space-y-4">
-              <AlertDialogTitle className="text-xl font-[550]">
+              <AlertDialogTitle className="text-lg sm:text-xl font-[550] break-words word-break overflow-wrap-anywhere hyphens-auto leading-relaxed">
                 {isContextInput
                   ? 'Context Input Required'
                   : `Allow tool from "${firstToolCall.name}"?`}

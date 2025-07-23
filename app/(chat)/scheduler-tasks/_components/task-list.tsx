@@ -187,7 +187,7 @@ function SchedulerTasksList(props: SchedulerTasksListProps) {
 
       <Separator className="shadow" />
 
-      <div className="mt-2">
+      <div className="mt-2 w-full">
         {loading ? (
           <UploadListSkeleton />
         ) : tasks.length === 0 ? (
