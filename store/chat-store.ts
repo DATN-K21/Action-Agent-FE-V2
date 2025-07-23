@@ -119,6 +119,7 @@ const useChatStore = create<ChatStore>()(
                 content: input,
               },
             ],
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           },
         };
 
@@ -152,8 +153,8 @@ const useChatStore = create<ChatStore>()(
                 if (
                   (data.type === MessageType.AI && data.content) ||
                   (data.type !== MessageType.AI && data.tool_calls) ||
-                  (data.type === MessageType.ERROR) || 
-                  ((data.type === MessageType.TOOL && data.name === 'KnowledgeBase'))
+                  data.type === MessageType.ERROR ||
+                  (data.type === MessageType.TOOL && data.name === 'KnowledgeBase')
                 ) {
                   if (data.type === MessageType.INTERRUPT && data.tool_calls) {
                     set({ isInterrupting: true });
