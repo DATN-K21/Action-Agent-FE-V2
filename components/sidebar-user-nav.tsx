@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { logout } from '@/services/auth-service';
+import { Role } from '@/constants/data';
 
 export function SidebarUserNav({ user }: { user: User }) {
   const [openProfile, setOpenProfile] = useState(false);
@@ -40,19 +41,27 @@ export function SidebarUserNav({ user }: { user: User }) {
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-            <DropdownMenuItem className="cursor-pointer" onSelect={() => setOpenProfile(true)}>
-              My profile
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <button
-                type="button"
-                className="w-full cursor-pointer"
-                onClick={() => handleLogOut()}
-              >
-                Sign out
-              </button>
-            </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onSelect={() => setOpenProfile(true)}>
+                My profile
+              </DropdownMenuItem>
+              {user.role === Role.ADMIN && (
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onSelect={() => (window.location.href = '/admin/dashboard/overview')}
+                >
+                  Overview Dashboard
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <button
+                  type="button"
+                  className="w-full cursor-pointer"
+                  onClick={() => handleLogOut()}
+                >
+                  Sign out
+                </button>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
