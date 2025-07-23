@@ -113,6 +113,7 @@ const PureActionConfirmation = ({ message, user }: ActionConfirmationProps) => {
         decision: type.toString(),
         tool_message: isContextInput ? userAnswer : JSON.stringify(args),
       },
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
 
     try {
