@@ -51,4 +51,5 @@ export interface IMessageInterruptPayload {
     decision: string;
     tool_message?: string;
   };
+  timezone: string;
 }

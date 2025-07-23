@@ -15,6 +15,7 @@ export interface StreamTeamParams {
         content: string;
       },
     ];
+    timezone: string;
   };
 }
 
