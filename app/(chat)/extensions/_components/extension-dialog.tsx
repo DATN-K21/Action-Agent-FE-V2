@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { IExtensionAction } from '@/constants/data';
 import { getExtensionActions } from '@/services/extension-service';
 import { IExtension } from '@/types/extension';
@@ -60,12 +61,14 @@ const ExtensionDialog: React.FC<ExtensionDialogProps> = ({ user, extension, isOp
             {extension.name}
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm md:text-base text-center sm:text-left">
-            {`Integrate ${extension.name} into your chat!`}
+            {extension.description || 'No description available for this extension.'}
           </DialogDescription>
+          <Separator className="shadow" />
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <span>{`${extension.name.toUpperCase()} tool list: `}</span>
             {actionLoading ? (
               <div className="space-y-3 p-2">
                 {Array(4)
