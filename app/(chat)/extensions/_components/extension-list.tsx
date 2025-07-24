@@ -96,7 +96,7 @@ export default function ExtensionList(props: ExtensionListProps) {
       } as ExtensionParams;
       const { data, meta } = await getAllExtensions(extensionParams);
 
-      if (data.length <= 0 || !meta || meta?.page >= meta?.totalPages) {
+      if (data.length <= 0 || !meta || meta?.page > meta?.totalPages) {
         setHasMore(false);
       } else {
         setCurrentPage(nextPage);
