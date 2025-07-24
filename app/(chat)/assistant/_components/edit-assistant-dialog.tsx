@@ -207,7 +207,7 @@ export function EditAssistantDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col justify-center items-center gap-4 px-6">
+        <div className="flex flex-col items-center gap-4 px-6 max-h-96 overflow-y-auto">
           {/* Name */}
           <div className="grid w-full max-w-md items-center gap-1.5">
             <Label htmlFor="name">Name</Label>
@@ -280,7 +280,7 @@ export function EditAssistantDialog({
           {/* Advanced Settings */}
           <Accordion.Root type="single" collapsible className="w-full max-w-md">
             <Accordion.Item value="advanced" className="border rounded">
-              <Accordion.Header>
+              <Accordion.Header className="mb-2">
                 <Accordion.Trigger className="w-full flex items-center justify-between p-2 text-left text-sm">
                   Advanced settings
                   <span className="ml-2">▼</span>

@@ -153,15 +153,16 @@ export function MCPServerDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] w-[95%] max-w-full mx-auto">
+      <DialogContent className="sm:max-w-screen-toast-mobile w-[95%] max-w-full mx-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-xl">{title}</DialogTitle>
             <DialogDescription>Fill in the details of your MCP server below.</DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+          <div className="grid gap-4 py-4 max-h-96 overflow-y-auto">
+            {/* Name */}
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4 px-1">
               <Label htmlFor="mcpName" className="md:text-right">
                 Name
               </Label>
@@ -178,7 +179,8 @@ export function MCPServerDialog({
                 {errors.mcpName && <span className="text-sm text-red-500">{errors.mcpName}</span>}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+            {/* URL */}
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4 px-1">
               <Label htmlFor="url" className="md:text-right">
                 URL
               </Label>
@@ -195,7 +197,8 @@ export function MCPServerDialog({
                 {errors.url && <span className="text-sm text-red-500">{errors.url}</span>}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+            {/* Description */}
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4 px-1">
               <Label htmlFor="description" className="md:text-right">
                 Description
               </Label>
@@ -214,7 +217,8 @@ export function MCPServerDialog({
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+            {/* Transport */}
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4 px-1">
               <Label htmlFor="transport" className="md:text-right">
                 Transport
               </Label>
