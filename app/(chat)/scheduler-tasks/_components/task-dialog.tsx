@@ -240,7 +240,7 @@ function SchedulerTaskDialog(props: SchedulerTaskDialogProps) {
           <DialogDescription>Provide scheduler task details.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col justify-center items-center gap-4 px-6">
+        <div className="flex flex-col items-center gap-4 px-6 max-h-96 overflow-y-auto py-2">
           {/* Name */}
           <div className="grid w-full max-w-md items-center gap-1.5">
             <Label htmlFor="name">

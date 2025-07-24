@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { InfoIcon } from '@/components/icons';
 import { useState, useEffect } from 'react';
-import {toast} from '@/components/toast';
+import { toast } from '@/components/toast';
 import * as Accordion from '@radix-ui/react-accordion';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ interface UploadDialogProps {
     is_global: boolean,
     thread_id?: string | null,
     chunkSize?: number,
-    chunkOverlap?: number
+    chunkOverlap?: number,
   ) => void;
   user?: any;
 }
@@ -111,7 +111,7 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
         isGlobal,
         isGlobal ? null : threadId,
         chunkSize,
-        chunkOverlap
+        chunkOverlap,
       );
       setFile(null);
       setDescription('');
@@ -136,7 +136,7 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
         <DialogHeader>
           <DialogTitle>Upload File</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4 px-1">
+        <div className="flex flex-col gap-4 px-1 max-h-96 overflow-y-auto">
           <div className="flex items-center gap-2 justify-between">
             <Label htmlFor="global-upload" className="flex items-center gap-1">
               Global
@@ -153,7 +153,9 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
           </div>
           {!isGlobal && (
             <div className="flex flex-col w-full gap-1.5">
-              <Label htmlFor="thread">Thread <span className="text-red-500">*</span></Label>
+              <Label htmlFor="thread">
+                Thread <span className="text-red-500">*</span>
+              </Label>
               <div className="w-full">
                 <select
                   id="thread"
@@ -163,7 +165,9 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
                 >
                   <option value="">Select a thread</option>
                   {threads.map((t) => (
-                    <option key={t.id} value={t.id}>{t.title}</option>
+                    <option key={t.id} value={t.id}>
+                      {t.title}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -180,10 +184,17 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
                 </span>
               </span>
             </Label>
-            <Input id="file" type="file" accept=".txt,.md,.pdf,.docx,.xlsx,.pptx" onChange={handleFile} />
+            <Input
+              id="file"
+              type="file"
+              accept=".txt,.md,.pdf,.docx,.xlsx,.pptx"
+              onChange={handleFile}
+            />
           </div>
           <div className="grid w-full gap-1.5">
-            <Label htmlFor="desc">Description <span className="text-red-500">*</span></Label>
+            <Label htmlFor="desc">
+              Description <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="desc"
               placeholder="Brief description (required, ≤ 100 words, ≤ 500 characters)"
@@ -211,7 +222,7 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
                   type="number"
                   min={1}
                   value={chunkSize}
-                  onChange={e => setChunkSize(Number(e.target.value))}
+                  onChange={(e) => setChunkSize(Number(e.target.value))}
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -221,7 +232,7 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
                   type="number"
                   min={0}
                   value={chunkOverlap}
-                  onChange={e => setChunkOverlap(Number(e.target.value))}
+                  onChange={(e) => setChunkOverlap(Number(e.target.value))}
                 />
               </div>
               {advancedError && <span className="text-xs text-red-500 mt-1">{advancedError}</span>}
@@ -229,7 +240,9 @@ export function UploadDialog({ open, onOpenChange, onUpload, user }: UploadDialo
           </Accordion.Item>
         </Accordion.Root>
         <DialogFooter>
-          <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Uploading...' : 'Upload'}</Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Uploading...' : 'Upload'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

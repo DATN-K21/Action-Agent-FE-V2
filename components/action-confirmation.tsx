@@ -148,7 +148,7 @@ const PureActionConfirmation = ({ message, user }: ActionConfirmationProps) => {
                   : `Allow tool from "${firstToolCall.name}"?`}
               </AlertDialogTitle>
             </AlertDialogHeader>
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-96 overflow-y-auto">
               <div className="rounded-lg border bg-neutral-50 p-4">
                 {isContextInput ? (
                   <>
